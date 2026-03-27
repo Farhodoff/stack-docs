@@ -53,7 +53,7 @@ export function MobileNav({ items }: MobileNavProps) {
               onOpenChange={setOpen}
               className="font-semibold pb-2"
             >
-              Documentation
+              📖 Hujjatlar
             </MobileLink>
 
             {items && items.length > 0 && (

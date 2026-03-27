@@ -13,9 +13,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Fullstack Docs - Learn Modern Web Development",
+  title: "📚 Stack Docs - Fullstack Dasturchilik O'rganish",
   description:
-    "Comprehensive guides for fullstack development with Next.js, Node.js, PostgreSQL, and TypeScript.",
+    "Next.js, Node.js, PostgreSQL va TypeScript bilan fullstack development uchun to'liq qo'llanmalar.",
   keywords: [
     "Next.js",
     "TypeScript",
@@ -23,10 +23,10 @@ export const metadata: Metadata = {
     "Prisma",
     "React",
     "Fullstack",
-    "Documentation",
+    "Dokumentatsiya",
   ],
-  authors: [{ name: "Fullstack Docs Team" }],
-  creator: "Fullstack Docs",
+  authors: [{ name: "Stack Docs Jamoasi" }],
+  creator: "Stack Docs",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
@@ -34,16 +34,16 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
-    url: "https://fullstack-docs.com",
-    title: "Fullstack Docs - Learn Modern Web Development",
-    description: "Comprehensive guides for fullstack development",
-    siteName: "Fullstack Docs",
+    locale: "uz_UZ",
+    url: "https://stack-docs.com",
+    title: "📚 Stack Docs - Fullstack Dasturchilik O'rganish",
+    description: "Fullstack development uchun to'liq qo'llanmalar",
+    siteName: "Stack Docs",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Fullstack Docs",
-    description: "Comprehensive guides for fullstack development",
+    title: "Stack Docs",
+    description: "Fullstack development uchun to'liq qo'llanmalar",
   },
   robots: {
     index: true,

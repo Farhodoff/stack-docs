@@ -4,12 +4,12 @@ export default function CreateDocPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Create New Documentation</h2>
+        <h2 className="text-2xl font-bold">➕ Yangi Hujjat Yaratish</h2>
         <p className="text-muted-foreground">
-          Add a new documentation page to your site
+          Saytingizga yangi hujjat qo'shish
         </p>
       </div>
-      
+
       <DocForm mode="create" />
     </div>
   )

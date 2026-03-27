@@ -17,12 +17,12 @@ export default async function EditDocPage({ params }: EditDocPageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Edit Documentation</h2>
+        <h2 className="text-2xl font-bold">✏️ Hujjatni Tahrirlash</h2>
         <p className="text-muted-foreground">
-          Editing: {doc.frontmatter.title}
+          Tahrirlanayotgan hujjat: {doc.frontmatter.title}
         </p>
       </div>
-      
+
       <DocForm mode="edit" initialData={doc} />
     </div>
   )
