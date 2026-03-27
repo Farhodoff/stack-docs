@@ -9,9 +9,9 @@ export default function DocsIndexPage() {
   return (
     <div className="container py-12">
       <div className="mb-12">
-        <h1 className="text-4xl font-bold mb-4">Documentation</h1>
+        <h1 className="text-4xl font-bold mb-4">📚 Dokumentatsiya</h1>
         <p className="text-xl text-muted-foreground">
-          Comprehensive guides for fullstack development
+          Fullstack development uchun to'liq qo'llanmalar va darsliklar
         </p>
       </div>
       
