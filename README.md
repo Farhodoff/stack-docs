@@ -1,6 +1,6 @@
 # 📚 Stack Docs
 
-Open-source fullstack web development learning platform.
+Open-source fullstack learning platform.
 
 **Live**: https://stack-lovat-eight.vercel.app
 
@@ -19,13 +19,6 @@ npm run dev
 - 💾 Supabase database integration
 - 🌙 Dark mode support
 - 📱 Responsive design
-
-## Documentation
-
-- [Getting Started](.github/docs/README.md) - Setup and project overview
-- [Supabase Integration](.github/docs/SUPABASE_SETUP.md) - Database setup
-- [Vercel Deployment](.github/docs/VERCEL_ENV_SETUP.md) - Production deployment
-- [Admin Panel](.github/docs/admin/GUIDE.md) - Admin features and troubleshooting
 
 ## License
 
