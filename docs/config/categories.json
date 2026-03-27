@@ -1,0 +1,122 @@
+[
+  {
+    "id": "api",
+    "name": "API",
+    "description": "Building REST & GraphQL APIs",
+    "color": "#3b82f6",
+    "order": 1,
+    "icon": "🔌",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  },
+  {
+    "id": "authentication",
+    "name": "Authentication",
+    "description": "User authentication and authorization",
+    "color": "#ef4444",
+    "order": 2,
+    "icon": "🔐",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  },
+  {
+    "id": "backend",
+    "name": "Backend",
+    "description": "Backend development concepts and patterns",
+    "color": "#8b5cf6",
+    "order": 3,
+    "icon": "⚙️",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  },
+  {
+    "id": "best-practices",
+    "name": "Best Practices",
+    "description": "Industry best practices and patterns",
+    "color": "#10b981",
+    "order": 4,
+    "icon": "⭐",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  },
+  {
+    "id": "database",
+    "name": "Database",
+    "description": "Database design and management",
+    "color": "#f59e0b",
+    "order": 5,
+    "icon": "🗄️",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  },
+  {
+    "id": "deployment",
+    "name": "Deployment",
+    "description": "Deployment and DevOps",
+    "color": "#06b6d4",
+    "order": 6,
+    "icon": "🚀",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  },
+  {
+    "id": "frontend",
+    "name": "Frontend",
+    "description": "Frontend development and UI/UX",
+    "color": "#61dafb",
+    "order": 7,
+    "icon": "🎨",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  },
+  {
+    "id": "fullstack",
+    "name": "Fullstack",
+    "description": "Fullstack development patterns",
+    "color": "#ec4899",
+    "order": 8,
+    "icon": "🔗",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  },
+  {
+    "id": "html-css-js",
+    "name": "HTML, CSS & JavaScript",
+    "description": "Web fundamentals - HTML, CSS, and JavaScript",
+    "color": "#fbbf24",
+    "order": 9,
+    "icon": "📝",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  },
+  {
+    "id": "introduction",
+    "name": "Introduction",
+    "description": "Getting started and introduction",
+    "color": "#6366f1",
+    "order": 10,
+    "icon": "👋",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  },
+  {
+    "id": "nodejs",
+    "name": "Node.js",
+    "description": "Node.js and runtime environment",
+    "color": "#339933",
+    "order": 11,
+    "icon": "🟢",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  },
+  {
+    "id": "react",
+    "name": "React",
+    "description": "React.js and component development",
+    "color": "#61dafb",
+    "order": 12,
+    "icon": "⚛️",
+    "createdAt": "2026-03-28T10:00:00Z",
+    "updatedAt": "2026-03-28T10:00:00Z"
+  }
+]

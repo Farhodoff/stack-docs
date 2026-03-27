@@ -6,6 +6,7 @@ import path from "path";
 import { z } from "zod";
 
 const docsDir = path.join(process.cwd(), "docs");
+const categoriesJsonPath = path.join(docsDir, "config", "categories.json");
 
 // Schema for document creation/update
 const docSchema = z.object({
@@ -18,7 +19,18 @@ const docSchema = z.object({
   status: z.enum(["draft", "published"]).default("draft"),
 });
 
+// Schema for category creation/update
+const categorySchema = z.object({
+  id: z.string().min(1).regex(/^[a-z0-9-]+$/),
+  name: z.string().min(1).max(50),
+  description: z.string().min(1).max(200),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+  order: z.number().int().nonnegative(),
+  icon: z.string().max(2).optional(),
+});
+
 export type DocFormData = z.infer<typeof docSchema>;
+export type CategoryFormData = z.infer<typeof categorySchema>;
 
 /**
  * Update document status (draft/published)
@@ -576,5 +588,210 @@ tags: [${validated.tags.map((t) => `"${t}"`).join(", ")}]
       success: false,
       message: "Bulk upload jarayonida xatolik yuz berdi",
     };
+  }
+}
+
+/**
+ * Get all categories from categories.json
+ */
+export async function getAllCategoriesAction() {
+  try {
+    try {
+      const content = await fs.readFile(categoriesJsonPath, "utf-8");
+      const categories = JSON.parse(content);
+      return categories.sort((a: any, b: any) => a.order - b.order);
+    } catch {
+      // If file doesn't exist, return empty array
+      return [];
+    }
+  } catch (error) {
+    console.error("Error reading categories:", error);
+    return [];
+  }
+}
+
+/**
+ * Create a new category
+ */
+export async function createCategoryAction(data: CategoryFormData) {
+  try {
+    const validated = categorySchema.parse(data);
+
+    // Ensure config directory exists
+    const configDir = path.join(docsDir, "config");
+    await fs.mkdir(configDir, { recursive: true });
+
+    // Get existing categories
+    let categories = [];
+    try {
+      const content = await fs.readFile(categoriesJsonPath, "utf-8");
+      categories = JSON.parse(content);
+    } catch {
+      // File doesn't exist yet
+      categories = [];
+    }
+
+    // Check if category already exists
+    if (categories.some((cat: any) => cat.id === validated.id)) {
+      return { error: "Kategoriya allaqachon mavjud" };
+    }
+
+    // Add new category
+    const newCategory = {
+      ...validated,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    categories.push(newCategory);
+    categories.sort((a: any, b: any) => a.order - b.order);
+
+    // Write updated categories
+    await fs.writeFile(categoriesJsonPath, JSON.stringify(categories, null, 2));
+
+    revalidatePath("/admin");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating category:", error);
+    if (error instanceof z.ZodError) {
+      return { error: "Validatsiya xatosi", details: error.errors };
+    }
+    return { error: "Kategoriya yaratishda xatolik" };
+  }
+}
+
+/**
+ * Update an existing category
+ */
+export async function updateCategoryAction(id: string, data: Partial<CategoryFormData>) {
+  try {
+    const configDir = path.join(docsDir, "config");
+    await fs.mkdir(configDir, { recursive: true });
+
+    // Get existing categories
+    let categories = [];
+    try {
+      const content = await fs.readFile(categoriesJsonPath, "utf-8");
+      categories = JSON.parse(content);
+    } catch {
+      return { error: "Kategoriyalar topilmadi" };
+    }
+
+    // Find and update category
+    const categoryIndex = categories.findIndex((cat: any) => cat.id === id);
+    if (categoryIndex === -1) {
+      return { error: "Kategoriya topilmadi" };
+    }
+
+    // Validate updated fields
+    const validated = categorySchema.partial().parse(data);
+
+    categories[categoryIndex] = {
+      ...categories[categoryIndex],
+      ...validated,
+      updatedAt: new Date().toISOString(),
+    };
+
+    categories.sort((a: any, b: any) => a.order - b.order);
+
+    // Write updated categories
+    await fs.writeFile(categoriesJsonPath, JSON.stringify(categories, null, 2));
+
+    revalidatePath("/admin");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating category:", error);
+    if (error instanceof z.ZodError) {
+      return { error: "Validatsiya xatosi", details: error.errors };
+    }
+    return { error: "Kategoriyani yangilashda xatolik" };
+  }
+}
+
+/**
+ * Delete a category
+ */
+export async function deleteCategoryAction(id: string) {
+  try {
+    // Get all docs to check if any use this category
+    const docs = await getAllDocsAction();
+    const docsUsingCategory = docs.filter((doc: any) => doc.category === id);
+
+    if (docsUsingCategory.length > 0) {
+      return {
+        error: `Bu kategoriyada ${docsUsingCategory.length} ta hujjat mavjud. Avval hujjatlarni o'chiring yoki boshqa kategoriyaga o'tkazib yuboring.`,
+        docsCount: docsUsingCategory.length
+      };
+    }
+
+    // Get existing categories
+    let categories = [];
+    try {
+      const content = await fs.readFile(categoriesJsonPath, "utf-8");
+      categories = JSON.parse(content);
+    } catch {
+      return { error: "Kategoriyalar topilmadi" };
+    }
+
+    // Find and remove category
+    const categoryIndex = categories.findIndex((cat: any) => cat.id === id);
+    if (categoryIndex === -1) {
+      return { error: "Kategoriya topilmadi" };
+    }
+
+    categories.splice(categoryIndex, 1);
+
+    // Write updated categories
+    await fs.writeFile(categoriesJsonPath, JSON.stringify(categories, null, 2));
+
+    revalidatePath("/admin");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    return { error: "Kategoriyani o'chirishda xatolik" };
+  }
+}
+
+/**
+ * Reorder categories
+ */
+export async function reorderCategoriesAction(categoryIds: string[]) {
+  try {
+    // Get existing categories
+    let categories = [];
+    try {
+      const content = await fs.readFile(categoriesJsonPath, "utf-8");
+      categories = JSON.parse(content);
+    } catch {
+      return { error: "Kategoriyalar topilmadi" };
+    }
+
+    // Update order based on new order
+    const updatedCategories = categoryIds.map((id, index) => {
+      const category = categories.find((cat: any) => cat.id === id);
+      if (!category) return null;
+      return {
+        ...category,
+        order: index,
+        updatedAt: new Date().toISOString(),
+      };
+    }).filter(Boolean);
+
+    if (updatedCategories.length !== categories.length) {
+      return { error: "Ba'zi kategoriyalar topilmadi" };
+    }
+
+    // Write updated categories
+    await fs.writeFile(categoriesJsonPath, JSON.stringify(updatedCategories, null, 2));
+
+    revalidatePath("/admin");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error reordering categories:", error);
+    return { error: "Kategoriyalarni qayta tartiblashtishda xatolik" };
   }
 }

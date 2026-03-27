@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { createDocAction, updateDocAction } from "@/app/admin/actions";
+import { createDocAction, updateDocAction, getAllCategoriesAction } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
@@ -50,6 +50,8 @@ type FormData = z.infer<typeof docSchema>;
 export function DocForm({ mode = "create", initialData }: DocFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
   const {
     register,
@@ -74,6 +76,23 @@ export function DocForm({ mode = "create", initialData }: DocFormProps) {
             status: "draft",
           },
   });
+
+  // Load categories on component mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const cats = await getAllCategoriesAction();
+        setCategories(cats || []);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+        toast.error("Kategoriyalarni yuklashda xatolik");
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
@@ -134,11 +153,19 @@ export function DocForm({ mode = "create", initialData }: DocFormProps) {
           <label htmlFor="category" className="text-sm font-medium">
             Category *
           </label>
-          <input
+          <select
             id="category"
+            disabled={isLoadingCategories}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             {...register("category")}
-          />
+          >
+            <option value="">Kategoriya tanlang...</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.icon} {cat.name}
+              </option>
+            ))}
+          </select>
           {errors.category && (
             <p className="text-sm text-destructive">
               {errors.category.message}

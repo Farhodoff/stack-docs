@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, LayoutDashboard, Settings, LogOut } from "lucide-react";
+import { FileText, LayoutDashboard, Settings, LogOut, Layers } from "lucide-react";
 import { Toaster } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -40,6 +40,12 @@ export default function AdminLayout({
             className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium"
           >
             <FileText size={18} /> Documents
+          </Link>
+          <Link
+            href="/admin/categories"
+            className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium"
+          >
+            <Layers size={18} /> Categories
           </Link>
           <Link
             href="/admin/settings"
