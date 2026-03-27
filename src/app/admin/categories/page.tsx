@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Plus, X } from "lucide-react";
 import {
   getAllCategoriesAction,
   deleteCategoryAction,
@@ -110,20 +104,30 @@ export default function CategoriesPage() {
         />
       )}
 
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingCategory ? "Kategoriyani Tahrirlash" : "Yangi Kategoriya"}
-            </DialogTitle>
-          </DialogHeader>
-          <CategoryForm
-            mode={editingCategory ? "edit" : "create"}
-            initialData={editingCategory || undefined}
-            onSuccess={handleSuccess}
-          />
-        </DialogContent>
-      </Dialog>
+      {showDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center pt-8 z-50">
+          <div className="bg-background border rounded-lg max-w-2xl max-h-[90vh] overflow-y-auto w-full mx-4">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-lg font-semibold">
+                {editingCategory ? "Kategoriyani Tahrirlash" : "Yangi Kategoriya"}
+              </h2>
+              <button
+                onClick={() => setShowDialog(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-6">
+              <CategoryForm
+                mode={editingCategory ? "edit" : "create"}
+                initialData={editingCategory || undefined}
+                onSuccess={handleSuccess}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

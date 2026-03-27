@@ -6,8 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   createCategoryAction,
@@ -86,7 +84,9 @@ export function CategoryForm({ mode, initialData, onSuccess }: CategoryFormProps
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
       <div className="space-y-2">
-        <Label htmlFor="id">ID (slug)*</Label>
+        <label htmlFor="id" className="text-sm font-medium">
+          ID (slug)*
+        </label>
         <Input
           id="id"
           placeholder="react, nodejs, ..."
@@ -100,7 +100,9 @@ export function CategoryForm({ mode, initialData, onSuccess }: CategoryFormProps
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="name">Nomi*</Label>
+        <label htmlFor="name" className="text-sm font-medium">
+          Nomi*
+        </label>
         <Input
           id="name"
           placeholder="React, Node.js, ..."
@@ -114,12 +116,14 @@ export function CategoryForm({ mode, initialData, onSuccess }: CategoryFormProps
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Tavsifi*</Label>
-        <Textarea
+        <label htmlFor="description" className="text-sm font-medium">
+          Tavsifi*
+        </label>
+        <textarea
           id="description"
           placeholder="Kategoriya haqida qisqa tavsif..."
           disabled={isLoading}
-          className={`resize-none ${errors.description ? "border-destructive" : ""}`}
+          className={`w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.description ? "border-destructive" : ""}`}
           rows={3}
           {...register("description")}
         />
@@ -130,7 +134,9 @@ export function CategoryForm({ mode, initialData, onSuccess }: CategoryFormProps
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="color">Rang*</Label>
+          <label htmlFor="color" className="text-sm font-medium">
+            Rang*
+          </label>
           <div className="flex gap-2 items-center">
             <input
               id="color"
@@ -152,7 +158,9 @@ export function CategoryForm({ mode, initialData, onSuccess }: CategoryFormProps
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="icon">Icon (emoji)*</Label>
+          <label htmlFor="icon" className="text-sm font-medium">
+            Icon (emoji)*
+          </label>
           <Input
             id="icon"
             placeholder="⚛️, 🟢, ..."
@@ -168,7 +176,9 @@ export function CategoryForm({ mode, initialData, onSuccess }: CategoryFormProps
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="order">Tartib*</Label>
+        <label htmlFor="order" className="text-sm font-medium">
+          Tartib*
+        </label>
         <Input
           id="order"
           type="number"
