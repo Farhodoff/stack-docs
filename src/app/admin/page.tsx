@@ -1,14 +1,25 @@
 import { getAllDocsMetadata } from "@/lib/mdx/parser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Layers, Clock, Plus, ExternalLink } from "lucide-react";
+import { FileText, Layers, Clock, Plus, ExternalLink, TrendingUp } from "lucide-react";
 import Link from "next/link";
+import { getAllCategoriesAction } from "@/app/admin/actions";
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
   const docs = getAllDocsMetadata();
+  const allCategories = await getAllCategoriesAction();
 
   const totalDocs = docs.length;
   const categories = new Set(docs.map((doc) => doc.frontmatter?.category)).size;
+
+  // Calculate docs per category
+  const categoryStats = allCategories.map((cat) => {
+    const count = docs.filter((doc) => doc.frontmatter?.category === cat.id).length;
+    return {
+      ...cat,
+      count,
+    };
+  }).filter((cat) => cat.count > 0).sort((a, b) => b.count - a.count);
 
   // Just grabbing a few docs to display as "Recent" or "Top"
   const recentDocs = docs.slice(0, 5);
@@ -61,6 +72,60 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Kategoriyalar bo'yicha statistika
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {categoryStats.length === 0 ? (
+              <p className="text-muted-foreground col-span-full">
+                Statistika topilmadi
+              </p>
+            ) : (
+              categoryStats.map((cat) => (
+                <div
+                  key={cat.id}
+                  className="p-4 rounded-lg border transition-colors hover:bg-muted"
+                  style={{ borderLeftColor: cat.color, borderLeftWidth: "4px" }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{cat.icon}</span>
+                      <Link
+                        href={`/admin/documents?category=${cat.id}`}
+                        className="font-semibold hover:underline"
+                      >
+                        {cat.name}
+                      </Link>
+                    </div>
+                    <span
+                      className="px-3 py-1 rounded-full text-white text-sm font-bold"
+                      style={{ backgroundColor: cat.color }}
+                    >
+                      {cat.count}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{cat.description}</p>
+                  <div className="mt-3 w-full bg-muted rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-full transition-all"
+                      style={{
+                        backgroundColor: cat.color,
+                        width: `${(cat.count / totalDocs) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="col-span-3">
         <CardHeader>
