@@ -22,24 +22,10 @@ npm run dev
 
 ## Documentation
 
-- [Setup Guide](.github/docs/SETUP.md) - Installation and configuration
+- [Getting Started](.github/docs/README.md) - Setup and project overview
 - [Supabase Integration](.github/docs/SUPABASE_SETUP.md) - Database setup
 - [Vercel Deployment](.github/docs/VERCEL_ENV_SETUP.md) - Production deployment
-- [Admin Panel](.github/docs/admin/ADMIN_DASHBOARD_GUIDE.md) - Admin features
-- [Troubleshooting](.github/docs/admin/ADMIN_CRUD_FIX.md) - Common issues
-
-## Project Structure
-
-```
-src/
-  ├── app/              # Next.js pages and routes
-  ├── components/       # React components
-  └── lib/              # Utilities and helpers
-
-docs/                   # MDX documentation files
-
-.github/docs/           # Setup and deployment guides
-```
+- [Admin Panel](.github/docs/admin/GUIDE.md) - Admin features and troubleshooting
 
 ## License
 
