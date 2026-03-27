@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { DocList } from '@/components/admin/doc-list'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { PlusCircle } from 'lucide-react'
 import Link from 'next/link'
+import { getAllCategoriesAction } from '@/app/admin/actions'
 
 interface Document {
   slug: string
@@ -21,14 +22,42 @@ interface DocumentsPageProps {
   docs: Document[]
 }
 
+interface Category {
+  id: string
+  name: string
+  color: string
+  icon: string
+}
+
 export default function DocumentsPage({ docs }: DocumentsPageProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
 
-  // Get unique categories
-  const categories = useMemo(() => {
-    return Array.from(new Set(docs.map(doc => doc.category)))
-  }, [docs])
+  // Load categories from server
+  useEffect(() => {
+    const loadCategories = async () => {
+      const cats = await getAllCategoriesAction()
+      setCategories(cats || [])
+    }
+    loadCategories()
+  }, [])
+
+  // Get unique categories - prioritize from loaded categories, fallback to docs
+  const uniqueCategories = useMemo(() => {
+    if (categories.length > 0) {
+      return categories.filter(cat =>
+        docs.some(doc => doc.category === cat.id)
+      )
+    }
+    // Fallback for docs without categories.json
+    return Array.from(new Set(docs.map(doc => doc.category))).map(id => ({
+      id: id as string,
+      name: id as string,
+      color: '#6366f1',
+      icon: '📁'
+    }))
+  }, [categories, docs])
 
   // Filter documents based on search and category
   const filteredDocs = useMemo(() => {
@@ -36,9 +65,9 @@ export default function DocumentsPage({ docs }: DocumentsPageProps) {
       const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doc.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      
+
       const matchesCategory = !selectedCategory || doc.category === selectedCategory
-      
+
       return matchesSearch && matchesCategory
     })
   }, [docs, searchQuery, selectedCategory])
@@ -47,44 +76,54 @@ export default function DocumentsPage({ docs }: DocumentsPageProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">All Documents</h2>
+          <h2 className="text-2xl font-bold">📄 Barcha Hujjatlar</h2>
           <p className="text-muted-foreground">
-            Manage and organize your documentation
+            Hujjatlarni boshqarish va o'rganish
           </p>
         </div>
         <Button asChild>
           <Link href="/admin/create">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Document
+            Hujjat Qo'shish
           </Link>
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-4">
         <Input
-          placeholder="Search documents..."
+          placeholder="Hujjatlarni izlash..."
           value={searchQuery}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
           className="max-w-sm"
         />
-        
-        <div className="flex gap-2 overflow-x-auto">
+
+        <div className="flex gap-2 overflow-x-auto pb-2">
           <Button
             variant={!selectedCategory ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSelectedCategory(null)}
           >
-            All
+            Barchasi
           </Button>
-          {categories.map((category) => (
+          {uniqueCategories.map((category) => (
             <Button
-              key={category}
-              variant={selectedCategory === category ? 'default' : 'outline'}
+              key={category.id}
+              variant={selectedCategory === category.id ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => setSelectedCategory(category.id)}
+              style={
+                selectedCategory === category.id
+                  ? { backgroundColor: category.color }
+                  : {
+                      borderColor: category.color,
+                      color: 'inherit',
+                    }
+              }
+              className="transition-all whitespace-nowrap"
             >
-              {category}
+              <span className="mr-1">{category.icon}</span>
+              {category.name}
             </Button>
           ))}
         </div>
@@ -92,7 +131,7 @@ export default function DocumentsPage({ docs }: DocumentsPageProps) {
 
       {/* Results count */}
       <div className="text-sm text-muted-foreground">
-        Showing {filteredDocs.length} of {docs.length} documents
+        {filteredDocs.length} ta, Jami {docs.length} ta hujjat
       </div>
 
       {/* Document list */}

@@ -39,19 +39,19 @@ export default function AdminLayout({
             href="/admin/documents"
             className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium"
           >
-            <FileText size={18} /> Documents
+            <FileText size={18} /> Hujjatlar
           </Link>
           <Link
             href="/admin/categories"
             className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium"
           >
-            <Layers size={18} /> Categories
+            <Layers size={18} /> Kategoriyalar
           </Link>
           <Link
             href="/admin/settings"
             className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium"
           >
-            <Settings size={18} /> Settings
+            <Settings size={18} /> Sozlamalar
           </Link>
         </nav>
         <div className="p-4 border-t">
@@ -61,7 +61,7 @@ export default function AdminLayout({
             className="w-full justify-start gap-2"
             size="sm"
           >
-            <LogOut size={18} /> Logout
+            <LogOut size={18} /> Chiqish
           </Button>
         </div>
       </aside>

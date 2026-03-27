@@ -17,15 +17,15 @@ export default function AdminDashboardPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">📊 Dashboard</h1>
           <p className="text-muted-foreground mt-2">
-            Overview of your documentation content.
+            Dokumentatsiyangizning maqolalari va statistikasi
           </p>
         </div>
         <Link href="/admin/create">
           <Button className="flex items-center gap-2">
             <Plus size={16} />
-            Create Document
+            Yangi Hujjat
           </Button>
         </Link>
       </div>
@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Documents
+              Jami Hujjatlar
             </CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -44,7 +44,7 @@ export default function AdminDashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Categories</CardTitle>
+            <CardTitle className="text-sm font-medium">Kategoriyalar</CardTitle>
             <Layers className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -53,18 +53,18 @@ export default function AdminDashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Status</CardTitle>
+            <CardTitle className="text-sm font-medium">Sistema Holati</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">Online</div>
+            <div className="text-2xl font-bold text-green-500">Faol</div>
           </CardContent>
         </Card>
       </div>
 
       <Card className="col-span-3">
         <CardHeader>
-          <CardTitle>Documents Overview</CardTitle>
+          <CardTitle>Hujjatlarning Ko'rinishi</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="relative w-full overflow-auto">
@@ -72,16 +72,16 @@ export default function AdminDashboardPage() {
               <thead className="[&_tr]:border-b">
                 <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Title
+                    Sarlavha
                   </th>
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Category
+                    Kategoriya
                   </th>
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Path
+                    Yo'li
                   </th>
                   <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
-                    Actions
+                    Amallar
                   </th>
                 </tr>
               </thead>
@@ -92,7 +92,7 @@ export default function AdminDashboardPage() {
                       colSpan={4}
                       className="p-4 text-center text-muted-foreground"
                     >
-                      No documents found.
+                      Hujjatlar topilmadi.
                     </td>
                   </tr>
                 ) : (
@@ -102,10 +102,10 @@ export default function AdminDashboardPage() {
                       className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
                     >
                       <td className="p-4 align-middle font-medium">
-                        {doc.frontmatter?.title || "Untitled"}
+                        {doc.frontmatter?.title || "Nomom"}
                       </td>
                       <td className="p-4 align-middle">
-                        {doc.frontmatter?.category || "None"}
+                        {doc.frontmatter?.category || "Yo'q"}
                       </td>
                       <td className="p-4 align-middle text-muted-foreground">
                         {doc.slug}.mdx
@@ -113,7 +113,7 @@ export default function AdminDashboardPage() {
                       <td className="p-4 align-middle text-right flex justify-end gap-2">
                         <Link href={`/admin/edit/${doc.slug}`}>
                           <Button variant="outline" size="sm">
-                            Edit
+                            Tahrirlash
                           </Button>
                         </Link>
                         <Link href={`/docs/${doc.slug}`} target="_blank">
@@ -122,7 +122,7 @@ export default function AdminDashboardPage() {
                             size="sm"
                             className="flex items-center gap-1"
                           >
-                            <ExternalLink size={14} /> View
+                            <ExternalLink size={14} /> Ko'rish
                           </Button>
                         </Link>
                       </td>
@@ -134,7 +134,7 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-4 flex justify-center">
             <Link href="/admin/documents">
-              <Button variant="link">View All Documents</Button>
+              <Button variant="link">Barcha Hujjatlarni Ko'rish</Button>
             </Link>
           </div>
         </CardContent>
