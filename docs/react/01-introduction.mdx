@@ -1,0 +1,79 @@
+---
+title: "Introduction to React.js"
+description: "A JavaScript library for building user interfaces."
+category: "react"
+order: 1
+tags:
+  - react
+  - frontend
+  - javascript
+---
+
+# Getting Started with React
+
+**React** is a declarative, efficient, and flexible JavaScript library for building user interfaces. Created by Facebook (Meta), it has become the industry standard for modern web development.
+
+In this learning path, you will learn how to build dynamic, fast, and scalable applications using React.
+
+---
+
+## Core Concepts
+
+### 1. Components
+React is all about components. A component is a small, reusable piece of code that returns a React element to be rendered to the page. The simplest version of a React component is a plain JavaScript function that returns a React element.
+
+### 2. Declarative UI
+React makes it painless to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components when your data changes.
+
+### 3. JSX (JavaScript XML)
+JSX is a syntax extension for JavaScript. It was written to be used with React. JSX looks a lot like HTML, but under the hood, it transforms into regular JavaScript objects.
+
+<CodeBlock language="tsx" title="HelloWorld.tsx">
+```tsx
+import React from 'react';
+
+// A simple React functional component
+function HelloWorld() {
+  const name = "Fullstack Developer";
+
+  return (
+    <div className="p-4 bg-blue-50 rounded-lg">
+      <h1 className="text-2xl font-bold text-blue-900">
+        Hello, {name}! 👋
+      </h1>
+      <p className="mt-2 text-gray-700">
+        Welcome to your first React component.
+      </p>
+    </div>
+  );
+}
+
+export default HelloWorld;
+```
+</CodeBlock>
+
+---
+
+## The Virtual DOM
+
+One of the reasons React is so fast is its use of the **Virtual DOM**. 
+
+Instead of manipulating the browser's DOM directly (which is slow), React creates a virtual representation of it in memory. When the state of a component changes, React updates the virtual DOM first, compares it with the previous version (a process called "diffing"), and then efficiently updates only the parts of the real DOM that actually changed.
+
+<Callout type="tip" title="Why does this matter?">
+Direct DOM manipulation is often the biggest bottleneck in web performance. By minimizing real DOM updates, React ensures your application remains lightning fast, even with complex, data-heavy interfaces.
+</Callout>
+
+---
+
+## What's Next?
+
+Now that you understand what React is and why it's so powerful, it's time to dive deeper. 
+
+In the upcoming lessons, we will explore:
+- Component State and Props
+- React Hooks (`useState`, `useEffect`)
+- Event Handling
+- Routing and Data Fetching
+
+Ready to start building? Let's move on to the next section!

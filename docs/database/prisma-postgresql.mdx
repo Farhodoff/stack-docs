@@ -1,0 +1,242 @@
+---
+title: "Databases with Prisma & PostgreSQL"
+description: "Master database management with Prisma ORM and PostgreSQL."
+category: "5. Databases"
+order: 5
+tags:
+  - prisma
+  - postgresql
+  - database
+  - orm
+---
+
+# Databases with Prisma & PostgreSQL
+
+Prisma ORM provides type-safe database access, making working with PostgreSQL a breeze.
+
+## Prisma Schema Design
+
+### Basic Models
+
+<CodeBlock language="prisma" title="Schema Definition">
+{`// schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(USER)
+  posts     Post[]
+  profile   Profile?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Profile {
+  id     String  @id @default(uuid())
+  bio    String?
+  avatar String?
+  user   User    @relation(fields: [userId], references: [id])
+  userId String  @unique
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  tags      Tag[]
+  comments  Comment[]
+  createdAt DateTime @default(now())
+}
+
+model Tag {
+  id    String @id @default(uuid())
+  name  String @unique
+  posts Post[]
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  text      String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}`}
+</CodeBlock>
+
+## Database Operations
+
+### CRUD Operations
+
+<CodeBlock language="typescript" title="Create, Read, Update, Delete">
+{`import { db } from '@/lib/db'
+
+// CREATE
+const user = await db.user.create({
+  data: {
+    email: 'john@example.com',
+    name: 'John Doe',
+    password: hashedPassword,
+  },
+})
+
+// READ - Find unique
+const user = await db.user.findUnique({
+  where: { id: userId },
+  include: { posts: true },
+})
+
+// READ - Find many
+const users = await db.user.findMany({
+  where: {
+    role: 'ADMIN',
+  },
+  orderBy: {
+    createdAt: 'desc',
+  },
+  select: {
+    id: true,
+    email: true,
+    name: true,
+  },
+})
+
+// UPDATE
+const updatedUser = await db.user.update({
+  where: { id: userId },
+  data: {
+    name: 'Jane Doe',
+  },
+})
+
+// DELETE
+await db.user.delete({
+  where: { id: userId },
+})`}
+</CodeBlock>
+
+### Advanced Queries
+
+<CodeBlock language="typescript" title="Complex Queries">
+{`// Filtering
+const posts = await db.post.findMany({
+  where: {
+    published: true,
+    OR: [
+      { title: { contains: 'Next.js' } },
+      { content: { contains: 'Next.js' } },
+    ],
+    author: {
+      role: 'ADMIN',
+    },
+  },
+})
+
+// Pagination
+const page = 1
+const limit = 10
+const posts = await db.post.findMany({
+  skip: (page - 1) * limit,
+  take: limit,
+  orderBy: { createdAt: 'desc' },
+})
+
+// Aggregations
+const stats = await db.post.aggregate({
+  _count: { id: true },
+  _avg: { views: true },
+  where: { published: true },
+})
+
+// Raw SQL
+const result = await db.$queryRaw\`
+  SELECT * FROM posts
+  WHERE published = true
+  LIMIT 10
+\``}
+</CodeBlock>
+
+## Migrations
+
+Manage your database schema with Prisma Migrate:
+
+```bash
+# Create a new migration
+npx prisma migrate dev --name add_user_role
+
+# Apply migrations in production
+npx prisma migrate deploy
+
+# Reset database
+npx prisma migrate reset
+
+# Generate Prisma Client
+npx prisma generate
+```
+
+## Transactions
+
+Ensure data integrity with transactions:
+
+<CodeBlock language="typescript" title="Database Transactions">
+{`// Interactive transaction
+await db.$transaction(async (tx) => {
+  const user = await tx.user.update({
+    where: { id: userId },
+    data: { credits: { decrement: 100 } },
+  })
+
+  await tx.purchase.create({
+    data: {
+      userId,
+      amount: 100,
+    },
+  })
+
+  return user
+})
+
+// Batch transaction
+const [user, post] = await db.$transaction([
+  db.user.update({
+    where: { id: userId },
+    data: { name: 'Updated' },
+  }),
+  db.post.create({
+    data: { title: 'New Post', authorId: userId },
+  }),
+])`}
+</CodeBlock>
+
+<Tip>
+Always use transactions when multiple database operations must succeed or fail together to maintain data consistency.
+</Tip>
+
+## Best Practices
+
+1. **Use indexes** on frequently queried fields
+2. **Implement soft deletes** for important data
+3. **Validate input** before database operations
+4. **Use connection pooling** in production
+5. **Regular backups** of your database
+6. **Monitor query performance**
+
+Continue to deployment section to learn how to ship your application!

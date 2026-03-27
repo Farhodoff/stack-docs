@@ -1,0 +1,408 @@
+---
+title: "Building REST & GraphQL APIs"
+description: "Learn to build robust APIs with REST and GraphQL using Next.js API routes."
+category: "4. Building APIs"
+order: 4
+tags:
+  - api
+  - rest
+  - graphql
+  - backend
+---
+
+# Building REST & GraphQL APIs
+
+APIs (Application Programming Interfaces) allow different parts of your application to communicate. Let's explore both REST and GraphQL approaches.
+
+## REST APIs
+
+REST (Representational State Transfer) is an architectural style for designing networked applications.
+
+### Creating REST APIs with Next.js
+
+In Next.js, you can create API routes in the `app/api` directory:
+
+<CodeBlock language="typescript" title="Users API Route">
+{`// app/api/users/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+
+// GET /api/users
+export async function GET() {
+  try {
+    const users = await db.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+    
+    return NextResponse.json(users)
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch users' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST /api/users
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    // Validate input
+    if (!body.email || !body.name) {
+      return NextResponse.json(
+        { error: 'Email and name are required' },
+        { status: 400 }
+      )
+    }
+    
+    const user = await db.user.create({
+      data: {
+        email: body.email,
+        name: body.name,
+      },
+    })
+    
+    return NextResponse.json(user, { status: 201 })
+  } catch (error) {
+    console.error('Error creating user:', error)
+    return NextResponse.json(
+      { error: 'Failed to create user' },
+      { status: 500 }
+    )
+  }
+}`}
+</CodeBlock>
+
+### Dynamic Routes
+
+Create dynamic API endpoints with square brackets:
+
+<CodeBlock language="typescript" title="Single User Endpoint">
+{`// app/api/users/[id]/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+
+// GET /api/users/:id
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = await db.user.findUnique({
+      where: { id: params.id },
+      include: {
+        posts: true,
+      },
+    })
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+    
+    return NextResponse.json(user)
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch user' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT /api/users/:id
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await request.json()
+    
+    const user = await db.user.update({
+      where: { id: params.id },
+      data: {
+        name: body.name,
+        email: body.email,
+      },
+    })
+    
+    return NextResponse.json(user)
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to update user' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE /api/users/:id
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await db.user.delete({
+      where: { id: params.id },
+    })
+    
+    return NextResponse.json({ message: 'User deleted' })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to delete user' },
+      { status: 500 }
+    )
+  }
+}`}
+</CodeBlock>
+
+### HTTP Methods Reference
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/users | Get all users |
+| POST | /api/users | Create a new user |
+| GET | /api/users/:id | Get a specific user |
+| PUT | /api/users/:id | Update a user |
+| DELETE | /api/users/:id | Delete a user |
+
+## GraphQL APIs
+
+GraphQL provides a more flexible alternative to REST, allowing clients to request exactly the data they need.
+
+### Setting up GraphQL with Apollo Server
+
+<CodeBlock language="bash" title="Install Dependencies">
+{`npm install @apollo/server graphql next-connect`}
+</CodeBlock>
+
+<CodeBlock language="typescript" title="GraphQL Schema">
+{`// lib/graphql/schema.ts
+import { gql } from 'graphql-tag'
+
+export const typeDefs = gql\`
+  type User {
+    id: ID!
+    email: String!
+    name: String
+    posts: [Post!]!
+    createdAt: String!
+  }
+  
+  type Post {
+    id: ID!
+    title: String!
+    content: String
+    published: Boolean!
+    author: User!
+    createdAt: String!
+  }
+  
+  type Query {
+    users: [User!]!
+    user(id: ID!): User
+    posts: [Post!]!
+    post(id: ID!): Post
+  }
+  
+  type Mutation {
+    createUser(email: String!, name: String): User!
+    updateUser(id: ID!, email: String, name: String): User
+    deleteUser(id: ID!): Boolean!
+    createPost(title: String!, content: String, authorId: ID!): Post!
+  }
+\`
+`}
+</CodeBlock>
+
+<CodeBlock language="typescript" title="GraphQL Resolvers">
+{`// lib/graphql/resolvers.ts
+import { db } from '@/lib/db'
+
+export const resolvers = {
+  Query: {
+    users: async () => {
+      return await db.user.findMany()
+    },
+    
+    user: async (_: any, { id }: { id: string }) => {
+      return await db.user.findUnique({
+        where: { id },
+        include: { posts: true },
+      })
+    },
+    
+    posts: async () => {
+      return await db.post.findMany({
+        include: { author: true },
+      })
+    },
+  },
+  
+  Mutation: {
+    createUser: async (_: any, args: any) => {
+      return await db.user.create({
+        data: {
+          email: args.email,
+          name: args.name,
+        },
+      })
+    },
+    
+    updateUser: async (_: any, { id, ...data }: any) => {
+      return await db.user.update({
+        where: { id },
+        data,
+      })
+    },
+    
+    deleteUser: async (_: any, { id }: { id: string }) => {
+      await db.user.delete({
+        where: { id },
+      })
+      return true
+    },
+    
+    createPost: async (_: any, args: any) => {
+      return await db.post.create({
+        data: {
+          title: args.title,
+          content: args.content,
+          authorId: args.authorId,
+        },
+        include: { author: true },
+      })
+    },
+  },
+  
+  User: {
+    posts: async (parent: any) => {
+      return await db.post.findMany({
+        where: { authorId: parent.id },
+      })
+    },
+  },
+  
+  Post: {
+    author: async (parent: any) => {
+      return await db.user.findUnique({
+        where: { id: parent.authorId },
+      })
+    },
+  },
+}
+`}
+</CodeBlock>
+
+### GraphQL vs REST
+
+<Tip title="When to Use GraphQL">
+**Use GraphQL when:**
+- You have multiple client types (web, mobile, etc.)
+- Clients need flexible data fetching
+- You want to reduce over-fetching
+- You have complex nested data
+
+**Use REST when:**
+- Your API is simple and straightforward
+- You need caching at the HTTP level
+- File uploads are common
+- Your team is more familiar with REST
+</Tip>
+
+## API Best Practices
+
+### 1. Error Handling
+
+```typescript
+// ✅ Good: Consistent error responses
+export async function GET() {
+  try {
+    const data = await fetchData()
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('API Error:', error)
+    return NextResponse.json(
+      { 
+        error: 'Something went wrong',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    )
+  }
+}
+```
+
+### 2. Input Validation
+
+```typescript
+import { z } from 'zod'
+
+const userSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(2).max(50),
+  age: z.number().min(18).optional(),
+})
+
+export async function POST(request: Request) {
+  const body = await request.json()
+  
+  const result = userSchema.safeParse(body)
+  
+  if (!result.success) {
+    return NextResponse.json(
+      { error: 'Invalid input', details: result.error },
+      { status: 400 }
+    )
+  }
+  
+  // Process valid data...
+}
+```
+
+### 3. Authentication
+
+```typescript
+import { auth } from '@/lib/auth'
+
+export async function GET(request: Request) {
+  const session = await auth()
+  
+  if (!session?.user) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+  
+  // User is authenticated, proceed...
+}
+```
+
+## Testing APIs
+
+Use tools like Postman, Insomnia, or curl to test your APIs:
+
+```bash
+# Test GET endpoint
+curl http://localhost:3000/api/users
+
+# Test POST endpoint
+curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","name":"Test User"}'
+```
+
+## Next Steps
+
+Now that you've learned about APIs, let's move on to authentication and authorization!

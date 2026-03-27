@@ -1,0 +1,244 @@
+---
+title: "Deployment Guide"
+description: "Deploy your fullstack application to Vercel and Railway with confidence."
+category: "9. Deployment Guide"
+order: 9
+tags:
+  - deployment
+  - vercel
+  - railway
+  - production
+---
+
+# Deployment: Vercel + Railway
+
+Getting your application into production is an exciting milestone. This guide covers deploying to Vercel (frontend/backend) and Railway (database).
+
+## Deploying to Vercel
+
+Vercel is the easiest way to deploy Next.js applications with zero configuration.
+
+### Step-by-Step Deployment
+
+**1. Push to Git Repository**
+
+```bash
+git add .
+git commit -m "Ready for deployment"
+git push origin main
+```
+
+**2. Connect to Vercel**
+
+1. Go to [vercel.com](https://vercel.com)
+2. Click "New Project"
+3. Import your Git repository
+4. Vercel auto-detects Next.js settings
+
+**3. Configure Environment Variables**
+
+In Vercel dashboard, add:
+
+```env
+DATABASE_URL=postgresql://...
+NEXTAUTH_SECRET=your-secret-key
+NEXTAUTH_URL=https://your-app.vercel.app
+```
+
+**4. Deploy**
+
+Click "Deploy" - that's it! Your app is live.
+
+### CI/CD with Vercel
+
+Vercel automatically deploys on every push:
+
+```
+Git Push → Vercel Build → Preview Deployment → Production (on main branch)
+```
+
+<Tip>
+Every pull request gets a unique preview URL for testing before merging to production.
+</Tip>
+
+## Deploying Database to Railway
+
+Railway makes PostgreSQL deployment simple and free for small projects.
+
+### Railway Setup
+
+**1. Create Railway Account**
+
+Visit [railway.app](https://railway.app)
+
+**2. Deploy PostgreSQL**
+
+```bash
+# Install Railway CLI
+npm i -g @railway/cli
+
+# Login
+railway login
+
+# Create new project
+railway init
+
+# Add PostgreSQL
+railway add postgresql
+```
+
+**3. Get Connection String**
+
+```bash
+railway variables
+# Copy DATABASE_URL
+```
+
+**4. Configure Your App**
+
+Add the `DATABASE_URL` to your Vercel environment variables.
+
+### Alternative: Supabase
+
+[Supabase](https://supabase.com) offers free PostgreSQL hosting with:
+- Automatic backups
+- Real-time subscriptions
+- Built-in authentication
+- Generous free tier
+
+## Production Checklist
+
+Before deploying to production:
+
+### Security
+
+- [ ] All secrets in environment variables
+- [ ] HTTPS enabled (automatic on Vercel)
+- [ ] CORS configured properly
+- [ ] Rate limiting implemented
+- [ ] Input validation on all endpoints
+
+### Performance
+
+- [ ] Images optimized
+- [ ] Static assets cached
+- [ ] Database queries optimized
+- [ ] Bundle size checked
+
+### Monitoring
+
+- [ ] Error tracking (Sentry, LogRocket)
+- [ ] Analytics configured
+- [ ] Uptime monitoring setup
+- [ ] Logging configured
+
+## Environment Variables
+
+Complete list of required variables:
+
+<CodeBlock language="bash" title=".env.production">
+{`# Database
+DATABASE_URL="postgresql://user:password@host:5432/dbname"
+
+# NextAuth
+NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
+NEXTAUTH_URL="https://your-domain.com"
+
+# OAuth Providers
+GOOGLE_CLIENT_ID="..."
+GOOGLE_CLIENT_SECRET="..."
+
+# API Keys
+STRIPE_SECRET_KEY="..."
+SENDGRID_API_KEY="..."
+
+# Feature Flags
+NODE_ENV="production"`}
+</CodeBlock>
+
+## Post-Deployment
+
+### Verify Deployment
+
+```bash
+# Check homepage
+curl https://your-app.vercel.app
+
+# Test API endpoint
+curl https://your-app.vercel.app/api/health
+
+# Check database connection
+curl https://your-app.vercel.app/api/users
+```
+
+### Monitoring
+
+Set up monitoring tools:
+
+**Vercel Analytics:**
+- Built-in performance metrics
+- Web vitals tracking
+- Real user monitoring
+
+**Sentry:**
+```bash
+npm install @sentry/nextjs
+npx @sentry/wizard@latest -i nextjs
+```
+
+### Rollback Strategy
+
+If something goes wrong:
+
+```bash
+# Instant rollback in Vercel dashboard
+# Or via CLI:
+vercel rollback
+```
+
+## Scaling Considerations
+
+When your app grows:
+
+### Database Optimization
+
+- Add database indexes
+- Implement query caching
+- Use connection pooling
+- Consider read replicas
+
+### Application Optimization
+
+- Enable edge functions for global users
+- Implement CDN for static assets
+- Use incremental static regeneration (ISR)
+- Optimize bundle size
+
+<Warning>
+Always test in a staging environment before deploying major changes to production.
+</Warning>
+
+## Troubleshooting
+
+### Common Issues
+
+**Build Fails:**
+```bash
+# Check build logs in Vercel dashboard
+# Run locally: npm run build
+# Fix TypeScript errors
+```
+
+**Database Connection Errors:**
+- Verify DATABASE_URL is correct
+- Check Railway/Supabase status
+- Ensure IP allowlist includes Vercel IPs
+
+**Environment Variable Issues:**
+- Redeploy after adding new variables
+- Check variable names match exactly
+- Restart development server
+
+## Next Steps
+
+Your app is now live! Continue to best practices to learn how to maintain and scale your application.

@@ -1,0 +1,78 @@
+---
+title: "Introduction to Node.js"
+description: "Learn the fundamentals of Node.js and server-side JavaScript."
+category: "nodejs"
+order: 1
+tags:
+  - nodejs
+  - backend
+  - javascript
+---
+
+# What is Node.js?
+
+**Node.js** is an open-source, cross-platform JavaScript runtime environment that executes JavaScript code outside of a web browser. Built on Chrome's V8 JavaScript engine, Node.js allows developers to use JavaScript to write command line tools and for server-side scripting.
+
+This means you can use one language—JavaScript—for both the frontend and backend of your application!
+
+---
+
+## Key Features of Node.js
+
+### 1. Asynchronous and Event-Driven
+All APIs of the Node.js library are asynchronous (non-blocking). It essentially means a Node.js-based server never waits for an API to return data. The server moves to the next API after calling it, and a notification mechanism of Events helps the server to get a response from the previous API call.
+
+### 2. Fast Execution
+Being built on Google Chrome's V8 JavaScript Engine, Node.js library is extremely fast in code execution.
+
+### 3. Single Threaded but Highly Scalable
+Node.js uses a single-threaded model with event looping. The event mechanism helps the server to respond in a non-blocking way and makes the server highly scalable as opposed to traditional servers which create limited threads to handle requests.
+
+### 4. NPM (Node Package Manager)
+When you install Node.js, you also get **npm**, the world's largest software registry. It contains over a million packages (libraries) of free, reusable code that you can easily integrate into your projects.
+
+---
+
+## Your First Node.js Server
+
+Let's look at how easy it is to create a simple web server using built-in Node.js modules.
+
+<CodeBlock language="javascript" title="server.js">
+```javascript
+const http = require('http');
+
+const hostname = '127.0.0.1';
+const port = 3000;
+
+// Create the HTTP server
+const server = http.createServer((req, res) => {
+  // Set the response HTTP header with HTTP status and Content type
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello World from Node.js!\n');
+});
+
+// Start the server
+server.listen(port, hostname, () => {
+  console.log(`Server running at http://${hostname}:${port}/`);
+});
+```
+</CodeBlock>
+
+To run this file, you would simply type `node server.js` in your terminal.
+
+---
+
+<Callout type="tip" title="Why Node.js?">
+Node.js is incredibly popular for building real-time web applications (like chat apps), RESTful APIs, and microservices because of its non-blocking I/O architecture and massive ecosystem.
+</Callout>
+
+## What's Next?
+
+In the next lessons, we will explore:
+- Working with the File System and Core Modules
+- Express.js (The most popular web framework for Node)
+- Building robust REST APIs
+- Connecting to a Database
+
+Ready to write some backend code? Let's move on!

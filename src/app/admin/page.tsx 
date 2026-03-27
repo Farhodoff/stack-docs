@@ -1,0 +1,30 @@
+import { getAllDocsAction } from './actions'
+import { DocList } from '@/components/admin/doc-list'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { PlusCircle } from 'lucide-react'
+
+export default async function AdminDashboard() {
+  const docs = await getAllDocsAction()
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Documentation</h2>
+          <p className="text-muted-foreground">
+            Manage your documentation files
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/admin/create">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add New Doc
+          </Link>
+        </Button>
+      </div>
+
+      <DocList docs={docs} />
+    </div>
+  )
+}

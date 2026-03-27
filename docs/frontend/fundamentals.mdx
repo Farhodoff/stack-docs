@@ -1,0 +1,290 @@
+---
+title: "Frontend Fundamentals"
+description: "Master modern frontend development with React, Next.js App Router, and Tailwind CSS."
+category: "2. Frontend Fundamentals"
+order: 2
+tags:
+  - react
+  - nextjs
+  - tailwind
+  - frontend
+---
+
+# Frontend Fundamentals: React + Next.js + Tailwind CSS
+
+The frontend is what users see and interact with. In this guide, we'll cover the essential concepts for building modern, responsive user interfaces.
+
+## React Essentials
+
+### Components
+
+Components are the building blocks of React applications:
+
+<CodeBlock language="tsx" title="Functional Component">
+{`import { useState } from 'react'
+
+interface ButtonProps {
+  label: string
+  onClick: () => void
+  variant?: 'primary' | 'secondary'
+}
+
+export function Button({ label, onClick, variant = 'primary' }: ButtonProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  
+  const handleClick = async () => {
+    setIsLoading(true)
+    try {
+      await onClick()
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  return (
+    <button
+      onClick={handleClick}
+      disabled={isLoading}
+      className={\`px-4 py-2 rounded font-medium \${
+        variant === 'primary' 
+          ? 'bg-blue-500 text-white hover:bg-blue-600'
+          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+      }\`}
+    >
+      {isLoading ? 'Loading...' : label}
+    </button>
+  )
+}`}
+</CodeBlock>
+
+### Hooks
+
+Essential React hooks you need to know:
+
+**useState** - State management
+```tsx
+const [count, setCount] = useState(0)
+```
+
+**useEffect** - Side effects
+```tsx
+useEffect(() => {
+  // Runs on mount and when dependencies change
+  fetchData()
+  
+  return () => {
+    // Cleanup function
+    abortController.abort()
+  }
+}, [dependency])
+```
+
+**useContext** - Context consumption
+```tsx
+const { user, login } = useAuth()
+```
+
+**useMemo** - Memoization
+```tsx
+const expensiveValue = useMemo(() => {
+  return computeExpensiveValue(a, b)
+}, [a, b])
+```
+
+## Next.js App Router
+
+### Server vs Client Components
+
+**Server Components** (default):
+- Run on the server
+- Can access database directly
+- Zero bundle size
+- Cannot use hooks or browser APIs
+
+<CodeBlock language="tsx" title="Server Component">
+{`// This runs on the server
+import { db } from '@/lib/db'
+
+export default async function UsersPage() {
+  const users = await db.user.findMany()
+  
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  )
+}`}
+</CodeBlock>
+
+**Client Components**:
+- Run in the browser
+- Can use hooks and interactivity
+- Included in bundle
+- Must be marked with `'use client'`
+
+<CodeBlock language="tsx" title="Client Component">
+{`'use client'
+
+import { useState } from 'react'
+
+export function Counter() {
+  const [count, setCount] = useState(0)
+  
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Count: {count}
+    </button>
+  )
+}`}
+</CodeBlock>
+
+### File-Based Routing
+
+Next.js uses file-system based routing:
+
+```
+app/
+├── page.tsx              → /
+├── about/
+│   └── page.tsx          → /about
+├── blog/
+│   ├── page.tsx          → /blog
+│   └── [slug]/
+│       └── page.tsx      → /blog/:slug
+└── dashboard/
+    └── layout.tsx        → Layout for /dashboard/*
+```
+
+## Tailwind CSS
+
+Tailwind is a utility-first CSS framework that speeds up development:
+
+### Core Concepts
+
+**Utility Classes**:
+```html
+<div class="flex items-center justify-between p-4 bg-white rounded-lg shadow-md">
+  <h1 class="text-2xl font-bold text-gray-900">Title</h1>
+  <button class="px-4 py-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600">
+    Action
+  </button>
+</div>
+```
+
+**Responsive Design**:
+```html
+<div class="
+  grid 
+  grid-cols-1 
+  sm:grid-cols-2 
+  md:grid-cols-3 
+  lg:grid-cols-4 
+  gap-4
+">
+  <!-- Responsive grid -->
+</div>
+```
+
+**Dark Mode**:
+```html
+<div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+  <!-- Automatically adapts to theme -->
+</div>
+```
+
+### Custom Components with Tailwind
+
+Create reusable styled components:
+
+<CodeBlock language="tsx" title="Card Component">
+{`import { cn } from '@/lib/utils'
+
+interface CardProps {
+  children: React.ReactNode
+  className?: string
+}
+
+export function Card({ children, className }: CardProps) {
+  return (
+    <div className={cn(
+      'rounded-lg border bg-card text-card-foreground shadow-sm',
+      className
+    )}>
+      {children}
+    </div>
+  )
+}
+
+export function CardHeader({ children }: { children: React.ReactNode }) {
+  return <div className="flex flex-col space-y-1.5 p-6">{children}</div>
+}
+
+export function CardTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="text-2xl font-semibold leading-none tracking-tight">
+      {children}
+    </h3>
+  )
+}`}
+</CodeBlock>
+
+## Best Practices
+
+### 1. Component Composition
+
+```tsx
+// ✅ Good: Small, focused components
+function UserProfile() {
+  return (
+    <Card>
+      <Avatar src={user.image} />
+      <UserInfo name={user.name} email={user.email} />
+      <ActionButtons />
+    </Card>
+  )
+}
+
+// ❌ Avoid: Large, monolithic components
+function UserProfile() {
+  // 200 lines of JSX...
+}
+```
+
+### 2. Props Typing
+
+```tsx
+// ✅ Good: Clear interface
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary'
+  size?: 'sm' | 'md' | 'lg'
+}
+
+export function Button({ variant = 'primary', ...props }: ButtonProps) {
+  // ...
+}
+```
+
+### 3. Loading States
+
+```tsx
+// Use Suspense for loading states
+import { Suspense } from 'react'
+
+export default function Page() {
+  return (
+    <Suspense fallback={<LoadingSkeleton />}>
+      <DataComponent />
+    </Suspense>
+  )
+}
+```
+
+<Tip>
+Always provide visual feedback during loading states. Users should never wonder if something is happening.
+</Tip>
+
+## Next Steps
+
+Practice building components and pages with these technologies. Continue to the backend section to learn about API development!

@@ -1,0 +1,506 @@
+---
+title: "Modern Fullstack Stack"
+description: "Explore the modern fullstack architecture with Next.js, Node.js, PostgreSQL, and TypeScript - the perfect stack for 2024 and beyond."
+category: "8. Modern Fullstack"
+order: 8
+tags:
+  - nextjs
+  - nodejs
+  - postgresql
+  - typescript
+  - architecture
+---
+
+# Modern Fullstack Stack: Next.js + Node.js + PostgreSQL
+
+Choosing the right technology stack is crucial for building scalable, maintainable web applications. In this guide, we'll explore why the **Next.js + Node.js + PostgreSQL** combination has become a popular choice for modern fullstack development.
+
+## The Complete Stack Overview
+
+Our recommended stack consists of:
+
+```
+┌────────────────────────────────────────────┐
+│           Frontend Layer                   │
+│  ┌──────────────────────────────────────┐  │
+│  │   Next.js 15 (App Router)            │  │
+│  │   - React Server Components          │  │
+│  │   - Client Components                │  │
+│  │   - Server Actions                   │  │
+│  │   - API Routes                       │  │
+│  └──────────────────────────────────────┘  │
+└────────────────────────────────────────────┘
+                  ↕
+┌────────────────────────────────────────────┐
+│           Backend Layer                    │
+│  ┌──────────────────────────────────────┐  │
+│  │   Node.js Runtime                    │  │
+│  │   - TypeScript                       │  │
+│  │   - Prisma ORM                       │  │
+│  │   - NextAuth.js                      │  │
+│  └──────────────────────────────────────┘  │
+└────────────────────────────────────────────┘
+                  ↕
+┌────────────────────────────────────────────┐
+│           Database Layer                   │
+│  ┌──────────────────────────────────────┐  │
+│  │   PostgreSQL                         │  │
+│  │   - Relational Data                  │  │
+│  │   - Full-text Search                 │  │
+│  │   - JSONB Support                    │  │
+│  └──────────────────────────────────────┘  │
+└────────────────────────────────────────────┘
+```
+
+## Why Next.js?
+
+Next.js has become the go-to framework for production React applications. Here's why:
+
+### Key Features
+
+**1. App Router (Next.js 13+)**
+- File-based routing with nested layouts
+- Server and Client Components
+- Streaming and Suspense
+- Built-in data fetching
+
+<CodeBlock language="tsx" title="Server Component Example">
+{`// app/products/page.tsx
+import { db } from '@/lib/db'
+
+export default async function ProductsPage() {
+  const products = await db.product.findMany()
+
+  return (
+    <div>
+      <h1>Products</h1>
+      <ul>
+        {products.map(product => (
+          <li key={product.id}>{product.name}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}`}
+</CodeBlock>
+
+**2. Server Components**
+- Zero bundle size for server code
+- Direct database access
+- Automatic code splitting
+- Improved performance
+
+**3. API Routes**
+- Build REST APIs in the same project
+- No separate backend needed
+- Type-safe endpoints
+
+<CodeBlock language="typescript" title="API Route Example">
+{`// app/api/users/route.ts
+import { NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+
+export async function GET() {
+  const users = await db.user.findMany()
+  return NextResponse.json(users)
+}
+
+export async function POST(request: Request) {
+  const body = await request.json()
+  const user = await db.user.create({
+    data: body
+  })
+  return NextResponse.json(user)
+}`}
+</CodeBlock>
+
+**4. Optimizations**
+- Image optimization out of the box
+- Font optimization
+- Script optimization
+- Automatic static optimization
+
+## Why Node.js?
+
+Node.js powers the backend runtime, even when using Next.js:
+
+### Advantages
+
+<Tip title="JavaScript Everywhere">
+One language for both frontend and backend means:
+- Faster development
+- Easier context switching
+- Shared types and utilities
+- Smaller team learning curve
+</Tip>
+
+### Ecosystem
+
+The Node.js ecosystem provides:
+- **npm**: Millions of packages
+- **Express**: Minimal web framework
+- **Fastify**: Fast, low-overhead web framework
+- **NestJS**: Angular-inspired enterprise framework
+
+## Why PostgreSQL?
+
+PostgreSQL is one of the most advanced open-source relational databases:
+
+### Features
+
+**1. ACID Compliance**
+- Atomicity
+- Consistency
+- Isolation
+- Durability
+
+**2. Advanced Data Types**
+- JSONB for semi-structured data
+- Arrays
+- UUID
+- Geometric types
+
+**3. Performance**
+- MVCC (Multi-Version Concurrency Control)
+- Parallel queries
+- Advanced indexing (B-tree, Hash, GiST, SP-GiST, GIN, BRIN)
+
+<CodeBlock language="sql" title="PostgreSQL JSONB Example">
+{`-- Store flexible product metadata
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}'
+);
+
+-- Query JSONB data
+SELECT * FROM products
+WHERE metadata->>'color' = 'blue';`}
+</CodeBlock>
+
+## Why Prisma ORM?
+
+Prisma provides type-safe database access:
+
+### Benefits
+
+**1. Type Safety**
+- Auto-generated types from schema
+- Catch errors at compile time
+- Excellent IDE autocomplete
+
+**2. Developer Experience**
+- Intuitive API
+- Migrations built-in
+- Beautiful documentation
+
+<CodeBlock language="typescript" title="Prisma Schema">
+{`// schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  posts     Post[]
+  createdAt DateTime @default(now())
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  text      String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+}
+
+model Tag {
+  id    String @id @default(uuid())
+  name  String @unique
+  posts Post[]
+}
+
+model Category {
+  id    String @id @default(uuid())
+  name  String @unique
+  posts Post[]
+}`}
+</CodeBlock>
+
+<CodeBlock language="typescript" title="Prisma Query Examples">
+{`import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+// Create a user
+const user = await prisma.user.create({
+  data: {
+    email: 'alice@example.com',
+    name: 'Alice',
+    posts: {
+      create: {
+        title: 'My First Post',
+        content: 'Hello, world!',
+        published: true
+      }
+    }
+  },
+  include: {
+    posts: true
+  }
+})
+
+// Find published posts with author
+const posts = await prisma.post.findMany({
+  where: {
+    published: true
+  },
+  include: {
+    author: true
+  },
+  orderBy: {
+    createdAt: 'desc'
+  }
+})
+
+// Update with transaction
+await prisma.$transaction(async (tx) => {
+  await tx.user.update({
+    where: { id: userId },
+    data: { credits: { decrement: 10 } }
+  })
+
+  await tx.purchase.create({
+    data: { userId, amount: 10 }
+  })
+})`}
+</CodeBlock>
+
+## Project Structure
+
+Here's a recommended structure for a fullstack Next.js application:
+
+```
+my-app/
+├── app/
+│   ├── (auth)/
+│   │   ├── login/
+│   │   └── register/
+│   ├── (dashboard)/
+│   │   ├── dashboard/
+│   │   └── settings/
+│   ├── api/
+│   │   ├── users/
+│   │   └── posts/
+│   ├── blog/
+│   │   └── [slug]/
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── ui/
+│   ├── auth/
+│   └── blog/
+├── lib/
+│   ├── db.ts
+│   ├── auth.ts
+│   └── utils.ts
+├── prisma/
+│   └── schema.prisma
+├── public/
+└── types/
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ installed
+- PostgreSQL database (local or cloud-hosted)
+- npm, yarn, pnpm, or bun
+
+### Installation Steps
+
+**1. Create Next.js App**
+
+```bash
+npx create-next-app@latest my-app --typescript --tailwind --app
+cd my-app
+```
+
+**2. Install Prisma**
+
+```bash
+npm install prisma --save-dev
+npm install @prisma/client
+npx prisma init
+```
+
+**3. Set up Environment Variables**
+
+```bash
+# .env
+DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
+NEXTAUTH_SECRET="your-secret-key"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+**4. Define Prisma Schema**
+
+Edit `prisma/schema.prisma` with your models (see examples above).
+
+**5. Run Migrations**
+
+```bash
+npx prisma migrate dev --name init
+npx prisma generate
+```
+
+**6. Create Database Client**
+
+```typescript
+// lib/db.ts
+import { PrismaClient } from '@prisma/client'
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
+
+export const db = globalForPrisma.prisma ?? new PrismaClient()
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = db
+}
+```
+
+## Deployment Options
+
+### Vercel (Recommended for Next.js)
+
+- Zero configuration for Next.js
+- Automatic HTTPS
+- Global CDN
+- Preview deployments
+
+<Tip title="Railway">
+Great for PostgreSQL database:
+- Easy setup
+- Automatic backups
+- Scalable
+- Free tier available
+</Tip>
+
+### Alternative Options
+
+- **Frontend**: Netlify, Cloudflare Pages
+- **Backend**: Railway, Render, Fly.io
+- **Database**: Supabase, PlanetScale, Neon
+
+## Best Practices
+
+### 1. Type Safety Throughout
+
+Use TypeScript everywhere:
+
+```typescript
+// ✅ Good
+interface User {
+  id: string
+  email: string
+  name: string | null
+}
+
+async function getUser(id: string): Promise<User> {
+  return await db.user.findUniqueOrThrow({
+    where: { id }
+  })
+}
+
+// ❌ Avoid
+async function getUser(id: any): Promise<any> {
+  // ...
+}
+```
+
+### 2. Server Components by Default
+
+```typescript
+// ✅ Default to server components
+export default async function Page() {
+  const data = await fetchData()
+  return <DataDisplay data={data} />
+}
+
+// ✅ Use client components only when needed
+'use client'
+
+export function InteractiveComponent() {
+  const [state, setState] = useState()
+  // ...
+}
+```
+
+### 3. Error Boundaries
+
+```typescript
+import { ErrorBoundary } from 'react-error-boundary'
+
+<ErrorBoundary fallback={<Error />}>
+  <YourComponent />
+</ErrorBoundary>
+```
+
+### 4. Loading States
+
+```typescript
+// app/dashboard/page.tsx
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
+  )
+}
+```
+
+## Next Steps
+
+Now that you understand the stack, let's dive deeper:
+
+<CardGroup>
+  <LinkCard
+    href="/docs/frontend/fundamentals"
+    title="Frontend Fundamentals"
+    description="Master React and Tailwind CSS"
+  />
+  <LinkCard
+    href="/docs/api/building-apis"
+    title="Building REST & GraphQL APIs"
+    description="Create robust backend services"
+  />
+  <LinkCard
+    href="/docs/database/prisma-postgresql"
+    title="Databases with Prisma"
+    description="Type-safe database access"
+  />
+</CardGroup>
+
+<Note>
+This stack is production-ready and used by companies worldwide. It balances developer experience with performance and scalability.
+</Note>
+
+Ready to start building? Let's move on to frontend fundamentals!

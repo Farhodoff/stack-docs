@@ -1,0 +1,78 @@
+---
+title: "Backend Basics"
+description: "Understand the core concepts of backend development: Servers, Node.js, and APIs."
+category: "3. Backend Basics"
+order: 3
+tags:
+  - backend
+  - nodejs
+  - server
+  - api
+---
+
+# Backend (Asosiy tushunchalar)
+
+Frontend foydalanuvchilar ko'radigan qism bo'lsa, **Backend** ularning orqasida turib, barcha logikani va ma'lumotlarni boshqaradigan "miya" hisoblanadi. 
+
+Ushbu bo'limda biz backend dasturlashning asosiy tushunchalarini o'rganib chiqamiz.
+
+## Server nima o'zi?
+
+Server (yoki veb-server) bu internetga ulangan va boshqa kompyuterlardan (client - mijozlardan) kelgan so'rovlarga javob qaytarish uchun doim ishlab turadigan maxsus kompyuter (yoki dastur).
+
+Tasavvur qiling, siz restorandasiz:
+- **Mijoz (Client)**: Sizsiz, menyuga qarab buyurtma berasiz.
+- **Ofitsiant (Internet/HTTP)**: Buyurtmangizni oshxonaga olib boradi.
+- **Oshxona (Server)**: Sizning buyurtmangizni qabul qiladi, pishiradi va ofitsiant orqali tayyor ovqatni sizga qaytaradi.
+
+Dasturlashda bu jarayon quyidagicha kechadi:
+1. Brauzeringiz `https://google.com` ga kirish uchun so'rov (Request) yuboradi.
+2. Google'ning serverlari bu so'rovni qabul qiladi.
+3. Server kerakli HTML, CSS va JS fayllarni yig'ib, brauzerga javob (Response) qilib qaytaradi.
+
+## Node.js va boshqa backend tillari
+
+Backend yozish uchun kompyuterga (serverga) qanday ishlashni tushuntirib beradigan dasturlash tillari kerak bo'ladi.
+
+Eng mashhur tillar:
+- **Python**: Django, FastAPI.
+- **Java**: Spring Boot.
+- **PHP**: Laravel.
+- **Go, Rust, Ruby** va h.k.
+
+Ammo Fullstack dasturchilar uchun eng qulay tanlov bu — **Node.js**.
+
+<Tip title="Node.js afzalligi">
+Node.js orqali siz **JavaScript** tilini faqat brauzerda emas, balki serverda ham ishlata olasiz! Ya'ni frontend uchun ham, backend uchun ham bitta dasturlash tilini bilish kifoya.
+</Tip>
+
+### Node.js qanday ishlaydi?
+
+Node.js o'z ichiga V8 dvigatelini (Chrome brauzeridagi kodni o'qiydigan dvigatel) olgan va uni kompyuter operatsion tizimi bilan ishlashga moslashtirgan. U orqali biz fayl tizimiga o'zgartirish kiritish, database'ga ulanish kabi ishlarni bajaramiz.
+
+## API nima (REST tushunchasi)
+
+API — **Application Programming Interface** (Dasturlash Interfeysi). 
+Bu ikki xil dasturning bir-biri bilan gaplashishi uchun ko'prik.
+
+Frontend o'z-o'zidan Database'ga ulanmaydi (bu xavfsizlikka to'g'ri kelmaydi). Uning o'rniga, u Backend API'ga so'rov yuboradi, API esa bazadan ma'lumotni olib frontend'ga uzatadi.
+
+### REST (Representational State Transfer)
+Bu API yaratishning eng mashhur standartlaridan biri. U arxitektura bo'lib, quyidagi qoidalarga asoslanadi:
+
+1. **URL manzil orqali murojaat (Endpoints)**: 
+   - `https://sayt.com/api/users` (foydalanuvchilarni olish)
+   - `https://sayt.com/api/products` (mahsulotlarni olish)
+
+2. **HTTP Metodlaridan foydalanish**:
+   - `GET` — ma'lumotni olish (o'qish).
+   - `POST` — yangi ma'lumot yaratish.
+   - `PUT` / `PATCH` — bor ma'lumotni o'zgartirish (yangilash).
+   - `DELETE` — ma'lumotni o'chirib tashlash.
+
+<Note>
+**CRUD** operasiyalari aynan shu 4 metodga asoslanadi: **C**reate (POST), **R**ead (GET), **U**pdate (PUT), **D**elete (DELETE).
+</Note>
+
+## Keyingi qadam
+Backend va API nimaligini umumiy tushunib olgan bo'lsangiz, keyingi bo'limda biz qanday qilib haqiqiy REST va GraphQL API'larni kodda yozishni o'rganamiz!

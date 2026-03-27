@@ -1,0 +1,398 @@
+---
+title: "Best Practices & Project Structure"
+description: "Learn industry best practices for organizing and maintaining fullstack applications."
+category: "7. Best Practices"
+order: 7
+tags:
+  - best-practices
+  - structure
+  - organization
+  - maintenance
+---
+
+# Best Practices & Project Structure
+
+Following established patterns and best practices makes your codebase more maintainable and scalable.
+
+## Recommended Project Structure
+
+A well-organized project structure improves developer experience:
+
+```
+my-app/
+├── app/                          # Next.js App Router
+│   ├── (auth)/                   # Auth route group
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   └── register/
+│   │       └── page.tsx
+│   ├── (dashboard)/              # Dashboard route group
+│   │   ├── dashboard/
+│   │   │   └── page.tsx
+│   │   └── settings/
+│   │       └── page.tsx
+│   ├── api/                      # API routes
+│   │   ├── users/
+│   │   │   └── route.ts
+│   │   └── posts/
+│   │       └── route.ts
+│   ├── blog/                     # Public pages
+│   │   └── [slug]/
+│   │       └── page.tsx
+│   ├── layout.tsx                # Root layout
+│   ├── page.tsx                  # Homepage
+│   └── globals.css               # Global styles
+│
+├── components/
+│   ├── ui/                       # Reusable UI components
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── input.tsx
+│   │   └── dialog.tsx
+│   ├── auth/                     # Auth-specific components
+│   │   ├── login-form.tsx
+│   │   └── signup-form.tsx
+│   ├── blog/                     # Blog components
+│   │   ├── post-card.tsx
+│   │   └── post-list.tsx
+│   └── shared/                   # Shared components
+│       ├── header.tsx
+│       ├── footer.tsx
+│       └── navigation.tsx
+│
+├── lib/                          # Utilities and libraries
+│   ├── db.ts                     # Database client
+│   ├── auth.ts                   # Auth configuration
+│   ├── utils.ts                  # General utilities
+│   └── validations.ts            # Zod schemas
+│
+├── prisma/
+│   └── schema.prisma             # Prisma schema
+│
+├── public/                       # Static assets
+│   ├── images/
+│   ├── fonts/
+│   └── icons/
+│
+├── types/                        # TypeScript types
+│   └── index.ts
+│
+├── hooks/                        # Custom hooks
+│   └── use-auth.ts
+│
+└── config/                       # Configuration files
+    └── site.ts                   # Site metadata
+```
+
+## Code Organization Principles
+
+### 1. Separation of Concerns
+
+Keep different responsibilities separate:
+
+```typescript
+// ✅ Good: Separate concerns
+// lib/db.ts - Database logic
+export const db = new PrismaClient()
+
+// lib/auth.ts - Authentication logic
+export const auth = { ... }
+
+// components/auth/login-form.tsx - UI only
+export function LoginForm() { ... }
+```
+
+### 2. DRY (Don't Repeat Yourself)
+
+Extract reusable logic:
+
+```typescript
+// ✅ Good: Reusable hook
+export function useAuth() {
+  const session = useSession()
+  return { user: session.data?.user, isLoading: session.status === 'loading' }
+}
+
+// Use throughout your app
+const { user, isLoading } = useAuth()
+```
+
+### 3. Single Responsibility
+
+Each component/function should do one thing well:
+
+```typescript
+// ❌ Bad: Does too much
+function UserProfile({ userId }) {
+  // Fetch data
+  // Validate input
+  // Handle errors
+  // Render UI
+  // Update cache
+  // Send analytics
+}
+
+// ✅ Good: Focused responsibility
+function UserProfile({ userId }) {
+  const { data, loading } = useUserData(userId)
+  const { updateUser } = useUserActions()
+  
+  if (loading) return <Skeleton />
+  if (!data) return <NotFound />
+  
+  return <ProfileView user={data} onUpdate={updateUser} />
+}
+```
+
+## TypeScript Best Practices
+
+### Strict Typing
+
+```typescript
+// ✅ Good: Explicit types
+interface User {
+  id: string
+  email: string
+  name: string | null
+  role: 'USER' | 'ADMIN' | 'MODERATOR'
+}
+
+async function getUser(id: string): Promise<User> {
+  return await db.user.findUniqueOrThrow({
+    where: { id }
+  })
+}
+
+// ❌ Avoid: Any types
+async function getUser(id: any): Promise<any> {
+  // ...
+}
+```
+
+### Type Inference
+
+Let TypeScript infer when possible:
+
+```typescript
+// ✅ Good: Inferred
+const users = await db.user.findMany()
+// TypeScript knows users is User[]
+
+const count = users.length
+// TypeScript knows count is number
+```
+
+## Error Handling
+
+### Consistent Error Patterns
+
+```typescript
+// ✅ Good: Structured error handling
+class AppError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public status: number = 500
+  ) {
+    super(message)
+    this.name = 'AppError'
+  }
+}
+
+export async function safeAsync<T>(
+  promise: Promise<T>
+): Promise<[T, null] | [null, AppError]> {
+  try {
+    const result = await promise
+    return [result, null]
+  } catch (error) {
+    const appError = error instanceof AppError 
+      ? error 
+      : new AppError('Something went wrong', 'INTERNAL_ERROR')
+    return [null, appError]
+  }
+}
+
+// Usage
+const [user, error] = await safeAsync(getUser(userId))
+if (error) {
+  return NextResponse.json({ error }, { status: error.status })
+}
+```
+
+## Testing Strategy
+
+### Testing Pyramid
+
+```
+        /\
+       /  \      E2E Tests (10%)
+      /----\    
+     /      \   Integration Tests (20%)
+    /--------\  
+   /          \ Unit Tests (70%)
+  /------------\
+```
+
+### Unit Testing Example
+
+```typescript
+// __tests__/utils.test.ts
+import { describe, it, expect } from 'vitest'
+import { formatDate } from '@/lib/utils'
+
+describe('formatDate', () => {
+  it('formats date correctly', () => {
+    const date = new Date('2024-01-01')
+    expect(formatDate(date)).toBe('January 1, 2024')
+  })
+})
+```
+
+## Performance Optimization
+
+### Image Optimization
+
+```tsx
+import Image from 'next/image'
+
+// ✅ Good: Optimized
+<Image
+  src="/hero.jpg"
+  alt="Hero"
+  width={800}
+  height={600}
+  priority
+  quality={80}
+/>
+```
+
+### Lazy Loading
+
+```tsx
+import dynamic from 'next/dynamic'
+
+const HeavyComponent = dynamic(
+  () => import('@/components/heavy'),
+  { 
+    loading: () => <Skeleton />,
+    ssr: false 
+  }
+)
+```
+
+### Code Splitting
+
+Next.js automatically splits code by routes. For manual splitting:
+
+```tsx
+// Load on demand
+if (condition) {
+  const module = await import('@/lib/heavy-module')
+  module.heavyFunction()
+}
+```
+
+## Security Checklist
+
+- [ ] **Input Validation**: Use Zod or Yup for all user input
+- [ ] **SQL Injection**: Use Prisma's parameterized queries
+- [ ] **XSS Prevention**: Sanitize user-generated content
+- [ ] **CSRF Protection**: Built into NextAuth
+- [ ] **Rate Limiting**: Implement on API routes
+- [ ] **HTTPS**: Always in production
+- [ ] **Secure Headers**: Use next-secure-headers
+- [ ] **Dependency Updates**: Regular `npm audit`
+
+## Documentation
+
+### Code Comments
+
+```typescript
+// ✅ Good: Explains WHY, not WHAT
+// Using debounce to prevent excessive API calls
+// while user is typing
+const debouncedSearch = debounce(search, 300)
+
+// ❌ Avoid: Obvious comments
+// Set timeout to 300ms
+setTimeout(() => {}, 300)
+```
+
+### README Files
+
+Every major component should have documentation:
+
+```markdown
+# Component Name
+
+Description of what it does and why.
+
+## Usage
+
+\`\`\`tsx
+import { Component } from '@/components/component'
+\`\`\`
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| variant | 'primary' \| 'secondary' | 'primary' | Button style |
+```
+
+## Git Workflow
+
+### Commit Messages
+
+Follow conventional commits:
+
+```bash
+feat: add user authentication
+fix: resolve login redirect issue
+docs: update API documentation
+refactor: simplify database queries
+test: add unit tests for auth
+chore: update dependencies
+```
+
+### Branch Strategy
+
+```
+main (production)
+  ↑
+develop (staging)
+  ↑
+feature/* (new features)
+bugfix/* (bug fixes)
+hotfix/* (urgent production fixes)
+```
+
+## Continuous Improvement
+
+### Regular Tasks
+
+**Daily:**
+- Review error logs
+- Check performance metrics
+
+**Weekly:**
+- Update dependencies
+- Review and refactor code
+- Write tests for new features
+
+**Monthly:**
+- Security audit
+- Performance optimization
+- Documentation updates
+
+## Resources
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Prisma Documentation](https://prisma.io/docs)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [React Documentation](https://react.dev)
+
+---
+
+**Remember:** Best practices evolve. Stay curious, keep learning, and always be open to improving your workflow!

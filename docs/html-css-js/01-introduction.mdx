@@ -1,0 +1,119 @@
+---
+title: "Introduction to HTML, CSS, and JavaScript"
+description: "The foundational pillars of Frontend Web Development."
+category: "html-css-js"
+order: 1
+tags:
+  - html
+  - css
+  - javascript
+  - frontend
+---
+
+# The Pillars of the Web
+
+Every website on the internet, no matter how complex, is built using three core technologies: **HTML**, **CSS**, and **JavaScript**. Think of them as the skeleton, the skin, and the muscles of a web page.
+
+In this learning path, you will master these three fundamental languages to build modern, responsive, and interactive user interfaces.
+
+---
+
+## 1. HTML: The Structure (The Skeleton)
+
+**HTML (HyperText Markup Language)** is the standard markup language for documents designed to be displayed in a web browser. It provides the basic structure of the site.
+
+- **Purpose:** Defines the content and layout (headings, paragraphs, images, links).
+- **Analogy:** The bricks and mortar of a house.
+
+<CodeBlock language="html" title="index.html">
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>My First Website</title>
+</head>
+<body>
+    <h1>Welcome to Fullstack Docs!</h1>
+    <p>This is a paragraph of text describing the website.</p>
+    <button>Click Me!</button>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 2. CSS: The Presentation (The Skin)
+
+**CSS (Cascading Style Sheets)** is used to style and layout web pages. While HTML tells the browser *what* the content is, CSS tells the browser *how* it should look.
+
+- **Purpose:** Handles colors, fonts, spacing, animations, and responsive design.
+- **Analogy:** The paint, interior design, and architecture of the house.
+
+<CodeBlock language="css" title="styles.css">
+```css
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+h1 {
+    color: #2563eb; /* A nice blue color */
+    text-align: center;
+}
+
+button {
+    background-color: #2563eb;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #1d4ed8;
+}
+```
+</CodeBlock>
+
+---
+
+## 3. JavaScript: The Behavior (The Muscles)
+
+**JavaScript (JS)** is a scripting language that enables you to create dynamically updating content, control multimedia, animate images, and much more. It brings your static HTML and CSS to life.
+
+- **Purpose:** Adds interactivity, logic, data fetching, and dynamic UI updates.
+- **Analogy:** The electricity, plumbing, and smart-home system of the house.
+
+<CodeBlock language="javascript" title="script.js">
+```javascript
+// Find the button element in the HTML
+const myButton = document.querySelector('button');
+
+// Add a click event listener
+myButton.addEventListener('click', () => {
+    // When clicked, show an alert
+    alert('Hello! Welcome to the world of JavaScript!');
+    
+    // Change the text of the button
+    myButton.textContent = 'Clicked!';
+});
+```
+</CodeBlock>
+
+---
+
+## How They Work Together
+
+When a user visits a website:
+1. The browser requests the **HTML** file first and starts reading it from top to bottom.
+2. When the browser sees a `<link>` tag in the HTML, it fetches the **CSS** and applies the styles.
+3. When the browser encounters a `<script>` tag, it executes the **JavaScript** code, which might modify the HTML or CSS on the fly.
+
+<Callout type="info" title="What's Next?">
+In the next chapters, we will dive deep into modern **HTML5 semantic tags**, master **CSS3 Flexbox and Grid** layouts, and explore the power of **Modern JavaScript (ES6+)** including Arrow Functions, Promises, and the DOM API.
+</Callout>
+
+Ready to build the web? Click next!

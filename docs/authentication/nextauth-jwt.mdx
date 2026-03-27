@@ -1,0 +1,260 @@
+---
+title: "Authentication & Authorization"
+description: "Implement secure authentication with NextAuth.js and JWT tokens."
+category: "6. Authentication"
+order: 6
+tags:
+  - authentication
+  - nextauth
+  - jwt
+  - security
+---
+
+# Authentication & Authorization
+
+Security is crucial in modern web applications. This guide covers implementing authentication and authorization using NextAuth.js and JWT.
+
+## NextAuth.js Setup
+
+NextAuth.js is a complete authentication solution for Next.js applications.
+
+### Installation
+
+```bash
+npm install next-auth@beta
+```
+
+### Configuration
+
+<CodeBlock language="typescript" title="Auth Configuration">
+{`// auth.ts
+import NextAuth from 'next-auth'
+import Credentials from 'next-auth/providers/credentials'
+import Google from 'next-auth/providers/google'
+import { db } from '@/lib/db'
+import bcrypt from 'bcryptjs'
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers: [
+    // Email/Password
+    Credentials({
+      name: 'credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Invalid credentials')
+        }
+        
+        const user = await db.user.findUnique({
+          where: { email: credentials.email as string },
+        })
+        
+        if (!user || !user.password) {
+          throw new Error('Invalid credentials')
+        }
+        
+        const isMatch = await bcrypt.compare(
+          credentials.password as string,
+          user.password
+        )
+        
+        if (!isMatch) {
+          throw new Error('Invalid credentials')
+        }
+        
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        }
+      },
+    }),
+    
+    // OAuth Providers
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+  ],
+  
+  pages: {
+    signIn: '/login',
+  },
+  
+  callbacks: {
+    async session({ session, token }) {
+      if (token.sub && session.user) {
+        session.user.id = token.sub
+      }
+      return session
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+      }
+      return token
+    },
+  },
+})
+`}
+</CodeBlock>
+
+## Protecting Routes
+
+### Server Components
+
+<CodeBlock language="tsx" title="Protected Server Component">
+{`import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
+
+export default async function DashboardPage() {
+  const session = await auth()
+  
+  if (!session?.user) {
+    redirect('/login')
+  }
+  
+  return (
+    <div>
+      <h1>Welcome, {session.user.name}!</h1>
+      {/* Dashboard content */}
+    </div>
+  )
+}`}
+</CodeBlock>
+
+### Client Components
+
+<CodeBlock language="tsx" title="Protected Client Component">
+{`'use client'
+
+import { useSession } from 'next-auth/react'
+import { redirect } from 'next/navigation'
+
+export default function ProtectedPage() {
+  const { data: session, status } = useSession()
+  
+  if (status === 'loading') {
+    return <div>Loading...</div>
+  }
+  
+  if (!session) {
+    redirect('/login')
+  }
+  
+  return (
+    <div>
+      <p>Signed in as {session.user?.email}</p>
+    </div>
+  )
+}`}
+</CodeBlock>
+
+### API Routes
+
+<CodeBlock language="typescript" title="Protected API Route">
+{`import { auth } from '@/auth'
+import { NextResponse } from 'next/server'
+
+export async function GET() {
+  const session = await auth()
+  
+  if (!session?.user) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+  
+  // Authorized access
+  return NextResponse.json({ user: session.user })
+}`}
+</CodeBlock>
+
+## Role-Based Access Control (RBAC)
+
+Implement authorization based on user roles:
+
+<CodeBlock language="typescript" title="Role Check Utility">
+{`// lib/auth-utils.ts
+import { auth } from '@/auth'
+import { db } from '@/lib/db'
+
+export async function requireAdmin() {
+  const session = await auth()
+  
+  if (!session?.user?.id) {
+    throw new Error('Unauthorized')
+  }
+  
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  })
+  
+  if (user?.role !== 'ADMIN') {
+    throw new Error('Forbidden')
+  }
+  
+  return session.user
+}
+
+export async function requireOwner(resourceId: string) {
+  const session = await auth()
+  
+  if (!session?.user?.id) {
+    throw new Error('Unauthorized')
+  }
+  
+  const resource = await db.resource.findUnique({
+    where: { id: resourceId },
+    select: { ownerId: true },
+  })
+  
+  if (resource?.ownerId !== session.user.id) {
+    throw new Error('Forbidden')
+  }
+  
+  return session.user
+}`}
+</CodeBlock>
+
+## JWT Tokens
+
+Understanding JWT (JSON Web Tokens):
+
+```typescript
+// JWT Structure
+{
+  "header": {
+    "alg": "HS256",
+    "typ": "JWT"
+  },
+  "payload": {
+    "sub": "user-id",
+    "iat": 1234567890,
+    "exp": 1234567890,
+    "email": "user@example.com"
+  },
+  "signature": "..."
+}
+```
+
+<Tip>
+Never store sensitive information in JWT tokens as they can be decoded. Use them for identification, not authorization alone.
+</Tip>
+
+## Best Practices
+
+1. **Use HTTPS** in production
+2. **Hash passwords** with bcrypt
+3. **Implement rate limiting** for login attempts
+4. **Use secure session storage**
+5. **Regularly rotate secrets**
+6. **Implement logout functionality**
+7. **Add two-factor authentication (2FA)**
+
+Continue to database section to learn about data persistence!
