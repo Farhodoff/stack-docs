@@ -1,0 +1,207 @@
+---
+title: "HTML Asoslari - Eng Muhim Taglar"
+description: "HTML'dagi eng muhim taglar va ularning vazifasi, matn bilan ishlash, blok va inline elementlar"
+category: "html-css-js"
+order: 2
+tags:
+  - html
+  - tags
+  - elements
+status: "published"
+---
+
+# HTML Asoslari - Eng Muhim Taglar
+
+Bu darsda HTML'dagi **eng muhim taglarni**, **matn bilan ishlash usullarini**, va **blok/inline elementlar** farqini o'rganamiz.
+
+---
+
+## 1️⃣ Eng Muhim Taglar va Ularning Vazifasi
+
+HTML'da ko'p taglar bor, lekin eng asosiylarini bilsangiz, deyarli barcha web sahifalarni yarata olasiz.
+
+### Sarlavha Teglari (Heading Tags)
+
+Sarlavhalar `<h1>` dan `<h6>` gacha mavjud. `<h1>` eng katta, `<h6>` eng kichik:
+
+<CodeBlock language="html" title="Sarlavha Misoli">
+```html
+<h1>Eng muhim sarlavha</h1>
+<h2>Kichikroq sarlavha</h2>
+<h3>Yanada kichikroq</h3>
+<h4>To'rtinchi daraja sarlavha</h4>
+<h5>Beshinchi daraja sarlavha</h5>
+<h6>Eng kichik sarlavha</h6>
+```
+</CodeBlock>
+
+**Qachon ishlatish:**
+- `<h1>` - Sahifa nomi (faqat bir marta)
+- `<h2>` - Asosiy bo'lim
+- `<h3>`, `<h4>`, ... - Alt bo'limlar
+
+### Paragraf Tegi
+
+`<p>` tegi oddiy matn paragrafini belgilaydi:
+
+```html
+<p>Bu oddiy matn paragrafi.</p>
+<p>Har bir p tegi yangi paragraf boshlaydi.</p>
+```
+
+---
+
+## 2️⃣ Matn Bilan Ishlash
+
+### Qalin va Kursiv Matn
+
+**Qalin matn** uchun:
+- `<strong>` - Semantik ahamiyatli qalin
+- `<b>` - Faqat vizual qalin (ahamiyatsiz)
+
+**Kursiv matn** uchun:
+- `<em>` - Semantik urg'u berilgan
+- `<i>` - Faqat vizual kursiv
+
+<CodeBlock language="html" title="Matn Formatting">
+```html
+<strong>Qalin matn (ahamiyatli)</strong>
+<b>Qalin matn (faqat vizual)</b>
+
+<em>Kursiv (urg'u berilgan)</em>
+<i>Kursiv (faqat vizual)</i>
+
+<!-- Ikkalasini bir vaqtda -->
+<strong><em>Qalin va kursiv</em></strong>
+```
+</CodeBlock>
+
+**Tavsiya:** Semantik tag'larni (`<strong>` va `<em>`) ishlatish yaxshiroq. Ular search engine'lar va i-readers uchun ma'lum bo'ladi.
+
+### Qator Almashtiruv va Bo'limlar
+
+Matn ichida `<br>` tegi yangi qatorga o'tkazadi:
+
+```html
+<p>Birinchi qator<br>Ikkinchi qator</p>
+```
+
+Katta bo'limni ajratish uchun `<hr>` (horizontal rule) ishlatiladi:
+
+```html
+<h2>Bo'lim 1</h2>
+<p>Matn...</p>
+
+<hr>  <!-- Gorizontal chiziq -->
+
+<h2>Bo'lim 2</h2>
+<p>Matn...</p>
+```
+
+---
+
+## 3️⃣ Blok va Inline Elementlar
+
+HTML elementlari **blok** yoki **inline** tipida bo'ladi. Bu ularning sahifadagi pozitsiyasini bildiradi.
+
+### Blok Elementlar
+
+**Blok element** butun kenglikni egallaydi. Avtomatik yangi qatorda boshlanadi va tugaydi.
+
+<CodeBlock language="html" title="Blok Elementlar">
+```html
+<div>Bu blok element - butun kenglik egallaydi</div>
+<h1>Sarlavha ham blok element</h1>
+<p>Paragraf ham blok element</p>
+<section>Section ham blok</section>
+```
+</CodeBlock>
+
+**Blok elementlar:** `<div>`, `<h1>-<h6>`, `<p>`, `<section>`, `<header>`, `<footer>`, `<nav>`, `<ul>`, `<ol>`, `<li>`
+
+### Inline Elementlar
+
+**Inline element** faqat o'z o'lchamini egallaydi. Tekst ichida joy oladi:
+
+<CodeBlock language="html" title="Inline Elementlar">
+```html
+<p>Bu matn <span>va bu span</span> bir qatorda.</p>
+<p><strong>Qalin</strong> va <em>kursiv</em> inline.</p>
+<p><a href="#">Bu link</a> ham inline.</p>
+```
+</CodeBlock>
+
+**Inline elementlar:** `<span>`, `<strong>`, `<em>`, `<b>`, `<i>`, `<a>`, `<button>`
+
+### Farq Ko'rsatish
+
+```html
+<!-- BLOK - har biri yangi qatorda -->
+<div>Blok 1</div>
+<div>Blok 2</div>
+<div>Blok 3</div>
+
+<!-- INLINE - hammasi bir qatorda -->
+<span>Inline 1</span>
+<span>Inline 2</span>
+<span>Inline 3</span>
+```
+
+---
+
+## 🎯 Amaliy Misol
+
+Hammani birlashtirib, to'liq HTML sahifasini yaratamiz:
+
+<CodeBlock language="html" title="To'liq Misol">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <title>Mening Blog</title>
+</head>
+<body>
+    <!-- Sahifa sarlavhasi -->
+    <h1>Mening Blog</h1>
+
+    <!-- Bo'lim 1 -->
+    <h2>Birinchi Maqola</h2>
+    <p>Bu <strong>juda muhim</strong> maqola. <em>Iltimos</em> o'qib chiqing!</p>
+    <p>Maqola matni bu yerda davom etadi...</p>
+
+    <hr>
+
+    <!-- Bo'lim 2 -->
+    <h2>Ikkinchi Maqola</h2>
+    <p>Ikkinchi maqolada biz o'rganamiz:</p>
+    <p>HTML <strong>juda oson</strong> va <em>foydali</em>.</p>
+
+    <hr>
+
+    <!-- Footer -->
+    <p>© 2026 Mening Blog. Barcha huquqlar himoyalangan.</p>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 📝 Xulosa
+
+| Element | Type | Vazifasi |
+|---------|------|---------|
+| `<h1>-<h6>` | Blok | Sarlavhalar |
+| `<p>` | Blok | Paragraf |
+| `<div>` | Blok | Umumiy konteyner |
+| `<span>` | Inline | Umumiy matn konteyner |
+| `<strong>` | Inline | Qalin (muhim) |
+| `<em>` | Inline | Kursiv (urg'u) |
+| `<br>` | - | Yangi qator |
+| `<hr>` | Blok | Gorizontal chiziq |
+
+---
+
+## 🚀 Keyingi Darsda
+
+Ro'yxatlar (`<ul>`, `<ol>`, `<li>`), linklar (`<a>`), rasmlar (`<img>`), va formalar (`<form>`, `<input>`) o'rganamiz!
