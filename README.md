@@ -7,3 +7,4 @@ Open-source fullstack learning platform.
 ## License
 
 MIT
+# stack-docs
