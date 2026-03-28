@@ -28,14 +28,17 @@ export function DeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogTitle>🗑️ Hujjatni o'chirish</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the document
-            &quot;<span className="font-semibold">{docTitle}</span>&quot;.
+            Bu amalni bekor qo'lib bo'lmaydi! Hujjat&nbsp;
+            <span className="font-semibold text-destructive">&quot;{docTitle}&quot;</span>
+            &nbsp;doimiy o'chiriladi.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel className="mr-auto">
+            Bekor qilish
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={async (e) => {
               e.preventDefault()
@@ -43,7 +46,7 @@ export function DeleteDialog({
             }}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            Delete
+            O'chirish
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
