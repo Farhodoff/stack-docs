@@ -1,0 +1,181 @@
+---
+title: "CSS Selectors (Tanlovchilar)"
+description: "HTML elementlarini CSS bilan tanlash usullari"
+category: "html-css-js"
+order: 11
+tags:
+  - css
+  - selectors
+status: "published"
+---
+
+# CSS Selectors (Tanlovchilar)
+
+## 🎯 Selector Nima?
+
+**Selector** – qaysi HTML elementlariga CSS qo'llashni belgilaydigan ifoda.
+
+```css
+/* SELECTOR */
+p {
+  color: blue;
+}
+```
+
+---
+
+## 1️⃣ Element Selector
+
+Tegning nomi bilan:
+
+```css
+p { color: blue; }
+h1 { font-size: 32px; }
+button { background: green; }
+```
+
+<CodeBlock language="html" title="Misol">
+```html
+<p>Bu matn ko'k bo'ladi</p>
+<p>Bu matn ham ko'k bo'ladi</p>
+<h1>Bu h1 oldin ko'rsatiladi</h1>
+```
+</CodeBlock>
+
+---
+
+## 2️⃣ Class Selector
+
+`.` bilan class nomi:
+
+```css
+.highlight { background: yellow; }
+.error { color: red; }
+.success { color: green; }
+```
+
+<CodeBlock language="html" title="Misol">
+```html
+<p class="highlight">Sariq fon</p>
+<p class="error">Qizil matn</p>
+<button class="success">Yashil tugma</button>
+```
+</CodeBlock>
+
+---
+
+## 3️⃣ ID Selector
+
+`#` bilan ID:
+
+```css
+#header { background: blue; }
+#footer { background: gray; }
+```
+
+<CodeBlock language="html" title="Misol">
+```html
+<header id="header">Sarlavha</header>
+<footer id="footer">Pastki qism</footer>
+```
+</CodeBlock>
+
+---
+
+## 4️⃣ Universal Selector
+
+`*` - barcha elementlar:
+
+```css
+* { margin: 0; padding: 0; }
+```
+
+---
+
+## 5️⃣ Grouping Selector
+
+Bir nechta selector'ni bir qoidada:
+
+```css
+h1, h2, h3 {
+  color: blue;
+  font-family: Arial;
+}
+
+p, span {
+  font-size: 16px;
+}
+```
+
+---
+
+## 6️⃣ Descendant Selector
+
+Ota ichidagi farzandlar:
+
+```css
+div p { color: blue; }
+```
+
+<CodeBlock language="html" title="Misol">
+```html
+<div>
+  <p>Bu matn ko'k bo'ladi (div ichida)</p>
+</div>
+
+<section>
+  <p>Bu matn KO'K BO'LMAYDI (section ichida)</p>
+</section>
+```
+</CodeBlock>
+
+---
+
+## 7️⃣ Child Selector
+
+Faqat bevosita child:
+
+```css
+div > p { color: red; }
+```
+
+---
+
+## 8️⃣ Attribute Selector
+
+Atributga asosan:
+
+```css
+input[type="text"] { border: 1px solid blue; }
+a[target="_blank"] { color: purple; }
+```
+
+---
+
+## 📊 Selector Priority (Spesifiklik)
+
+```
+1. Inline style         100 (eng katta)
+2. ID (#id)              10
+3. Class va pseudo      1
+4. Element              0 (eng kichik)
+```
+
+**Misol:**
+
+```css
+p            { color: blue; }    /* 1 */
+.highlight   { color: yellow; } /* 10 */
+#special     { color: red; }    /* 100 */
+```
+
+```html
+<p id="special" class="highlight">Qaysi rang?</p>
+<!-- JAVOB: QIZILi (ID eng katta) -->
+```
+
+---
+
+## 🚀 Keyingi Darsda
+
+Ranglar va o'lchovlar birliklari o'rganamiz!

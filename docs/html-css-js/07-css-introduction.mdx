@@ -1,0 +1,171 @@
+---
+title: "CSS Nima va Nima Uchun Ishlatiladi"
+description: "CSS - veb-sahifalarni shakllantirish va dizayn qilish tili"
+category: "html-css-js"
+order: 10
+tags:
+  - css
+  - introduction
+  - styling
+status: "published"
+---
+
+# CSS Nima va Nima Uchun Ishlatiladi
+
+## 🎨 CSS Nima?
+
+**CSS (Cascading Style Sheets)** – veb-sahifalarning ko'rinishini va joylashuvini boshqarish uchun ishlatiladigan til.
+
+**HTML vs CSS:**
+- **HTML** - Sahifaning tuzilishi va tarkibi (suyak)
+- **CSS** - Sahifaning ko'rinishi va ranglanishi (teri, bo'yoq)
+
+## 🎯 Nima Uchun CSS Kerak?
+
+<CodeBlock language="html" title="CSS Siz">
+```html
+<!-- CSS siz - JUDA XUNUK -->
+<h1>Mening Bloggim</h1>
+<button>Bosing</button>
+```
+</CodeBlock>
+
+<CodeBlock language="html" title="CSS Bilan">
+```html
+<!-- CSS bilan - CHIROYLI! -->
+<h1 style="color: blue; font-size: 32px;">Mening Bloggim</h1>
+<button style="background: #007bff; color: white; padding: 10px;">Bosing</button>
+```
+</CodeBlock>
+
+---
+
+## 📝 CSS Sintaksisi
+
+**Har bir CSS qoidasi 3 ta qismdan iborat:**
+
+```css
+selector {
+  property: value;
+}
+```
+
+**Misol:**
+
+```css
+h1 {
+  color: blue;           /* property: value */
+  font-size: 32px;       /* property: value */
+  text-align: center;    /* property: value */
+}
+```
+
+---
+
+## 🔗 CSS Qo'shish: 3 Ta Usul
+
+### 1️⃣ Inline CSS (Tugalroq)
+
+HTML elementi ichiga yozish:
+
+```html
+<p style="color: red; font-size: 18px;">Bu qizil matn</p>
+```
+
+**Muammolari:**
+- ❌ Kod nopok
+- ❌ Takrorlanadi
+- ❌ Qiyin boshqarish
+
+### 2️⃣ Internal CSS (O'rtacha)
+
+`<head>` ichiga `<style>` teg bilan:
+
+<CodeBlock language="html" title="Internal CSS">
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        h1 { color: blue; }
+        p { font-size: 18px; }
+        button { background: green; }
+    </style>
+</head>
+<body>
+    <h1>Sarlavha</h1>
+    <p>Matn</p>
+    <button>Tugma</button>
+</body>
+</html>
+```
+</CodeBlock>
+
+**Foydalari:**
+- ✅ Korxonalashtirilgan
+- ❌ Faqat bir sahifada
+- ❌ Boshqa fayllar bilan bo'lmaydi
+
+### 3️⃣ External CSS (Eng Yaxshi)
+
+Alohida `.css` fayl:
+
+<CodeBlock language="html" title="index.html">
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Sarlavha</h1>
+    <p>Matn</p>
+    <button>Tugma</button>
+</body>
+</html>
+```
+</CodeBlock>
+
+<CodeBlock language="css" title="styles.css">
+```css
+h1 {
+    color: blue;
+    font-size: 32px;
+}
+
+p {
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+button {
+    background: green;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+}
+```
+</CodeBlock>
+
+**Foydalari:**
+- ✅ Barcha sahifalarda ishlaydi
+- ✅ Oson boshqarish
+- ✅ Kodlar nopak
+- ✅ Katta proyektlar uchun ideal
+
+---
+
+## 🎓 Xulosa
+
+| USU | FOYDALARI | KAMCHILIKLARI |
+|-----|-----------|---------------|
+| **Inline** | Tez | Nopok, takrorlanadi |
+| **Internal** | Korxonalashtiradi | Faqat bir sahifa |
+| **External** | Eng yaxshi | Zarur bo'lgan vaqt |
+
+---
+
+## 🚀 Keyingi Darsda
+
+CSS Selectors (tanlovchilar) - elementlarni tanlash usullari o'rganamiz!
