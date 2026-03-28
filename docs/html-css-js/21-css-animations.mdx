@@ -1,0 +1,839 @@
+---
+title: "CSS - Animatsiya (@keyframes)"
+description: "Keyframes va @keyframes qoidasi bilan murakkab animatsiyalar yaratish"
+category: "html-css-js"
+order: 21
+tags:
+  - css
+  - animation
+  - keyframes
+  - effects
+status: "published"
+---
+
+# CSS - Animatsiya (@keyframes)
+
+Animatsiya - elementni bir holatdan boshqa holatga yumshoq o'tkazish. @keyframes qoidasi orqali animatsiyani aniq boshqarish mumkin.
+
+---
+
+## 1️⃣ @keyframes Asoslari
+
+@keyframes orqali animatsiyaning har bir bosqichini belgilash:
+
+```css
+/* Animatsiyani belgilash */
+@keyframes slidein {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Animatsiyani elementga qo'llash */
+.box {
+  animation-name: slidein;
+  animation-duration: 2s;
+}
+
+/* Protsent bilan */
+@keyframes slidein {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+```
+
+---
+
+## 2️⃣ Animation Duration (Vaqt Davomiyligi)
+
+Animatsiya qancha vaqt ichida bo'lishini belgilash:
+
+```css
+.box {
+  animation-name: slidein;
+
+  /* 2 sekund */
+  animation-duration: 2s;
+
+  /* Millisekundlar */
+  animation-duration: 2000ms;
+}
+```
+
+---
+
+## 3️⃣ Animation Timing Function (Tezlik Funktsiyasi)
+
+Animatsiya tezligi:
+
+```css
+.box {
+  animation-name: slidein;
+  animation-duration: 2s;
+
+  /* Bir xil tezlik */
+  animation-timing-function: linear;
+}
+
+.box2 {
+  /* Sekin boshlash va tugash */
+  animation-timing-function: ease;
+}
+
+.box3 {
+  /* Sekin boshlash */
+  animation-timing-function: ease-in;
+}
+
+.box4 {
+  /* Sekin tugash */
+  animation-timing-function: ease-out;
+}
+
+.box5 {
+  /* Ikkalasi */
+  animation-timing-function: ease-in-out;
+}
+
+/* Custom */
+.box6 {
+  animation-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Steps */
+.box7 {
+  animation-timing-function: steps(4);
+}
+```
+
+---
+
+## 4️⃣ Animation Delay (Kechikish)
+
+Animatsiya qachon boshlashini belgilash:
+
+```css
+.box {
+  animation-name: slidein;
+  animation-duration: 2s;
+
+  /* 0.5 sekunddan keyin boshlash */
+  animation-delay: 0.5s;
+}
+
+/* Salbiy kechikish - animatsiya o'rtasidan boshlash */
+.box {
+  animation-delay: -1s;  /* 1 sekundni o'tgandek */
+}
+```
+
+---
+
+## 5️⃣ Animation Iteration Count (Takrorlanish Soni)
+
+Animatsiya qancha marta takrorlanishini belgilash:
+
+```css
+.box {
+  animation-name: slidein;
+  animation-duration: 2s;
+
+  /* Faqat bir marta */
+  animation-iteration-count: 1;
+}
+
+.box2 {
+  /* 3 marta */
+  animation-iteration-count: 3;
+}
+
+.box3 {
+  /* Cheksiz takrorlanish */
+  animation-iteration-count: infinite;
+}
+```
+
+---
+
+## 6️⃣ Animation Direction (Yo'nalishi)
+
+Animatsiya yo'nalishi:
+
+```css
+.box {
+  animation-name: slidein;
+  animation-duration: 2s;
+  animation-iteration-count: 2;
+
+  /* Normal - 0% dan 100% ga */
+  animation-direction: normal;
+}
+
+.box2 {
+  /* Teskari - 100% dan 0% ga */
+  animation-direction: reverse;
+}
+
+.box3 {
+  /* Normal, keyin teskari */
+  animation-direction: alternate;
+}
+
+.box4 {
+  /* Teskari, keyin normal */
+  animation-direction: alternate-reverse;
+}
+```
+
+---
+
+## 7️⃣ Animation Fill Mode (To'ldirish Rejimi)
+
+Animatsiya tugaganida element qanday bo'lishi:
+
+```css
+.box {
+  animation-name: slidein;
+  animation-duration: 2s;
+
+  /* Default - animatsiya boshiga qaytadi */
+  animation-fill-mode: none;
+}
+
+.box2 {
+  /* Tugaganida animatsiya oxirgi holatida qoladi */
+  animation-fill-mode: forwards;
+}
+
+.box3 {
+  /* Boslanmasiga animatsiya boshlang'ich holatida qoladi */
+  animation-fill-mode: backwards;
+}
+
+.box4 {
+  /* Ikkalasi */
+  animation-fill-mode: both;
+}
+```
+
+---
+
+## 8️⃣ Animation Shorthand (Qisqacha)
+
+Barcha animatsiya xususiyatlari bir qatorda:
+
+```css
+.box {
+  /* name duration timing-function delay iteration direction fill-mode */
+  animation: slidein 2s ease-in 0.5s 3 normal forwards;
+}
+
+/* Qisqacha ko'rinishi */
+.box {
+  animation-name: slidein;
+  animation-duration: 2s;
+  animation-timing-function: ease-in;
+  animation-delay: 0.5s;
+  animation-iteration-count: 3;
+  animation-direction: normal;
+  animation-fill-mode: forwards;
+}
+```
+
+---
+
+## 9️⃣ Praktik Animatsiya Misollari
+
+```css
+/* Pulsating effect */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Bounce effect */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-30px);
+  }
+}
+
+/* Rotate */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Gradient animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Slide in */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Fade in and scale */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+```
+
+---
+
+## 🔟 Praktik Misol - Animatsiyalar
+
+<CodeBlock language="html" title="Animatsiya Misoli">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animatsiya Misoli</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .demo {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .demo h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .demo-box {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .demo p {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Pulse */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+        }
+
+        .pulse {
+            background: #2563eb;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Bounce */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-30px);
+            }
+        }
+
+        .bounce {
+            background: #059669;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        /* Spin */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            background: #f59e0b;
+            animation: spin 2s linear infinite;
+        }
+
+        /* Slide In */
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .slideIn {
+            background: #ec4899;
+            animation: slideIn 1s ease-out;
+            animation-fill-mode: forwards;
+        }
+
+        /* Fade In Scale */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .fadeInScale {
+            background: #8b5cf6;
+            animation: fadeInScale 1.5s ease-out;
+        }
+
+        /* Flip */
+        @keyframes flip {
+            0% {
+                transform: rotateY(0deg);
+            }
+            100% {
+                transform: rotateY(360deg);
+            }
+        }
+
+        .flip {
+            background: #06b6d4;
+            animation: flip 2s linear infinite;
+            perspective: 1000px;
+        }
+
+        /* Gradient Shift */
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .gradient-shift {
+            background: linear-gradient(
+                90deg,
+                #2563eb,
+                #059669,
+                #f59e0b,
+                #2563eb
+            );
+            background-size: 200% 100%;
+            animation: gradientShift 4s ease infinite;
+        }
+
+        /* Scale In */
+        @keyframes scaleIn {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .scaleIn {
+            background: #14b8a6;
+            animation: scaleIn 1s ease-out;
+        }
+
+        /* Shake */
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-10px);
+            }
+            75% {
+                transform: translateX(10px);
+            }
+        }
+
+        .shake {
+            background: #dc2626;
+            animation: shake 0.5s infinite;
+        }
+
+        /* Float */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        .float {
+            background: #0ea5e9;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Rainbow */
+        @keyframes rainbow {
+            0% { background-color: #ff0000; }
+            20% { background-color: #ffff00; }
+            40% { background-color: #00ff00; }
+            60% { background-color: #0000ff; }
+            80% { background-color: #ff00ff; }
+            100% { background-color: #ff0000; }
+        }
+
+        .rainbow {
+            animation: rainbow 2s linear infinite;
+        }
+
+        /* Blur Animation */
+        @keyframes blurPulse {
+            0%, 100% {
+                filter: blur(0px);
+                opacity: 1;
+            }
+            50% {
+                filter: blur(3px);
+                opacity: 0.7;
+            }
+        }
+
+        .blur-pulse {
+            background: #5b21b6;
+            animation: blurPulse 1.5s ease-in-out infinite;
+        }
+
+        /* Staggered Animation */
+        .stagger-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stagger-item {
+            width: 30px;
+            height: 30px;
+            background: #2563eb;
+            border-radius: 4px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        .stagger-item:nth-child(1) { animation-delay: 0s; }
+        .stagger-item:nth-child(2) { animation-delay: 0.15s; }
+        .stagger-item:nth-child(3) { animation-delay: 0.3s; }
+        .stagger-item:nth-child(4) { animation-delay: 0.45s; }
+
+        /* Typing Animation */
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        .typing-text {
+            overflow: hidden;
+            border-right: 2px solid #333;
+            white-space: nowrap;
+            animation: typing 3s steps(40, end) infinite;
+        }
+    </style>
+</head>
+<body>
+    <h1>✨ Animatsiya Misoli</h1>
+
+    <div class="container">
+        <!-- Pulse -->
+        <div class="demo">
+            <h2>Pulse</h2>
+            <div class="demo-box pulse"></div>
+            <p>Qalqib turish</p>
+        </div>
+
+        <!-- Bounce -->
+        <div class="demo">
+            <h2>Bounce</h2>
+            <div class="demo-box bounce"></div>
+            <p>Sakrash</p>
+        </div>
+
+        <!-- Spin -->
+        <div class="demo">
+            <h2>Spin</h2>
+            <div class="demo-box spin"></div>
+            <p>Aylanish</p>
+        </div>
+
+        <!-- Slide In -->
+        <div class="demo">
+            <h2>Slide In</h2>
+            <div class="demo-box slideIn"></div>
+            <p>Surilish</p>
+        </div>
+
+        <!-- Fade In Scale -->
+        <div class="demo">
+            <h2>Fade + Scale</h2>
+            <div class="demo-box fadeInScale"></div>
+            <p>Payida va masshta</p>
+        </div>
+
+        <!-- Flip -->
+        <div class="demo">
+            <h2>Flip</h2>
+            <div class="demo-box flip"></div>
+            <p>Aylantirish</p>
+        </div>
+
+        <!-- Gradient Shift -->
+        <div class="demo">
+            <h2>Gradient Shift</h2>
+            <div class="demo-box gradient-shift"></div>
+            <p>Rang o'zgarishi</p>
+        </div>
+
+        <!-- Scale In -->
+        <div class="demo">
+            <h2>Scale In</h2>
+            <div class="demo-box scaleIn"></div>
+            <p>Masshtablanish</p>
+        </div>
+
+        <!-- Shake -->
+        <div class="demo">
+            <h2>Shake</h2>
+            <div class="demo-box shake"></div>
+            <p>Titirash</p>
+        </div>
+
+        <!-- Float -->
+        <div class="demo">
+            <h2>Float</h2>
+            <div class="demo-box float"></div>
+            <p>Suzish</p>
+        </div>
+
+        <!-- Rainbow -->
+        <div class="demo">
+            <h2>Rainbow</h2>
+            <div class="demo-box rainbow"></div>
+            <p>Kamalak o'tishi</p>
+        </div>
+
+        <!-- Blur Pulse -->
+        <div class="demo">
+            <h2>Blur Pulse</h2>
+            <div class="demo-box blur-pulse"></div>
+            <p>Bulanish</p>
+        </div>
+
+        <!-- Staggered -->
+        <div class="demo">
+            <h2>Pog'onali Animation</h2>
+            <div class="stagger-container">
+                <div class="stagger-item"></div>
+                <div class="stagger-item"></div>
+                <div class="stagger-item"></div>
+                <div class="stagger-item"></div>
+            </div>
+            <p>Ketma-ket sakrash</p>
+        </div>
+    </div>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 1️⃣1️⃣ Animation Performance Optimization
+
+Animatsiyani tez va samarali qilish:
+
+```css
+/* ✅ YAXSHI - GPU accelerated */
+.box {
+  animation: slide 1s ease-out;
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ❌ YOMON - CPU ga bekor */
+.box {
+  animation: bad 1s ease-out;
+}
+
+@keyframes bad {
+  from {
+    left: -100%;
+  }
+  to {
+    left: 0;
+  }
+}
+
+/* ✅ YAXSHI - opacity */
+.box {
+  animation: fade 1s ease-out;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ❌ YOMON - width o'zgarishi */
+.box {
+  animation: grow 1s ease-out;
+}
+
+@keyframes grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+```
+
+---
+
+## 1️⃣2️⃣ Animatsiya Cheat Sheet
+
+| Xususiyat | Misol | Maqsadi |
+|-----------|-------|---------|
+| `@keyframes` | `@keyframes slidein { ... }` | Animatsiyani belgilash |
+| `animation-duration` | `2s`, `2000ms` | Vaqt davomiyligi |
+| `animation-delay` | `0.5s`, `-1s` | Kechikish |
+| `animation-timing-function` | `ease`, `linear`, `ease-in` | Tezlik funktsiyasi |
+| `animation-iteration-count` | `3`, `infinite` | Takrorlanish soni |
+| `animation-direction` | `normal`, `reverse`, `alternate` | Yo'nalishi |
+| `animation-fill-mode` | `forwards`, `backwards`, `both` | Tugaganida holatı |
+
+---
+
+## 🎯 Animatsiya Qisqacha
+
+- `@keyframes` → Animatsiyani belgilash (0%, 50%, 100% yoki from/to)
+- `animation` → Animatsiyani qo'llash
+- `animation-timing-function` → Tezlik (ease, linear, cubic-bezier)
+- **TAVSIYA:** GPU accelerated xususiyatlari (transform, opacity) ishlatilsin!
+
+---
+
+Keyingi darsda **Mobile-first yondashuv** va responsiv dizayn strategiyasini o'rganamiz!

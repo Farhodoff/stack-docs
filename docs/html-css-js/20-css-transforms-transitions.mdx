@@ -1,0 +1,630 @@
+---
+title: "CSS - Transform va Transition"
+description: "Elementlarni o'zgartirish va o'zgarishlarni harakatlash"
+category: "html-css-js"
+order: 20
+tags:
+  - css
+  - transform
+  - transition
+  - animation
+status: "published"
+---
+
+# CSS - Transform va Transition
+
+Transform - elementni o'zgartirishni (aylanish, masshtablash, harakatlash) ta'minlaydi. Transition - o'zgarishlar ornini yumshoq qiladi.
+
+---
+
+## 1️⃣ Transform Nima?
+
+Transform elementni o'zgartiradi, lekin document oqimiga ta'sir qilmaydi:
+
+```css
+.box {
+  /* Document oqimini o'zgaritmaydi */
+  transform: translateX(50px);
+}
+
+/* Boshqacha */
+.box {
+  /* Document oqimini siqadi */
+  margin-left: 50px;
+}
+```
+
+---
+
+## 2️⃣ Translate (Ko'chirish)
+
+Elementni ko'chirib o'tkazish:
+
+```css
+/* X o'qi bo'ylab */
+.box {
+  transform: translateX(50px);   /* 50px o'ngga */
+  transform: translateX(-50px);  /* 50px chapga */
+}
+
+/* Y o'qi bo'ylab */
+.box {
+  transform: translateY(50px);   /* 50px pastga */
+  transform: translateY(-50px);  /* 50px yuqoriga */
+}
+
+/* Ikkalasini birga */
+.box {
+  transform: translate(50px, 100px);  /* X, Y */
+}
+
+/* 3D translate */
+.box {
+  transform: translateZ(50px);
+  transform: translate3d(50px, 100px, 50px);
+}
+```
+
+---
+
+## 3️⃣ Scale (Masshtablash)
+
+Elementni kattalashtirish yoki kichiklashtirish:
+
+```css
+/* X o'qi bo'ylab */
+.box {
+  transform: scaleX(1.5);   /* 1.5 marta katta */
+  transform: scaleX(0.5);   /* Yarim o'lcham */
+}
+
+/* Y o'qi bo'ylab */
+.box {
+  transform: scaleY(1.5);
+}
+
+/* Ikkalasini */
+.box {
+  transform: scale(1.5);      /* Ikkalasini 1.5 marta */
+  transform: scale(1.5, 0.8); /* X - 1.5, Y - 0.8 */
+}
+
+/* 3D scale */
+.box {
+  transform: scaleZ(1.5);
+  transform: scale3d(1.5, 1.5, 1);
+}
+```
+
+---
+
+## 4️⃣ Rotate (Aylanish)
+
+Elementni aylantiradish:
+
+```css
+/* Tekis aylanish */
+.box {
+  transform: rotate(45deg);      /* 45 gradus */
+  transform: rotate(0.5turn);    /* 0.5 aylanish */
+  transform: rotate(3.14rad);    /* Radian */
+}
+
+/* 3D aylanish */
+.box {
+  transform: rotateX(45deg);  /* X o'qi atrofida */
+  transform: rotateY(45deg);  /* Y o'qi atrofida */
+  transform: rotateZ(45deg);  /* Z o'qi atrofida */
+}
+
+/* Ixtiyoriy o'qi atrofida */
+.box {
+  transform: rotate3d(1, 1, 0, 45deg);  /* X, Y, Z, burchak */
+}
+```
+
+---
+
+## 5️⃣ Skew (Egilish)
+
+Elementni egilib qo'yish:
+
+```css
+/* X o'qi bo'ylab */
+.box {
+  transform: skewX(45deg);
+}
+
+/* Y o'yi bo'ylab */
+.box {
+  transform: skewY(45deg);
+}
+
+/* Ikkalasini */
+.box {
+  transform: skew(45deg, 20deg);  /* X, Y */
+}
+```
+
+---
+
+## 6️⃣ Transform Origin (Aylanish Markazi)
+
+Transform qayerdan boshlashini belgilash:
+
+```css
+.box {
+  transform: rotate(45deg);
+  /* Default - markaz */
+  transform-origin: center;
+}
+
+/* Chap ustun burchakdan */
+.box {
+  transform-origin: top left;
+  transform: rotate(45deg);
+}
+
+/* Piksellar bilan */
+.box {
+  transform-origin: 50px 100px;
+  transform: rotate(45deg);
+}
+
+/* Protsent bilan */
+.box {
+  transform-origin: 100% 100%;  /* O'ng pastki burchak */
+  transform: rotate(45deg);
+}
+```
+
+---
+
+## 7️⃣ Transition (O'zgarish Harakati)
+
+O'zgarishlarni yumshoq qilish:
+
+```css
+.box {
+  background-color: red;
+
+  /* Barcha xususiyatlarni 0.5 sekundda */
+  transition: all 0.5s ease;
+}
+
+.box:hover {
+  background-color: blue;
+}
+
+/* Alohida xususiyatlar */
+.box {
+  transition: background-color 0.3s ease;
+  transition: transform 0.5s ease;
+}
+
+/* Bir nechta xususiyat */
+.box {
+  transition:
+    background-color 0.3s ease,
+    transform 0.5s ease,
+    border-radius 0.7s ease;
+}
+```
+
+---
+
+## 8️⃣ Transition Timing Functions
+
+O'zgarishning tezligi:
+
+```css
+.box {
+  transition: all 1s linear;      /* Bir xil tezlik */
+}
+
+.box {
+  transition: all 1s ease;        /* Sekin boshlash va tugash */
+}
+
+.box {
+  transition: all 1s ease-in;     /* Sekin boshlash */
+}
+
+.box {
+  transition: all 1s ease-out;    /* Sekin tugash */
+}
+
+.box {
+  transition: all 1s ease-in-out; /* Ikkalasi */
+}
+
+/* Custom bezier */
+.box {
+  transition: all 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Steps */
+.box {
+  transition: all 1s steps(4);  /* 4 qadam */
+}
+```
+
+---
+
+## 9️⃣ Transition Delay (O'zgarish Kechikishi)
+
+O'zgarish qachon boshlashini belgilash:
+
+```css
+.box {
+  transition: all 0.5s ease;
+
+  /* 0.2 sekunddan keyin boshlash */
+  transition-delay: 0.2s;
+}
+
+/* Alohida */
+.box {
+  transition-property: background-color;
+  transition-duration: 0.5s;
+  transition-timing-function: ease;
+  transition-delay: 0.2s;
+}
+```
+
+---
+
+## 🔟 Praktik Misol - Transform va Transition
+
+<CodeBlock language="html" title="Transform va Transition Misoli">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transform va Transition Misoli</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .demo {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .demo h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .demo-box {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .demo p {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Translate */
+        .translate:hover {
+            transform: translate(30px, 30px);
+            transition: all 0.5s ease;
+        }
+
+        /* Scale */
+        .scale:hover {
+            transform: scale(1.5);
+            transition: transform 0.5s ease;
+        }
+
+        /* Rotate */
+        .rotate:hover {
+            transform: rotate(360deg);
+            transition: transform 0.8s ease;
+        }
+
+        /* SkewX */
+        .skew:hover {
+            transform: skewX(30deg);
+            transition: transform 0.5s ease;
+        }
+
+        /* Complex Transform */
+        .complex:hover {
+            transform: translate(20px, 20px) scale(1.3) rotate(15deg);
+            transition: transform 0.5s ease;
+        }
+
+        /* Color Transition */
+        .color-transition {
+            background-color: #2563eb;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.5s ease;
+        }
+
+        .color-transition:hover {
+            background-color: #059669;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Border Radius Transition */
+        .radius-transition {
+            width: 100px;
+            height: 100px;
+            background: #f59e0b;
+            margin: 0 auto;
+            border-radius: 0;
+            transition: border-radius 0.5s ease;
+        }
+
+        .radius-transition:hover {
+            border-radius: 50%;
+        }
+
+        /* Staggered Animation */
+        .stagger {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stagger-item {
+            width: 30px;
+            height: 30px;
+            background: #2563eb;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .stagger-item:nth-child(1) { transition-delay: 0s; }
+        .stagger-item:nth-child(2) { transition-delay: 0.1s; }
+        .stagger-item:nth-child(3) { transition-delay: 0.2s; }
+        .stagger-item:nth-child(4) { transition-delay: 0.3s; }
+
+        .demo:hover .stagger-item {
+            transform: translateY(-30px);
+        }
+
+        /* Shadow Transition */
+        .shadow-transition {
+            width: 100px;
+            height: 100px;
+            background: #ec4899;
+            border-radius: 8px;
+            margin: 0 auto;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.5s ease, transform 0.5s ease;
+        }
+
+        .demo:hover .shadow-transition {
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
+            transform: translateY(-10px);
+        }
+
+        /* Multi-transform */
+        .multi {
+            width: 100px;
+            height: 100px;
+            background: #10b981;
+            border-radius: 8px;
+            margin: 0 auto;
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .demo:hover .multi {
+            transform: scale(1.4) rotate(360deg);
+        }
+
+        /* Step animation */
+        .steps {
+            width: 100px;
+            height: 100px;
+            background: #8b5cf6;
+            border-radius: 8px;
+            margin: 0 auto;
+            transition: background-color 0.8s steps(4);
+        }
+
+        .demo:hover .steps {
+            background-color: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚡ Transform va Transition Misoli</h1>
+
+    <div class="container">
+        <!-- Translate -->
+        <div class="demo">
+            <h2>Translate</h2>
+            <div class="demo-box translate"></div>
+            <p>Hover qiling</p>
+        </div>
+
+        <!-- Scale -->
+        <div class="demo">
+            <h2>Scale</h2>
+            <div class="demo-box scale"></div>
+            <p>Kattalashtirish</p>
+        </div>
+
+        <!-- Rotate -->
+        <div class="demo">
+            <h2>Rotate</h2>
+            <div class="demo-box rotate"></div>
+            <p>360° aylanish</p>
+        </div>
+
+        <!-- Skew -->
+        <div class="demo">
+            <h2>Skew</h2>
+            <div class="demo-box skew"></div>
+            <p>Egilish</p>
+        </div>
+
+        <!-- Complex -->
+        <div class="demo">
+            <h2>Murakkab</h2>
+            <div class="demo-box complex"></div>
+            <p>Bir nechta</p>
+        </div>
+
+        <!-- Color Transition -->
+        <div class="demo">
+            <h2>Rang O'zgarishi</h2>
+            <button class="color-transition">Bosing</button>
+        </div>
+
+        <!-- Border Radius -->
+        <div class="demo">
+            <h2>Border Radius</h2>
+            <div class="radius-transition"></div>
+            <p>Doiraga aylanish</p>
+        </div>
+
+        <!-- Staggered -->
+        <div class="demo">
+            <h2>Pog'onali (Staggered)</h2>
+            <div class="stagger">
+                <div class="stagger-item"></div>
+                <div class="stagger-item"></div>
+                <div class="stagger-item"></div>
+                <div class="stagger-item"></div>
+            </div>
+            <p>Hover qiling</p>
+        </div>
+
+        <!-- Shadow -->
+        <div class="demo">
+            <h2>Soya Transition</h2>
+            <div class="shadow-transition"></div>
+            <p>Hover qiling</p>
+        </div>
+
+        <!-- Multi Transform -->
+        <div class="demo">
+            <h2>Murakkab Transform</h2>
+            <div class="multi"></div>
+            <p>Scale + Rotate</p>
+        </div>
+
+        <!-- Steps -->
+        <div class="demo">
+            <h2>Steps Animation</h2>
+            <div class="steps"></div>
+            <p>Qadam qadam</p>
+        </div>
+    </div>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 1️⃣1️⃣ Transform Shorthand va Kombinatsiyalar
+
+```css
+/* Bir nechta transform */
+.box {
+  transform: translateX(50px) rotateZ(45deg) scale(1.5);
+}
+
+/* Tartibi muhim */
+.box {
+  /* Ikkala ham boshqacha ko'rinadi */
+  transform: translate(50px, 50px) rotate(45deg);
+  transform: rotate(45deg) translate(50px, 50px);
+}
+
+/* Perspective - 3D */
+.parent {
+  perspective: 1000px;
+}
+
+.child {
+  transform: rotateY(45deg);
+  transform-style: preserve-3d;
+}
+```
+
+---
+
+## 1️⃣2️⃣ Transition vs Animation
+
+| Xususiyat | Transition | Animation |
+|-----------|-----------|-----------|
+| Boshlash | Hover yoki JS bilan | Avtomatik yoki JS |
+| Takrorlanish | Faqat bir marta | Kaç kez tahsin qilish |
+| Boshqarish | Oson | Murakkab |
+| Timing | simple | Murakkab |
+
+---
+
+## Transform va Transition Cheat Sheet
+
+| Xususiyat | Misol | Maqsadi |
+|-----------|-------|---------|
+| `translate()` | `translate(50px, 100px)` | Ko'chirish |
+| `scale()` | `scale(1.5)` | Masshtablash |
+| `rotate()` | `rotate(45deg)` | Aylanish |
+| `skew()` | `skewX(30deg)` | Egilish |
+| `transform-origin` | `center` | Aylanish markazi |
+| `transition` | `all 0.5s ease` | O'zgarish harakati |
+| `transition-delay` | `0.2s` | O'zgarish kechikishi |
+
+---
+
+## 🎯 Transform va Transition Qisqacha
+
+- `transform` → Elementni o'zgartirish (translate, scale, rotate, skew)
+- `transition` → O'zgarishlarni yumshoq qilish
+- `transform-origin` → Transform merkazi
+- **TAVSIYA:** UI interaktivlikni oshirish uchun har doim transition ishlating!
+
+---
+
+Keyingi darsda **Animatsiya** - keyframes va @keyframes qoidasini o'rganamiz!

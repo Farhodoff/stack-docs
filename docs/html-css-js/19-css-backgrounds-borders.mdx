@@ -1,0 +1,630 @@
+---
+title: "CSS - Fon va Chegara"
+description: "Elementlarning fonini va chegarasini o'zgartirish va dizayn qilish"
+category: "html-css-js"
+order: 19
+tags:
+  - css
+  - backgrounds
+  - borders
+  - styling
+status: "published"
+---
+
+# CSS - Fon va Chegara
+
+Fon (background) va chegara (border) - bu elementning vizual ko'rinishini o'zgartiradigan asosiy xususiyatlar. Bularga raqam, gradient, suratlar va boshqa effektlarni qo'shish mumkin.
+
+---
+
+## 1️⃣ Background Color (Fon Rangi)
+
+Eng sodda usul - rangli fon qo'shish:
+
+```css
+.box {
+  background-color: #2563eb;
+}
+
+.box2 {
+  background-color: rgb(37, 99, 235);
+}
+
+.box3 {
+  background-color: rgba(37, 99, 235, 0.5);  /* Shaffoflik */
+}
+
+.transparent {
+  background-color: transparent;
+}
+```
+
+---
+
+## 2️⃣ Background Image (Fon Suratlari)
+
+Suratni fon qilib ishlatish:
+
+```css
+.box {
+  background-image: url('image.jpg');
+}
+
+/* Fon suratini takrorlamama */
+.box {
+  background-image: url('image.jpg');
+  background-repeat: no-repeat;
+}
+
+/* Fon suratini takrorlamaning yo'lash */
+.box {
+  background-image: url('image.jpg');
+  background-repeat: repeat-x;  /* Faqat gorizontal */
+}
+
+.box {
+  background-repeat: repeat-y;  /* Faqat vertikal */
+}
+```
+
+---
+
+## 3️⃣ Background Position (Fon Joylashuvi)
+
+Suratning joylashuvini boshqarish:
+
+```css
+.box {
+  background-image: url('image.jpg');
+  background-repeat: no-repeat;
+
+  /* Joylashuvlar */
+  background-position: top left;       /* Yuqori chap */
+  background-position: center;         /* Markazga */
+  background-position: bottom right;   /* Pastki o'ng */
+}
+
+/* Piksellar bilan */
+.box {
+  background-position: 50px 100px;  /* 50px o'ngga, 100px pastga */
+}
+
+/* Protsent bilan */
+.box {
+  background-position: 50% 50%;  /* Markazga */
+}
+```
+
+---
+
+## 4️⃣ Background Size (Fon O'lchami)
+
+Fon suratining o'lchamini boshqarish:
+
+```css
+.box {
+  background-image: url('image.jpg');
+  background-repeat: no-repeat;
+
+  /* O'lchamlar */
+  background-size: auto;         /* Original o'lchami */
+  background-size: 200px 150px;  /* Aniq o'lchami */
+  background-size: 50%;          /* Protsent */
+  background-size: cover;        /* To'liq ekrani qoplash */
+  background-size: contain;      /* To'likcha ko'rinish */
+}
+```
+
+---
+
+## 5️⃣ Background Attachment (Fon Qo'zg'alinishi)
+
+Sahifa aylantirganida fon qanday harakatlanishi:
+
+```css
+.box {
+  background-image: url('image.jpg');
+
+  /* Default - surili */
+  background-attachment: scroll;
+}
+
+.parallax {
+  /* Fixed - qo'zg'almaydi */
+  background-attachment: fixed;
+  height: 500px;
+  overflow: auto;
+}
+```
+
+---
+
+## 6️⃣ Background Gradient (Gradiyent)
+
+Ranglarni yumshoq o'tish:
+
+```css
+/* Linear gradient - to'g'ri */
+.box {
+  background: linear-gradient(to right, #2563eb, #059669);
+}
+
+/* Burchak bilan */
+.box {
+  background: linear-gradient(45deg, #2563eb, #059669);
+}
+
+/* Bir nechta ranglar */
+.box {
+  background: linear-gradient(
+    to right,
+    #ff0000,    /* Qizil */
+    #ffff00 50%, /* Sariq - 50% da */
+    #00ff00     /* Yashil */
+  );
+}
+
+/* Radial gradient - markaz dari */
+.box {
+  background: radial-gradient(circle, #2563eb, #059669);
+}
+
+/* Ellipse */
+.box {
+  background: radial-gradient(ellipse, #2563eb, #059669);
+}
+
+/* Conic gradient - aylanma */
+.box {
+  background: conic-gradient(
+    from 0deg,
+    #ff0000,
+    #ffff00,
+    #00ff00,
+    #0000ff,
+    #ff0000
+  );
+}
+
+/* Repeating gradient */
+.box {
+  background: repeating-linear-gradient(
+    90deg,
+    #2563eb 0px,
+    #2563eb 20px,
+    #059669 20px,
+    #059669 40px
+  );
+}
+```
+
+---
+
+## 7️⃣ Border Asoslari (Chegara)
+
+Elementning chorasiga chegara qo'shish:
+
+```css
+.box {
+  /* Barcha tomonlarga */
+  border: 2px solid black;
+}
+
+/* Alohida tomonlar */
+.box {
+  border-top: 2px solid red;
+  border-right: 3px dashed blue;
+  border-bottom: 1px dotted green;
+  border-left: 5px double orange;
+}
+
+/* Chegara stili */
+.box {
+  border: 2px solid black;        /* To'g'ri chiziq */
+  border: 2px dashed black;       /* Kesik */
+  border: 2px dotted black;       /* Nuqtali */
+  border: 2px double black;       /* Ikki chiziq */
+  border: 2px groove black;       /* 3D ustiga */
+  border: 2px ridge black;        /* 3D pastga */
+  border: 2px inset black;        /* Ichkariga */
+  border: 2px outset black;       /* Tashqariga */
+}
+```
+
+---
+
+## 8️⃣ Border Radius (Chegara Burunishti)
+
+Chegara burchaklarini yumaloq qilish:
+
+```css
+.box {
+  border: 2px solid black;
+
+  /* Barcha burchaklar */
+  border-radius: 10px;
+}
+
+/* Alohida burchaklar */
+.box {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 30px;
+  border-bottom-left-radius: 15px;
+}
+
+/* Qisqacha */
+.box {
+  border-radius: 10px 20px 30px 15px;
+}
+
+/* Doira */
+.circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+}
+
+/* Oval */
+.oval {
+  width: 200px;
+  height: 100px;
+  border-radius: 50%;
+}
+```
+
+---
+
+## 9️⃣ Box Shadow (Soya)
+
+Elementga soya qo'shish:
+
+```css
+.box {
+  /* Sodda soya */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Alohida */
+.box {
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.3);
+  /* 10px o'ngga, 10px pastga, 20px blur, 0.3 shaffoflik */
+}
+
+/* Bir nechta soya */
+.box {
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Ichkariga soya */
+.box {
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Spread radius bilan */
+.box {
+  box-shadow: 0 4px 8px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Rang bilan */
+.box {
+  box-shadow: 0 0 20px #ff0000;
+}
+```
+
+---
+
+## 🔟 Praktik Misol - Fon va Chegara
+
+<CodeBlock language="html" title="Fon va Chegara Misoli">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fon va Chegara Misoli</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Sodda Chegara */
+        .card {
+            background-color: white;
+            border: 2px solid #2563eb;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Gradient Fon */
+        .gradient-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .gradient-box h2 {
+            margin-bottom: 10px;
+        }
+
+        /* Image Background */
+        .image-bg {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect fill="%23e0e7ff" width="400" height="300"/></svg>');
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Border Stillar */
+        .border-solid {
+            border: 3px solid #059669;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        .border-dashed {
+            border: 3px dashed #dc2626;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        .border-dotted {
+            border: 3px dotted #f59e0b;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        /* Rounded Corners */
+        .rounded {
+            background-color: #dbeafe;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .circle {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #2563eb, #059669);
+            border-radius: 50%;
+            margin: 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Multi-border */
+        .multi-shadow {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.05),
+                0 4px 8px rgba(0, 0, 0, 0.1),
+                0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Inset Shadow */
+        .inset {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Repeating Gradient */
+        .striped {
+            background: repeating-linear-gradient(
+                45deg,
+                #2563eb,
+                #2563eb 10px,
+                #dbeafe 10px,
+                #dbeafe 20px
+            );
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Radial Gradient */
+        .radial {
+            background: radial-gradient(circle, #ff6b6b, #feca57);
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .box-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 CSS Fon va Chegara Misoli</h1>
+
+    <div class="container">
+        <!-- Gradient Fon -->
+        <div class="gradient-box">
+            <h2>Gradient Fon</h2>
+            <p>Ranglar yumshoq o'tishi</p>
+        </div>
+
+        <!-- Border Stili -->
+        <div>
+            <div class="box-title">Chegara Stili - Solid</div>
+            <div class="border-solid">To'g'ri chiziq chegara</div>
+
+            <div class="box-title">Chegara Stili - Dashed</div>
+            <div class="border-dashed">Kesik chegara</div>
+
+            <div class="box-title">Chegara Stili - Dotted</div>
+            <div class="border-dotted">Nuqtali chegara</div>
+        </div>
+
+        <!-- Rounded Corners -->
+        <div>
+            <div class="box-title">Yumaloq Burchaklar</div>
+            <div class="rounded">Yumaloq burchakli quti</div>
+
+            <div class="circle">100x100</div>
+        </div>
+
+        <!-- Multi-shadow -->
+        <div>
+            <div class="box-title">Bir Nechta Soya</div>
+            <div class="multi-shadow">Chuqur soya effekti</div>
+        </div>
+
+        <!-- Inset Shadow -->
+        <div>
+            <div class="box-title">Ichkariga Soya</div>
+            <div class="inset">Ichkariga soya effekti</div>
+        </div>
+
+        <!-- Striped -->
+        <div class="striped">
+            <div class="box-title">Shaquli Gradiyent</div>
+            Takroriy naqsh
+        </div>
+
+        <!-- Radial -->
+        <div class="radial">
+            <div class="box-title">Radial Gradiyent</div>
+            Markazdan tarqaladi
+        </div>
+    </div>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 1️⃣1️⃣ Background Shorthand (Qisqacha)
+
+Barcha background xususiyatlari bir qatorda:
+
+```css
+.box {
+  background: url('image.jpg') center/cover no-repeat fixed #2563eb;
+}
+
+/* Asl ko'rinishi */
+.box {
+  background-image: url('image.jpg');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: #2563eb;
+}
+```
+
+---
+
+## 1️⃣2️⃣ Border Shorthand (Qisqacha)
+
+Chegara xususiyatlari bir qatorda:
+
+```css
+.box {
+  border: 2px solid #2563eb;
+}
+
+/* Asl ko'rinishi */
+.box {
+  border-width: 2px;
+  border-style: solid;
+  border-color: #2563eb;
+}
+```
+
+---
+
+## Fon va Chegara Cheat Sheet
+
+| Xususiyat | Misol | Maqsadi |
+|-----------|-------|---------|
+| `background-color` | `#2563eb` | Fon rangi |
+| `background-image` | `url('image.jpg')` | Fon surati |
+| `background-size` | `cover`, `contain` | Fon o'lchami |
+| `background-position` | `center`, `50% 50%` | Fon joylashuvi |
+| `background-repeat` | `no-repeat`, `repeat-x` | Takrorlash |
+| `linear-gradient` | `to right, red, blue` | Chiziqli gradiyent |
+| `border` | `2px solid black` | Chegara |
+| `border-radius` | `10px`, `50%` | Burunish |
+| `box-shadow` | `0 4px 8px rgba(...)` | Soya |
+
+---
+
+## 🎯 Fon va Chegara Qisqacha
+
+- `background-color` → Elementning fon rangi
+- `linear-gradient()` → Ranglarni yumshoq o'tish
+- `border` → Chegara chiziqlar
+- `border-radius` → Yumaloq burchaklar
+- `box-shadow` → Element soyasi
+- **TAVSIYA:** Doira yaratish uchun `border-radius: 50%` ishlatiladi!
+
+---
+
+Keyingi darsda **Transform va Transition** effektlarini o'rganamiz!

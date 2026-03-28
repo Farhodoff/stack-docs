@@ -1,0 +1,712 @@
+---
+title: "Mobile-first Yondashuv va Responsive Dizayn"
+description: "Mobile ekrandan boshlang'ich responsiv veb-sayt yaratish strategiyasi"
+category: "html-css-js"
+order: 22
+tags:
+  - css
+  - responsive
+  - mobile-first
+  - strategy
+status: "published"
+---
+
+# Mobile-first Yondashuv va Responsive Dizayn
+
+Mobile-first - mobil ekranga mos qilib, keyin katta ekranlarga o'zgartirasiz. Bu strategiya faqat zarur CSS'ni yuklaydi va barcha qurilmada yaxshi ishlaydi.
+
+---
+
+## 1️⃣ Mobile-first nima?
+
+Ikkita yondashuv:
+
+```css
+/* ❌ Desktop-first (eski usul) */
+.container {
+  width: 1200px;  /* Desktop uchun */
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: 100%;  /* Mobil uchun */
+  }
+}
+
+/* ✅ Mobile-first (yangi usul) */
+.container {
+  width: 100%;  /* Mobil uchun asosiy */
+}
+
+@media (min-width: 768px) {
+  .container {
+    width: 1200px;  /* Planshet uchun */
+  }
+}
+```
+
+---
+
+## 2️⃣ Viewport Meta Tag
+
+HTML'nin `<head>`'ga qo'shilishi shart:
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+```
+
+Bu qoida quyidagini ta'minlaydi:
+- Qurilma kengligiga mos qilish
+- Boshlang'ich masshtab 1 (100%)
+
+---
+
+## 3️⃣ Breakpoint'lar
+
+Turli ekran o'lchamlariga mos CSS:
+
+```css
+/* Mobil (default) - 0px va yuqori */
+.box {
+  font-size: 14px;
+  column-count: 1;
+}
+
+/* Kichik planshet (480px va yuqori) */
+@media (min-width: 480px) {
+  .box {
+    font-size: 16px;
+  }
+}
+
+/* Planshet (768px va yuqori) */
+@media (min-width: 768px) {
+  .box {
+    font-size: 18px;
+    column-count: 2;
+  }
+}
+
+/* Katta planshet (1024px va yuqori) */
+@media (min-width: 1024px) {
+  .box {
+    font-size: 20px;
+    column-count: 3;
+  }
+}
+
+/* Desktop (1200px va yuqori) */
+@media (min-width: 1200px) {
+  .box {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+/* Katta desktop (1440px va yuqori) */
+@media (min-width: 1440px) {
+  .box {
+    max-width: 1400px;
+  }
+}
+```
+
+---
+
+## 4️⃣ Standart Breakpoint'lar
+
+Aksariyatning tavsiyasi:
+
+```css
+/* Mobile: 320px - 480px */
+/* Tablet: 480px - 768px */
+/* Small Laptop: 768px - 1024px */
+/* Desktop: 1024px - 1440px */
+/* Large Desktop: 1440px+ */
+
+/* Qisqacha breakpoint'lar */
+@media (min-width: 640px) { ... }   /* sm */
+@media (min-width: 768px) { ... }   /* md */
+@media (min-width: 1024px) { ... }  /* lg */
+@media (min-width: 1280px) { ... }  /* xl */
+@media (min-width: 1536px) { ... }  /* 2xl */
+```
+
+---
+
+## 5️⃣ Mobile-first Layout Misoli
+
+```css
+/* MOBIL (asosiy) */
+.container {
+  display: block;
+  padding: 20px;
+}
+
+.header {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.sidebar {
+  margin-top: 30px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* TABLET */
+@media (min-width: 768px) {
+  .container {
+    padding: 30px;
+  }
+
+  .nav {
+    flex-direction: row;
+    gap: 20px;
+  }
+}
+
+/* DESKTOP */
+@media (min-width: 1024px) {
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .sidebar {
+    margin-top: 0;
+  }
+}
+```
+
+---
+
+## 6️⃣ Responsive Images
+
+Rasmlarni responsiv qilish:
+
+```css
+/* Asosiy - img barcha ekranda 100% */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Ekran katta bo'lganda aniq o'lchami */
+@media (min-width: 1024px) {
+  img {
+    max-width: 600px;
+    width: 100%;
+  }
+}
+```
+
+HTML'da srcset ishlatish:
+
+```html
+<!-- Turli o'lchamlarda turli rasmlar -->
+<img
+  src="image-small.jpg"
+  srcset="
+    image-small.jpg 480w,
+    image-medium.jpg 768w,
+    image-large.jpg 1200w
+  "
+  sizes="(max-width: 480px) 100vw,
+         (max-width: 768px) 80vw,
+         (max-width: 1200px) 60vw,
+         1200px"
+  alt="Rasm tasnifi"
+>
+```
+
+Picture element:
+
+```html
+<picture>
+  <!-- Mobil uchun */
+  <source media="(max-width: 600px)" srcset="mobile.jpg">
+  <!-- Planshet uchun -->
+  <source media="(max-width: 1024px)" srcset="tablet.jpg">
+  <!-- Desktop uchun -->
+  <img src="desktop.jpg" alt="Rasm">
+</picture>
+```
+
+---
+
+## 7️⃣ Flexible Grid System
+
+Mobile-first grid:
+
+```css
+/* MOBIL - 1 ustun */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+/* TABLET - 2 ustun */
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* DESKTOP - 3 ustun */
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* LARGE - 4 ustun */
+@media (min-width: 1440px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+```
+
+---
+
+## 8️⃣ Responsive Typography (Shrift)
+
+Matn o'lchamini responsiv qilish:
+
+```css
+/* MOBIL */
+h1 {
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 20px;
+}
+
+p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* TABLET */
+@media (min-width: 768px) {
+  h1 {
+    font-size: 32px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  p {
+    font-size: 16px;
+  }
+}
+
+/* DESKTOP */
+@media (min-width: 1024px) {
+  h1 {
+    font-size: 40px;
+  }
+
+  h2 {
+    font-size: 28px;
+  }
+
+  p {
+    font-size: 18px;
+  }
+}
+```
+
+---
+
+## 9️⃣ Practical Misol - Mobile-first Layout
+
+<CodeBlock language="html" title="Mobile-first Misoli">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile-first Layout</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        /* MOBIL (asosiy) */
+        header {
+            background-color: #2563eb;
+            color: white;
+            padding: 20px;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        nav a:hover {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 100%;
+        }
+
+        .content {
+            display: block;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            font-size: 20px;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .sidebar {
+            margin-top: 30px;
+        }
+
+        .sidebar h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .sidebar-item {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 40px;
+        }
+
+        /* TABLET (768px va yuqori) */
+        @media (min-width: 768px) {
+            .container {
+                padding: 30px;
+            }
+
+            header h1 {
+                font-size: 32px;
+            }
+
+            nav ul {
+                flex-direction: row;
+                gap: 20px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .card h2 {
+                font-size: 24px;
+            }
+
+            .card p {
+                font-size: 16px;
+            }
+
+            .sidebar {
+                margin-top: 0;
+            }
+        }
+
+        /* DESKTOP (1024px va yuqori) */
+        @media (min-width: 1024px) {
+            .container {
+                display: grid;
+                grid-template-columns: 1fr 300px;
+                gap: 40px;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 40px;
+            }
+
+            .content {
+                grid-column: 1;
+            }
+
+            .sidebar {
+                grid-column: 2;
+            }
+
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            header h1 {
+                font-size: 40px;
+            }
+
+            .card h2 {
+                font-size: 28px;
+            }
+        }
+
+        /* LARGE DESKTOP (1440px va yuqori) */
+        @media (min-width: 1440px) {
+            .container {
+                max-width: 1400px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📱 Mobile-first Veb-sayt</h1>
+        <nav>
+            <ul>
+                <li><a href="#">Bosh saxifa</a></li>
+                <li><a href="#">Hujjatlar</a></li>
+                <li><a href="#">Bog'lanish</a></li>
+                <li><a href="#">Haqida</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="content">
+            <h2 style="font-size: 24px; margin-bottom: 20px; color: #333;">Asosiy Kontent</h2>
+
+            <div class="grid">
+                <div class="card">
+                    <h2>Karta 1</h2>
+                    <p>Bu responsiv karta. Mobil ekranda to'liq kenglik, planshetda yarim, desktopda 1/3.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Karta 2</h2>
+                    <p>Barcha ekran o'lchamlarida yaxshi ko'rinadi. Mobile-first yondashuv qo'llanilgan.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Karta 3</h2>
+                    <p>Grid sistema fleksibel. Breakpoint'lar media queries bilan boshqariladi.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Karta 4</h2>
+                    <p>Desktop ekranda 4 ta karta bir qatorga joylashtiriladi.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Karta 5</h2>
+                    <p>Matn o'lchamlari ham responsive. Mobil uchun kichik, desktop uchun katta.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Karta 6</h2>
+                    <p>Responsive dizayn barcha qurilmada bir xil tajriba beradi.</p>
+                </div>
+            </div>
+        </div>
+
+        <aside class="sidebar">
+            <h3>Yon Menyusi</h3>
+
+            <div class="sidebar-item">
+                <h4 style="margin-bottom: 10px;">Maqola 1</h4>
+                <p style="font-size: 13px; color: #999;">Yangi maqola...!</p>
+            </div>
+
+            <div class="sidebar-item">
+                <h4 style="margin-bottom: 10px;">Maqola 2</h4>
+                <p style="font-size: 13px; color: #999;">Qiziqqarli maqola...</p>
+            </div>
+
+            <div class="sidebar-item">
+                <h4 style="margin-bottom: 10px;">Maqola 3</h4>
+                <p style="font-size: 13px; color: #999;">Eng yangilar...</p>
+            </div>
+        </aside>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Mobile-first Veb-sayt. Barcha huquqlar himoyalangan.</p>
+    </footer>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 1️⃣0️⃣ Media Query Patterns
+
+```css
+/* Orientation - Telefonning yo'nalishi */
+@media (orientation: portrait) {
+  /* Vertikal telefonlar */
+}
+
+@media (orientation: landscape) {
+  /* Gorizontal telefonlar */
+}
+
+/* Touch Device'lar */
+@media (hover: none) {
+  /* Touch qurilmalar - hover yo'q */
+  button {
+    padding: 20px;  /* Katta tugma */
+  }
+}
+
+/* Pixel Density - Retina */
+@media (-webkit-min-device-pixel-ratio: 2) {
+  /* Retina ekranlari */
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+```
+
+---
+
+## 1️⃣1️⃣ Mobile-first Utilities
+
+```css
+/* Padding/Margin */
+.p-4 {
+  padding: 20px;
+}
+
+@media (min-width: 768px) {
+  .md\:p-6 {
+    padding: 30px;
+  }
+}
+
+/* Display */
+.hidden {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .md\:block {
+    display: block;
+  }
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+```
+
+---
+
+## Mobile-first Cheat Sheet
+
+| Breakpoint | Min-width | Ekran |
+|-----------|-----------|-------|
+| `xs` | 0px | Mobil |
+| `sm` | 480px | Kichik mobil |
+| `md` | 768px | Planshet |
+| `lg` | 1024px | Katta planshet |
+| `xl` | 1200px | Desktop |
+| `2xl` | 1440px | Katta desktop |
+
+---
+
+## 🎯 Mobile-first Qisqacha
+
+- **Mobile-first** → Mobil uchun asosiy CSS, keyin katta ekranlarga o'zgartiriladi
+- `min-width` → Breakpoint'lar uchun
+- `max-width: 100%` → Rasmlar va kontentni responsive qilish
+- **TAVSIYA:** Har doim mobil uchun boshlang'ich, keyin katta ekranlarga o'zgartirilsin!
+
+---
+
+Keyingi darsda **BEM Metodologiyasi** - CSS kod strukturasi va nomlanish qoidalarini o'rganamiz!

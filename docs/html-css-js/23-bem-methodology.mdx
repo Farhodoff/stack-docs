@@ -1,0 +1,809 @@
+---
+title: "BEM Metodologiyasi - CSS Nomlanish Standardi"
+description: "Blok, Element, Modifier - profesional CSS kod strukturasi va nomlanishi"
+category: "html-css-js"
+order: 23
+tags:
+  - css
+  - bem
+  - methodology
+  - naming
+  - architecture
+status: "published"
+---
+
+# BEM Metodologiyasi - CSS Nomlanish Standardi
+
+BEM (Block Element Modifier) - CSS kod va HTML strukturi stiI va tartibini belgilaydigan metodologiya. Bu CSS'ni tashkilashtirilgan, o'qilgan va saqlanadi qiladi.
+
+---
+
+## 1️⃣ BEM Nima?
+
+BEM uchta asosiy kontsepyaya asoslangan:
+
+```
+.block { }           /* Bloklarning bosh qismi */
+.block__element { }  /* Blokning ichidagi element */
+.block--modifier { } /* Blokning versiyasi yoki holati */
+```
+
+---
+
+## 2️⃣ Block (Blok)
+
+Blok - o'zi ichida to'la va qayta ishlatilishi mumkin olan bo'lagi:
+
+```html
+<!-- Button block'i -->
+<button class="button">Bosing</button>
+
+<!-- Karta block'i -->
+<div class="card">
+  <h2>Sarlavha</h2>
+  <p>Matn</p>
+</div>
+
+<!-- Navbar block'i -->
+<nav class="navbar">
+  <ul>
+    <li>Item 1</li>
+    <li>Item 2</li>
+  </ul>
+</nav>
+```
+
+```css
+.button {
+  padding: 10px 20px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.navbar {
+  background-color: #333;
+  padding: 15px 0;
+}
+```
+
+---
+
+## 3️⃣ Element (Element)
+
+Element - blok ichidagi qism. Ikki pastgi chiziq __ bilan ajratiladi:
+
+```html
+<div class="card">
+  <h2 class="card__title">Sarlavha</h2>
+  <p class="card__description">Tasnifi</p>
+  <a href="#" class="card__link">Ko'proq o'qish</a>
+</div>
+```
+
+```css
+.card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.card__title {
+  font-size: 24px;
+  color: #2563eb;
+  margin-bottom: 10px;
+}
+
+.card__description {
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.card__link {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.card__link:hover {
+  text-decoration: underline;
+}
+```
+
+---
+
+## 4️⃣ Modifier (O'zgartirgich)
+
+Modifier - blok yoki elementning holati yoki versiyasi. Bitta chiziq - bilan ajratiladi:
+
+```html
+<!-- Turli tugma turlari -->
+<button class="button">Normal</button>
+<button class="button button--primary">Asosiy</button>
+<button class="button button--secondary">Ikkinchi</button>
+<button class="button button--danger">Xavf</button>
+<button class="button button--disabled">O'chirilgan</button>
+
+<!-- Karta holatlari -->
+<div class="card card--featured">
+  <h2 class="card__title">Sarlavha</h2>
+  <p class="card__description">Tasnifi</p>
+</div>
+
+<div class="card card--small">
+  <h2 class="card__title card__title--small">Kichik Sarlavha</h2>
+  <p class="card__description">Tasnifi</p>
+</div>
+```
+
+```css
+/* Blok modifierlari */
+.button {
+  padding: 10px 20px;
+  background-color: #e5e7eb;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.button--primary {
+  background-color: #2563eb;
+  color: white;
+}
+
+.button--primary:hover {
+  background-color: #1d4ed8;
+}
+
+.button--secondary {
+  background-color: #059669;
+  color: white;
+}
+
+.button--danger {
+  background-color: #dc2626;
+  color: white;
+}
+
+.button--disabled {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Element modifierlari */
+.card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card--featured {
+  border: 2px solid #2563eb;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+  padding: 25px;
+}
+
+.card--small {
+  padding: 15px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card__title {
+  font-size: 24px;
+  color: #2563eb;
+  margin-bottom: 10px;
+}
+
+.card__title--small {
+  font-size: 18px;
+}
+```
+
+---
+
+## 5️⃣ BEM Nesting - Bosh va Ichki Bloklar
+
+Bitta blok boshqa blok ichida bo'lishi mumkin:
+
+```html
+<div class="navbar">
+  <div class="navbar__logo">Logo</div>
+
+  <div class="navbar__menu">
+    <a href="#" class="menu__item">Item 1</a>
+    <a href="#" class="menu__item">Item 2</a>
+  </div>
+
+  <div class="navbar__user-menu">
+    <button class="button button--small">Profil</button>
+  </div>
+</div>
+```
+
+```css
+.navbar {
+  background-color: #333;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar__logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+}
+
+.navbar__menu {
+  display: flex;
+  gap: 30px;
+}
+
+.navbar__user-menu {
+  display: flex;
+  gap: 10px;
+}
+
+/* Menu block - BEM bilan */
+.menu__item {
+  color: white;
+  text-decoration: none;
+  padding: 8px 0;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.menu__item:hover {
+  border-bottom-color: #2563eb;
+}
+```
+
+---
+
+## 6️⃣ Kompleks Misol - BEM Struktura
+
+<CodeBlock language="html" title="BEM Metodologiyasi Misoli">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEM Metodologiyasi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        /* ===== HEADER BLOCK ===== */
+        .header {
+            background-color: #2563eb;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+
+        .header__logo {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .header__nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header__nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .header__nav-link:hover {
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        /* ===== CARD BLOCK ===== */
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .card__title {
+            font-size: 22px;
+            color: #2563eb;
+            margin: 0;
+        }
+
+        .card__date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .card__description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .card__tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .card__tag {
+            background-color: #dbeafe;
+            color: #2563eb;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .card__footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 15px;
+        }
+
+        .card__stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* Card Modifiers */
+        .card--featured {
+            border: 2px solid #2563eb;
+            background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%);
+        }
+
+        .card--featured .card__title {
+            color: #1d4ed8;
+            font-size: 26px;
+        }
+
+        .card--small {
+            padding: 15px;
+        }
+
+        .card--small .card__title {
+            font-size: 18px;
+        }
+
+        .card--small .card__description {
+            font-size: 14px;
+        }
+
+        /* ===== BUTTON BLOCK ===== */
+        .button {
+            padding: 10px 20px;
+            background-color: #e5e7eb;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .button:hover {
+            background-color: #d1d5db;
+        }
+
+        /* Button Modifiers */
+        .button--primary {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .button--primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        .button--secondary {
+            background-color: #059669;
+            color: white;
+        }
+
+        .button--secondary:hover {
+            background-color: #047857;
+        }
+
+        .button--danger {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .button--danger:hover {
+            background-color: #b91c1c;
+        }
+
+        .button--small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .button--large {
+            padding: 15px 30px;
+            font-size: 16px;
+        }
+
+        /* ===== CONTAINER BLOCK ===== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .container--centered {
+            text-align: center;
+        }
+
+        /* ===== SECTION BLOCK ===== */
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section__title {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2563eb;
+        }
+
+        .section__subtitle {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 30px;
+        }
+
+        /* ===== GRID BLOCK ===== */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .grid--cols-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid--cols-3 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .grid--cols-4 {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header__logo">📚 BEM Blog</div>
+        <nav class="header__nav">
+            <a href="#" class="header__nav-link">Bosh saxifa</a>
+            <a href="#" class="header__nav-link">Maqolalar</a>
+            <a href="#" class="header__nav-link">Haqida</a>
+        </nav>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Section 1: Xususiy Maqolalar -->
+        <div class="section">
+            <h2 class="section__title">✨ Xususiy Maqolalar</h2>
+
+            <!-- Featured Card -->
+            <div class="card card--featured">
+                <div class="card__header">
+                    <h3 class="card__title">BEM Metodologiyasi - Profesional CSS</h3>
+                    <span class="card__date">2026-03-28</span>
+                </div>
+                <p class="card__description">BEM - Blok, Element, Modifier. Bu metodologiya CSS'ni tashkilashtirilgan va o'qilgan qiladi. Biz bu darsda BEM'ni o'rganamiz.</p>
+                <div class="card__tags">
+                    <span class="card__tag">CSS</span>
+                    <span class="card__tag">BEM</span>
+                    <span class="card__tag">Metodologiya</span>
+                </div>
+                <div class="card__footer">
+                    <div class="card__stats">
+                        <span>👁️ 1.2K ko'rishlar</span>
+                        <span>❤️ 45 Like</span>
+                    </div>
+                    <a href="#" class="button button--primary">Ko'proq o'qish</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Boshqa Maqolalar -->
+        <div class="section">
+            <h2 class="section__title">📰 Boshqa Maqolalar</h2>
+            <p class="section__subtitle">Qiziqarli maqolalarni o'qing va o'rganing</p>
+
+            <div class="grid grid--cols-3">
+                <!-- Card 1 -->
+                <div class="card">
+                    <div class="card__header">
+                        <h3 class="card__title">Flexbox Asoslari</h3>
+                        <span class="card__date">2026-03-25</span>
+                    </div>
+                    <p class="card__description">Flexbox - zamonaviy layout usuli. Elementlarni joylashtirish oson qiladi.</p>
+                    <div class="card__tags">
+                        <span class="card__tag">CSS</span>
+                        <span class="card__tag">Layout</span>
+                    </div>
+                    <div class="card__footer">
+                        <button class="button button--secondary button--small">O'qish</button>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="card">
+                    <div class="card__header">
+                        <h3 class="card__title">Grid Layout</h3>
+                        <span class="card__date">2026-03-20</span>
+                    </div>
+                    <p class="card__description">CSS Grid - 2D layout yaratish uchun eng kuchli asbob.</p>
+                    <div class="card__tags">
+                        <span class="card__tag">CSS</span>
+                        <span class="card__tag">Grid</span>
+                    </div>
+                    <div class="card__footer">
+                        <button class="button button--secondary button--small">O'qish</button>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="card">
+                    <div class="card__header">
+                        <h3 class="card__title">Responsive Design</h3>
+                        <span class="card__date">2026-03-15</span>
+                    </div>
+                    <p class="card__description">Turli ekranlarda yaxshi ko'rinish uchun responsive dizayn.</p>
+                    <div class="card__tags">
+                        <span class="card__tag">CSS</span>
+                        <span class="card__tag">Responsive</span>
+                    </div>
+                    <div class="card__footer">
+                        <button class="button button--secondary button--small">O'qish</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Tugmalar Namunaları -->
+        <div class="section">
+            <h2 class="section__title">🔘 Tugmalar</h2>
+            <p class="section__subtitle">BEM bilan yaratilgan tugmalar</p>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="button">Normal</button>
+                <button class="button button--primary">Asosiy</button>
+                <button class="button button--secondary">Ikkinchi</button>
+                <button class="button button--danger">Xavf</button>
+                <button class="button button--small">Kichik</button>
+                <button class="button button--large">Katta</button>
+                <button class="button button--primary button--large">Katta Asosiy</button>
+            </div>
+        </div>
+
+        <!-- Section 4: Olingan Darslar -->
+        <div class="section">
+            <h2 class="section__title">📝 BEM Qoidalari</h2>
+
+            <div class="grid grid--cols-2">
+                <div class="card card--small">
+                    <h3 class="card__title">✅ BEM Kuchli Tomonlari</h3>
+                    <ul style="margin-left: 20px; color: #666; line-height: 1.8;">
+                        <li>Kod tashkilanishi va o'qiladi</li>
+                        <li>Qayta foydalanuvchi komponentlar</li>
+                        <li>Konfliktlarni kamaytiradish</li>
+                        <li>Katta loyihalar uchun ideal</li>
+                    </ul>
+                </div>
+
+                <div class="card card--small">
+                    <h3 class="card__title">⚠️ BEM Chuqurliklari</h3>
+                    <ul style="margin-left: 20px; color: #666; line-height: 1.8;">
+                        <li>Nomlanish uzun bo'lishi mumkin</li>
+                        <li>Boshlash oqali ba'zi devloperlar</li>
+                        <li>Kichik loyihalarda ortiqcha</li>
+                        <li>Toza CSS uchun kerak</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 7️⃣ BEM Nomlanish Qoidalari
+
+Doim qo'llash kerak bo'lgan qoidalar:
+
+```css
+/* ✅ YAXSHI - Aniq va tashkilashtirilgan */
+.navbar { }
+.navbar__logo { }
+.navbar__menu { }
+.navbar__menu-item { }
+.button { }
+.button--primary { }
+
+/* ❌ YOMON - Buzilgan BEM */
+.navbar_logo { }           /* Bitta chiziq */
+.navbar---menu { }         /* Uch chiziq */
+.nav_bar__logo { }         /* Noto'g'ri blok nomi */
+.button-primary { }        /* Bitta chiziq */
+
+/* ❌ YOMON - Katta CSS nesting */
+.card .card-title { }      /* BEM emas, CSS nesting */
+.menu > li > a { }         /* Katta nesting */
+
+/* ✅ YAXSHI - BEM */
+.card { }
+.card__title { }
+.menu { }
+.menu__item { }
+.menu__link { }
+```
+
+---
+
+## 8️⃣ Praktik BEM Misollari
+
+```html
+<!-- ✅ YAXSHI - Aniq BEM struktura -->
+<form class="search-form">
+  <input type="text" class="search-form__input">
+  <button class="search-form__button search-form__button--submit">
+    Qidirish
+  </button>
+</form>
+
+<!-- ✅ YAXSHI - Modal dialog -->
+<div class="modal modal--active">
+  <div class="modal__overlay"></div>
+  <div class="modal__content">
+    <h2 class="modal__title">Sarlavha</h2>
+    <p class="modal__body">Matn</p>
+    <footer class="modal__footer">
+      <button class="button button--secondary">Bekor qilish</button>
+      <button class="button button--primary">Tasdiqlash</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ✅ YAXSHI - Sidebar menyu -->
+<aside class="sidebar">
+  <nav class="sidebar__nav">
+    <a href="#" class="sidebar__nav-link sidebar__nav-link--active">
+      Bosh saxifa
+    </a>
+    <a href="#" class="sidebar__nav-link">Hujjatlar</a>
+    <a href="#" class="sidebar__nav-link">Pengaturan</a>
+  </nav>
+</aside>
+```
+
+---
+
+## 9️⃣ BEM + SCSS (Advanced)
+
+```scss
+/* BEM bilan SCSS */
+.card {
+  background-color: white;
+  padding: 20px;
+
+  &__title {
+    font-size: 24px;
+    color: #2563eb;
+  }
+
+  &__description {
+    color: #666;
+  }
+
+  &--featured {
+    border: 2px solid #2563eb;
+
+    .card__title {
+      color: #1d4ed8;
+    }
+  }
+
+  &--small {
+    padding: 15px;
+
+    .card__title {
+      font-size: 18px;
+    }
+  }
+}
+```
+
+---
+
+## BEM Cheat Sheet
+
+| Konsepatyi | Namuna | Maqsadi |
+|-----------|--------|---------|
+| Block | `.card` | Asosiy komponent |
+| Element | `.card__title` | Blokning qismi |
+| Modifier | `.card--featured` | Holat yoki versiya |
+| Multiple | `.button--primary--large` | Bir nechta modifikator |
+
+---
+
+## 🎯 BEM Qisqacha
+
+- **Block** → `.blockname` - mustaqil komponent
+- **Element** → `.blockname__elementname` - bloking qismi
+- **Modifier** → `.blockname--modifiername` - holat yoki versiya
+- **TAVSIYA:** BEM katta va murakkab loyihalar uchun eng yaxshi!
+
+---
+
+Keyingi darsda **CSS Project - E-commerce landing page** yaratamiz!
