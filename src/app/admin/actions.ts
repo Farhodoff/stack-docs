@@ -4,23 +4,21 @@ import { revalidatePath } from "next/cache";
 import { promises as fs } from "fs";
 import path from "path";
 import { z } from "zod";
+import {
+  isSupabaseAvailable,
+  createDocInSupabase,
+  updateDocInSupabase,
+  deleteDocInSupabase,
+  getDocBySlugFromSupabase,
+  getAllDocsFromSupabase
+} from "@/lib/supabase";
 
 const docsDir = path.join(process.cwd(), "docs");
 const categoriesJsonPath = path.join(docsDir, "config", "categories.json");
 
-// Check if we're in a read-only environment
-const isReadOnlyEnv = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
-
-// Helper function to check write access
-async function checkWriteAccess(): Promise<{ writable: boolean; message?: string }> {
-  if (isReadOnlyEnv) {
-    return {
-      writable: false,
-      message: "Admin panel qo'shish Vercel production'da ishlamaydi. Iltimos, darslarni GitHub'ga to'g'ridan-to'g'ri push qiling: https://github.com/Farhodoff/stack-docs/tree/main/docs",
-    };
-  }
-  return { writable: true };
-}
+// Check if we're in production (Vercel)
+const isProduction = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+const useSupabase = isProduction && isSupabaseAvailable();
 
 // Schema for document creation/update
 const docSchema = z.object({
@@ -240,23 +238,39 @@ async function readDocFile(filePath: string) {
  */
 export async function createDocAction(data: DocFormData) {
   try {
-    // Check if environment is writable
-    const { writable, message } = await checkWriteAccess();
-    if (!writable) {
-      return { error: message || "Cannot create documents in this environment" };
-    }
-
     const validated = docSchema.parse(data);
-
-    // Create category directory if it doesn't exist
-    const categoryDir = path.join(docsDir, validated.category);
-    await fs.mkdir(categoryDir, { recursive: true });
 
     // Generate slug from title
     const slug = validated.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
+
+    // If in production with Supabase, use database
+    if (useSupabase) {
+      const result = await createDocInSupabase({
+        slug,
+        title: validated.title,
+        description: validated.description,
+        category: validated.category,
+        content: validated.content,
+        tags: validated.tags,
+        order: validated.order,
+        status: validated.status,
+      });
+
+      if (!result.success) {
+        return { error: result.error || "Failed to create document in database" };
+      }
+
+      revalidatePath("/docs");
+      revalidatePath("/admin");
+      return { success: true, slug };
+    }
+
+    // Local development: use filesystem
+    const categoryDir = path.join(docsDir, validated.category);
+    await fs.mkdir(categoryDir, { recursive: true });
 
     const filePath = path.join(categoryDir, `${slug}.mdx`);
 
@@ -298,15 +312,30 @@ tags: [${validated.tags.map((t) => `"${t}"`).join(", ")}]
  */
 export async function updateDocAction(slug: string, data: DocFormData) {
   try {
-    // Check if environment is writable
-    const { writable, message } = await checkWriteAccess();
-    if (!writable) {
-      return { error: message || "Cannot update documents in this environment" };
-    }
-
     const validated = docSchema.parse(data);
 
-    // Find the existing file
+    // If in production with Supabase, use database
+    if (useSupabase) {
+      const result = await updateDocInSupabase(slug, {
+        title: validated.title,
+        description: validated.description,
+        category: validated.category,
+        content: validated.content,
+        tags: validated.tags,
+        order: validated.order,
+        status: validated.status,
+      });
+
+      if (!result.success) {
+        return { error: result.error || "Failed to update document in database" };
+      }
+
+      revalidatePath("/docs");
+      revalidatePath("/admin");
+      return { success: true };
+    }
+
+    // Local development: use filesystem
     const doc = await getDocBySlugAction(slug);
     if (!doc) {
       return { error: "Document not found" };
@@ -352,12 +381,20 @@ tags: [${validated.tags.map((t) => `"${t}"`).join(", ")}]
  */
 export async function deleteDocAction(slug: string) {
   try {
-    // Check if environment is writable
-    const { writable, message } = await checkWriteAccess();
-    if (!writable) {
-      return { error: message || "Cannot delete documents in this environment" };
+    // If in production with Supabase, use database
+    if (useSupabase) {
+      const result = await deleteDocInSupabase(slug);
+
+      if (!result.success) {
+        return { error: result.error || "Failed to delete document from database" };
+      }
+
+      revalidatePath("/docs");
+      revalidatePath("/admin");
+      return { success: true };
     }
 
+    // Local development: use filesystem
     const doc = await getDocBySlugAction(slug);
     if (!doc) {
       return { error: "Document not found" };
@@ -373,6 +410,9 @@ export async function deleteDocAction(slug: string) {
     return { success: true };
   } catch (error) {
     console.error("Error deleting document:", error);
+    if (error instanceof Error) {
+      return { error: "Failed to delete document", details: error.message };
+    }
     return { error: "Failed to delete document" };
   }
 }
