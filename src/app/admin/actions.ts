@@ -13,7 +13,7 @@ const docSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   category: z.string().min(1, "Category is required"),
-  order: z.number().int().nonnegative(),
+  order: z.coerce.number().int().nonnegative("Order must be a positive number"),
   tags: z.array(z.string()).default([]),
   content: z.string().min(1, "Content is required"),
   status: z.enum(["draft", "published"]).default("draft"),
