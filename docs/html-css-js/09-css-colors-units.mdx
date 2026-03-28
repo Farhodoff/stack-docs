@@ -1,0 +1,381 @@
+---
+title: "CSS Ranglar va O'lchovlar"
+description: "CSS'da ranglarni o'rganish va turli o'lchov birliklarini ishlatish"
+category: "html-css-js"
+order: 12
+tags:
+  - css
+  - colors
+  - units
+  - measurements
+status: "published"
+---
+
+# CSS Ranglar va O'lchovlar
+
+## Ranglarni Ko'rsatish Usullari
+
+CSS'da ranglarni har xil usullar bilan belgilashimiz mumkin:
+
+### 1️⃣ Rang Nomlari
+
+Ingliz tilidagi rang nomlari:
+
+```css
+p {
+  color: red;
+  background-color: blue;
+  border-color: green;
+}
+```
+
+**Hammasiga oid ranglar:**
+- red, green, blue, yellow, orange, purple, pink, brown, gray, black, white, cyan, magenta, lime, navy, teal, olive, maroon...
+
+---
+
+## 2️⃣ HEX (Heksadesimal) Ranglar
+
+Raqamlar va harflar bilan ifoda qilinadigan ranglar: `#RRGGBB`
+
+```css
+body {
+  background-color: #f0f0f0;  /* Oq xira rang */
+  color: #333333;              /* Qora-qora */
+}
+
+h1 {
+  color: #2563eb;              /* Ko'k rang */
+}
+
+button {
+  background-color: #10b981;   /* Yashil rang */
+  color: #ffffff;              /* Toza oq */
+}
+
+a {
+  color: #8b5cf6;              /* Binafsha rang */
+}
+```
+
+**HEX Format:**
+- `#RRGGBB` - Red, Green, Blue (0-9 va A-F)
+- `#FFFF00` = Sariq
+- `#FF0000` = Qizil
+- `#00FF00` = Yashil
+- `#0000FF` = Ko'k
+
+---
+
+## 3️⃣ RGB Ranglar
+
+RGB (Red, Green, Blue) - har bir rang 0-255 qiymat:
+
+```css
+body {
+  background-color: rgb(240, 240, 240);  /* Oq */
+}
+
+h1 {
+  color: rgb(37, 99, 235);               /* Ko'k */
+}
+
+button {
+  background-color: rgb(16, 185, 129);   /* Yashil */
+}
+
+p {
+  color: rgb(51, 51, 51);                /* Qora */
+}
+```
+
+---
+
+## 4️⃣ RGBA Ranglar (Shaffoflik Bilan)
+
+RGBA - RGB + Alpha (shaffoflik): 0-1 (0 = to'liq shaffof, 1 = to'liq qalinlik)
+
+```css
+div {
+  background-color: rgba(255, 0, 0, 0.5);    /* Qizil, 50% shaffof */
+}
+
+button {
+  background-color: rgba(37, 99, 235, 0.8); /* Ko'k, 80% qalin */
+}
+
+overlay {
+  background-color: rgba(0, 0, 0, 0.7);     /* Qora, 70% qalin */
+}
+```
+
+---
+
+## 5️⃣ HSL Ranglar
+
+HSL (Hue, Saturation, Lightness) - rangi, saturatsiyasi, yorqinligi:
+
+```css
+h1 {
+  color: hsl(220, 100%, 50%);  /* Ko'k */
+}
+
+p {
+  color: hsl(0, 100%, 50%);    /* Qizil */
+}
+
+button {
+  background-color: hsl(160, 68%, 51%);  /* Yashil */
+}
+```
+
+---
+
+## O'lchov Birliklari (Units)
+
+### 1️⃣ Piksel (px) - ABSOLUTE
+
+Toza piksel, ekran o'lchamiga bog'liq emas:
+
+```css
+body {
+  font-size: 16px;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+p {
+  line-height: 24px;
+  margin: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  border-radius: 5px;
+}
+```
+
+---
+
+### 2️⃣ Foiz (%) - RELATIVE
+
+Ota-element o'lchamiga nisbatan:
+
+```css
+container {
+  width: 100%;        /* To'liq kenglik */
+  max-width: 1200px;
+}
+
+.half-width {
+  width: 50%;         /* Yarmasi */
+}
+
+.third-width {
+  width: 33.33%;      /* Uchinchi qismi */
+}
+
+p {
+  font-size: 100%;    /* Ota-qiymatiga teng */
+}
+```
+
+---
+
+### 3️⃣ em - OTA SHRIFTIGA NISBATAN
+
+Ota-elementning font-size qiymatiga nisbatan (standart 1em = 16px):
+
+```css
+body {
+  font-size: 16px;   /* Base size */
+}
+
+h1 {
+  font-size: 2em;    /* 32px (16 × 2) */
+}
+
+h2 {
+  font-size: 1.5em;  /* 24px (16 × 1.5) */
+}
+
+p {
+  font-size: 1em;    /* 16px */
+  margin: 1em;       /* 16px */
+}
+
+small {
+  font-size: 0.8em;  /* 12.8px (16 × 0.8) */
+}
+```
+
+---
+
+### 4️⃣ rem - ROOT SHRIFTIGA NISBATAN
+
+HTML root `<html>` elementining font-size'iga nisbatan (standart 1rem = 16px):
+
+```css
+html {
+  font-size: 16px;   /* Base */
+}
+
+body {
+  font-size: 1rem;   /* 16px */
+  padding: 1rem;     /* 16px */
+}
+
+h1 {
+  font-size: 2rem;   /* 32px */
+}
+
+h2 {
+  font-size: 1.5rem; /* 24px */
+}
+
+p {
+  font-size: 1rem;   /* 16px */
+  margin: 1rem;      /* 16px */
+}
+
+small {
+  font-size: 0.875rem;  /* 14px */
+}
+```
+
+**Foyda:** Butun saytni kichik qilish uchun faqat `html` font-size'ini o'zgartirasiz!
+
+---
+
+### 5️⃣ vh / vw - EKRAN O'LCHAMIGA NISBATAN
+
+- `vh` (viewport height) - ekran balandligining %
+- `vw` (viewport width) - ekran kengligining %
+
+```css
+header {
+  height: 100vh;     /* To'liq ekran balandligi */
+  width: 100vw;      /* To'liq ekran kenglig */
+}
+
+section {
+  height: 50vh;      /* Ekran balandligining yarmiis */
+}
+
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+```
+
+---
+
+## O'lchovlar Solishtirilishi
+
+| Birlik | Nomi | Misol | Izoh |
+|--------|------|-------|------|
+| px | Piksel | `16px` | Toza ekran nöqtasi |
+| % | Foiz | `50%` | Ota-element o'lchamiga nisbatan |
+| em | Em | `1.5em` | Ota shriftiga nisbatan |
+| rem | Root Em | `1.5rem` | Root shriftiga nisbatan |
+| vh | Viewport Height | `100vh` | Ekran balandligiga nisbatan |
+| vw | Viewport Width | `100vw` | Ekran kengligiga nisbatan |
+
+---
+
+## Praktik Misol - Rang va O'lchov
+
+<CodeBlock language="html" title="Misol">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <style>
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            background-color: #f0f0f0;
+            color: #333;
+            font-size: 1rem;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+        }
+
+        h1 {
+            color: #2563eb;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            background-color: rgb(37, 99, 235);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background-color: rgba(37, 99, 235, 0.8);
+        }
+
+        .box {
+            width: 100%;
+            height: 50vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ranglar va O'lchovlar</h1>
+        <p>Bu misol turli rang va o'lchov birliklarini ko'rsatadi.</p>
+        <button>Bosing!</button>
+        <div class="box">
+            Ekran yuzig'ining 50%
+        </div>
+    </div>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 🎯 Xulosa
+
+- **Ranglar:** Nomlar, HEX (#), RGB(), RGBA(), HSL()
+- **O'lchovlar:** px (toza), % (foiz), em (ota), rem (root), vh/vw (ekran)
+- **Tavsiya:** rem ishlatish responsive dizayn uchun yaxshiroq
+
+---
+
+Keyingi darsda **Box Model**ni - margin, padding, border - o'rganamiz!

@@ -1,0 +1,449 @@
+---
+title: "CSS Matn va Fontlar"
+description: "Shriftni o'zgartirish, text stilizatsiya va text effektlari"
+category: "html-css-js"
+order: 14
+tags:
+  - css
+  - text
+  - fonts
+  - typography
+status: "published"
+---
+
+# CSS Matn va Fontlar
+
+Matn - web saytning eng muhim elementi. CSS'da tekstni qanday ko'rinishini kontrol qilishimiz mumkin.
+
+---
+
+## 1️⃣ Font Turlari
+
+### System Fontlari
+
+Har bir kompyuterda mavjud bo'lgan fontlar:
+
+```css
+body {
+  /* Sans-serif - burchaklarsiz */
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+h1 {
+  /* Serif - kichik chiziqlar bor */
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+code {
+  /* Monospace - har bir belgisi bir xil kenglikda */
+  font-family: "Courier New", Courier, monospace;
+}
+```
+
+**Font Turları:**
+- **sans-serif:** Modern, toza (Arial, Helvetica, Verdana)
+- **serif:** Klassik, rasmi (Georgia, Times New Roman)
+- **monospace:** Kod va terminal (Courier, Consolas)
+- **cursive:** Qo'lbola yozuv
+- **fantasy:** Dekorativ
+
+---
+
+## 2️⃣ Font O'lchovlari (Font-size)
+
+```css
+html {
+  font-size: 16px; /* Base size */
+}
+
+body {
+  font-size: 1rem;     /* 16px */
+}
+
+h1 {
+  font-size: 2.5rem;   /* 40px */
+}
+
+h2 {
+  font-size: 2rem;     /* 32px */
+}
+
+h3 {
+  font-size: 1.5rem;   /* 24px */
+}
+
+p {
+  font-size: 1rem;     /* 16px */
+}
+
+small {
+  font-size: 0.875rem; /* 14px */
+}
+```
+
+---
+
+## 3️⃣ Font Qalinligi (Font-weight)
+
+```css
+body {
+  font-weight: 400;       /* normal */
+}
+
+strong, b {
+  font-weight: 700;       /* bold */
+}
+
+h1, h2, h3 {
+  font-weight: 600;       /* semi-bold */
+}
+
+.light {
+  font-weight: 300;       /* light */
+}
+
+.extra-bold {
+  font-weight: 900;       /* extra-bold */
+}
+```
+
+**Font-weight Qiymatlari:**
+- 100 = Thin (Ingichka)
+- 300 = Light (Engillik)
+- 400 = Normal (Standart)
+- 600 = Semi-bold
+- 700 = Bold (Qalin)
+- 900 = Extra-bold (Juda qalin)
+
+---
+
+## 4️⃣ Font Uslubi (Font-style)
+
+```css
+p {
+  font-style: normal;      /* Standart */
+}
+
+em, i {
+  font-style: italic;      /* Og'ma */
+}
+
+.oblique {
+  font-style: oblique;     /* Tortish bilan og'ma */
+}
+```
+
+---
+
+## 5️⃣ Text Tasviri (Text-decoration)
+
+```css
+a {
+  text-decoration: none;           /* Chiziq yo'q */
+}
+
+u {
+  text-decoration: underline;      /* Pastdan chiziq */
+}
+
+s {
+  text-decoration: line-through;   /* O'rta chiziq */
+}
+
+.overline {
+  text-decoration: overline;       /* Ustidan chiziq */
+}
+
+/* Kombinatsiya */
+.fancy {
+  text-decoration: underline overline wavy red;
+}
+```
+
+---
+
+## 6️⃣ Text Tekislashturuvi (Text-align)
+
+```css
+p {
+  text-align: left;        /* Chap tarafga */
+}
+
+h1 {
+  text-align: center;      /* Markazga */
+}
+
+footer {
+  text-align: right;       /* O'ng tarafga */
+}
+
+blockquote {
+  text-align: justify;     /* Tog'rilagani (uzun matnlar uchun) */
+}
+```
+
+---
+
+## 7️⃣ Text Transform (Katta-kichik harflar)
+
+```css
+h1 {
+  text-transform: uppercase;     /* BARCHASI KATTA */
+}
+
+.lowercase {
+  text-transform: lowercase;     /* barchasi kichik */
+}
+
+h3 {
+  text-transform: capitalize;    /* Har Bir So'z Katta Boshlangan */
+}
+
+.normal {
+  text-transform: none;          /* Standart */
+}
+```
+
+---
+
+## 8️⃣ Line Height (Satr Balandligi)
+
+```css
+p {
+  line-height: 1.5;      /* 1.5 marta font-size'dan */
+}
+
+body {
+  line-height: 1.6;      /* O'qishish uchun optimal */
+}
+
+.compact {
+  line-height: 1;        /* Tik-tik */
+}
+
+.spacious {
+  line-height: 2;        /* Keng bo'sh joy */
+}
+```
+
+---
+
+## 9️⃣ Letter Spacing (Harf Oralig'i)
+
+```css
+body {
+  letter-spacing: normal;   /* Standart */
+}
+
+h1 {
+  letter-spacing: 2px;      /* Kattalashtirish */
+}
+
+.tight {
+  letter-spacing: -1px;     /* Yaqinlashtirish */
+}
+
+.wide {
+  letter-spacing: 3px;      /* Juda keng */
+}
+```
+
+---
+
+## 🔟 Word Spacing (So'z Oralig'i)
+
+```css
+p {
+  word-spacing: normal;    /* Standart */
+}
+
+.spaced {
+  word-spacing: 5px;       /* So'zlar orasida */
+}
+```
+
+---
+
+## 1️⃣1️⃣ Text Shadow (Matn Soyasi)
+
+```css
+h1 {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.glow {
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+.multiple {
+  text-shadow:
+    2px 2px 4px rgba(0, 0, 0, 0.3),
+    4px 4px 8px rgba(0, 0, 0, 0.2);
+}
+```
+
+---
+
+## Color va Background
+
+```css
+p {
+  color: #333;                    /* Text rangi */
+  background-color: #f0f0f0;      /* Fon rangi */
+}
+
+a {
+  color: #2563eb;                 /* Havolaning rangi */
+}
+
+a:hover {
+  color: #1d4ed8;                 /* Hover vaqtida */
+}
+```
+
+---
+
+## Praktik Misol - Matn va Fontlar
+
+<CodeBlock language="html" title="Text va Fonts Misoli">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            color: #2563eb;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+
+        p {
+            margin: 15px 0;
+            text-align: justify;
+        }
+
+        strong {
+            font-weight: 700;
+            color: #ef4444;
+        }
+
+        em {
+            font-style: italic;
+            color: #6b7280;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            background-color: #f3f4f6;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s;
+        }
+
+        a:hover {
+            border-bottom: 1px solid #2563eb;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .highlight {
+            background-color: #fef08a;
+            padding: 15px;
+            border-left: 4px solid #eab308;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Matn va Fontlar</h1>
+
+        <h2>Shriftlar Haqida</h2>
+        <p>
+            <strong>CSS'da matn</strong> rasmlashtirilish juda muhim. Siz <em>font-family</em>'ni,
+            o'lchamni, shuningdek <code>text-align</code> va boshqa xususiyatlarni o'zgartirishingiz mumkin.
+        </p>
+
+        <div class="highlight">
+            <strong>Maslahat:</strong> Har doim <strong>line-height: 1.6</strong> ishlating,
+            bu o'qishshni osonlashtiradi.
+        </div>
+
+        <h2>Font Qalinligi</h2>
+        <p>
+            Font qalinligi <strong>font-weight</strong> bilan boshqariladi.
+            Qiymatlari: 100, 300, 400, 600, 700, 900.
+        </p>
+
+        <h2>Text Dekoratsiyasi</h2>
+        <p>
+            <u>Pastdan chiziqli</u> matn,
+            <s>o'rta chiziqli</s> matn,
+            va <strong>qalin</strong> matn<br>
+            hama shaklda ko'rsatilishi mumkin.
+        </p>
+
+        <h2>Havolalar</h2>
+        <p>
+            Qo'shimcha ma'lumot uchun <a href="#">bu havolani</a> bosing.
+        </p>
+    </div>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 🎯 Text va Fonts Qisqacha
+
+| Xususiyat | Maqsadi | Misol |
+|-----------|---------|-------|
+| `font-family` | Shrift nomi | `font-family: Arial` |
+| `font-size` | O'lchami | `font-size: 1rem` |
+| `font-weight` | Qalinligi | `font-weight: 700` |
+| `font-style` | Uslubi | `font-style: italic` |
+| `text-align` | Tekislashturuvi | `text-align: center` |
+| `line-height` | Satr balandligi | `line-height: 1.6` |
+| `letter-spacing` | Harf oralig'i | `letter-spacing: 2px` |
+| `text-shadow` | Soya | `text-shadow: 2px 2px 4px` |
+
+---
+
+Keyingi darsda **Layout: Flexbox**ni o'rganamiz!

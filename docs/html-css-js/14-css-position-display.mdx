@@ -1,0 +1,556 @@
+---
+title: "CSS Position va Display"
+description: "Elementlarni qanday joylashtirilash va qanday ko'rinishi"
+category: "html-css-js"
+order: 17
+tags:
+  - css
+  - position
+  - display
+  - layout
+status: "published"
+---
+
+# CSS Position va Display
+
+Position va Display - elementlarni veb-sahifada qanday ko'rinishi va joylashgani haqida asosiy xususiyatlar.
+
+---
+
+## Display Xususiyati
+
+`display` - elementning qanday ko'rinishini boshqaradi.
+
+### 1️⃣ Display: Block
+
+Butun qatorni egallaydi, yangi qatordan boshlaydi:
+
+```css
+div {
+  display: block;
+}
+
+p {
+  display: block;
+}
+
+h1, h2, h3 {
+  display: block;
+}
+```
+
+**Block elementlar:** `<div>`, `<p>`, `<h1>-<h6>`, `<section>`, `<header>`, `<footer>`
+
+---
+
+### 2️⃣ Display: Inline
+
+Faqat kerakli o'lchamni egallaydi, qator bilan:
+
+```css
+span {
+  display: inline;
+}
+
+a {
+  display: inline;
+}
+
+strong {
+  display: inline;
+}
+```
+
+**Inline elementlar:** `<span>`, `<a>`, `<strong>`, `<em>`, `<img>`
+
+---
+
+### 3️⃣ Display: Inline-block
+
+Inline kabi, lekin width va height'ni boshqarish mumkin:
+
+```css
+button {
+  display: inline-block;
+  width: 100px;
+  height: 40px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #2563eb;
+  color: white;
+}
+```
+
+---
+
+### 4️⃣ Display: None
+
+Element ko'rinmaydi:
+
+```css
+.hidden {
+  display: none;
+}
+
+.modal.hidden {
+  display: none;
+}
+```
+
+---
+
+### 5️⃣ Display: Flex
+
+Flexbox layout:
+
+```css
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+```
+
+---
+
+### 6️⃣ Display: Grid
+
+Grid layout:
+
+```css
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+```
+
+---
+
+## Position Xususiyati
+
+`position` - element qanday joylashgani haqida bilgi beradi.
+
+### 1️⃣ Position: Static (Standart)
+
+Default qiymat - normal alip:
+
+```css
+div {
+  position: static;
+}
+```
+
+---
+
+### 2️⃣ Position: Relative
+
+Elementni o'zining joyidan siljitish:
+
+```css
+div {
+  position: relative;
+  top: 20px;       /* Yuqoridan 20px */
+  left: 10px;      /* Chapdan 10px */
+}
+```
+
+**Xususiyatlar:**
+- `top` - Yuqoridan
+- `bottom` - Pastdan
+- `left` - Chapdan
+- `right` - O'ngdan
+
+---
+
+### 3️⃣ Position: Absolute
+
+Eng yaqin positioned ota-elementga nisbatan:
+
+```css
+.container {
+  position: relative;
+}
+
+.child {
+  position: absolute;
+  top: 20px;
+  right: 10px;
+}
+```
+
+---
+
+### 4️⃣ Position: Fixed
+
+Ekranda qat'iy joyda qoladi, scrollda harakat qilmaydi:
+
+```css
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: #2563eb;
+  z-index: 1000;
+}
+
+body {
+  padding-top: 60px;  /* Header uchun bo'sh joy */
+}
+```
+
+---
+
+### 5️⃣ Position: Sticky
+
+Scroll bo'lishiga qadar normal, keyin fixed bo'ladi:
+
+```css
+.nav {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 100;
+}
+```
+
+---
+
+## Z-Index (Qavatlar)
+
+Elementlarning depth (qavat) tartibini boshqarish:
+
+```css
+.background {
+  position: relative;
+  z-index: 1;
+}
+
+.modal {
+  position: fixed;
+  z-index: 1000;     /* Modal yuqorida */
+}
+
+.dropdown {
+  position: absolute;
+  z-index: 999;
+}
+```
+
+**Qoidalar:**
+- Katta z-index = yuqorida
+- Faqat `position` qiymat (absolute, relative, fixed, sticky) bilan ishlagani
+
+---
+
+## Praktik Misol - Position va Display
+
+<CodeBlock language="html" title="Position va Display Misoli">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding-top: 60px;
+        }
+
+        /* Fixed header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: #2563eb;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+        }
+
+        /* Main container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h2 {
+            margin: 30px 0 20px;
+            color: #333;
+        }
+
+        /* Display examples */
+        .display-examples {
+            margin-bottom: 30px;
+        }
+
+        .block {
+            display: block;
+            background-color: #e0e7ff;
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+        .inline {
+            display: inline;
+            background-color: #fce7f3;
+            padding: 5px 10px;
+            margin: 0 5px;
+        }
+
+        .inline-block {
+            display: inline-block;
+            background-color: #d1fae5;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+        }
+
+        /* Position examples */
+        .position-container {
+            position: relative;
+            height: 300px;
+            background-color: #f0f0f0;
+            border: 2px dashed #ccc;
+            margin-bottom: 30px;
+        }
+
+        .static {
+            position: static;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px;
+        }
+
+        .relative {
+            position: relative;
+            top: 20px;
+            left: 30px;
+            background-color: #e0e7ff;
+            border: 1px solid #2563eb;
+            padding: 15px;
+            margin: 10px;
+            width: 200px;
+        }
+
+        .absolute {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #fca5a5;
+            border: 1px solid #dc2626;
+            padding: 15px;
+            width: 150px;
+        }
+
+        /* Sticky navigation */
+        .sticky-nav {
+            position: sticky;
+            top: 60px;
+            background-color: #f3f4f6;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 15px 0;
+            z-index: 100;
+        }
+
+        .sticky-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .sticky-nav a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            max-width: 400px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+        }
+
+        button {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #059669;
+        }
+
+        .content-section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Fixed header -->
+    <header>
+        <h1>Position va Display Demo</h1>
+    </header>
+
+    <!-- Sticky navigation -->
+    <nav class="sticky-nav">
+        <ul>
+            <li><a href="#">Bosh sahifa</a></li>
+            <li><a href="#">Hujjatlar</a></li>
+            <li><a href="#">Admin</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h2>Display Xususiyatlari</h2>
+        <div class="content-section">
+            <h3>Block Elements</h3>
+            <div class="block">Block 1</div>
+            <div class="block">Block 2</div>
+            <div class="block">Block 3</div>
+        </div>
+
+        <div class="content-section">
+            <h3>Inline Elements</h3>
+            <p>
+                <span class="inline">Inline 1</span>
+                <span class="inline">Inline 2</span>
+                <span class="inline">Inline 3</span>
+            </p>
+        </div>
+
+        <div class="content-section">
+            <h3>Inline-block Elements</h3>
+            <div class="inline-block">Button 1</div>
+            <div class="inline-block">Button 2</div>
+            <div class="inline-block">Button 3</div>
+        </div>
+
+        <h2>Position Xususiyatlari</h2>
+        <div class="position-container">
+            <div class="absolute">
+                Absolute
+                (top: 20px, right: 20px)
+            </div>
+            <div class="static">
+                Static (Standart)
+            </div>
+            <div class="relative">
+                Relative
+                (top: 20px, left: 30px)
+            </div>
+        </div>
+
+        <h2>Sticky Navigation Misoli</h2>
+        <div class="content-section">
+            <p>Bu bo'lim sticky navigation'ni ko'rish uchun. Scroll qilsangiz, navigation yuqorida qoladi.</p>
+            <p>Qo'shimcha matn...</p>
+            <p>Qo'shimcha matn...</p>
+            <p>Qo'shimcha matn...</p>
+        </div>
+
+        <button onclick="openModal()">Modal ochish</button>
+    </div>
+
+    <!-- Modal (hidden by default) -->
+    <div id="modal" style="display: none;">
+        <div class="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal">
+            <h2>Modal Oynasi</h2>
+            <p>Bu fixed position bilan yaratilgan modal.</p>
+            <button onclick="closeModal()">Yopish</button>
+        </div>
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## Display vs Position Jadvali
+
+| Xususiyat | Qiymat | Maqsadi |
+|-----------|--------|---------|
+| `display` | `block` | Butun qatorni egallash |
+| `display` | `inline` | Faqat zarur joyni egallash |
+| `display` | `inline-block` | Inline + width/height |
+| `display` | `flex` | Flexbox |
+| `display` | `grid` | Grid |
+| `position` | `relative` | O'zining joyidan siljitish |
+| `position` | `absolute` | Ota-elementga nisbatan |
+| `position` | `fixed` | Ekranga nisbatan |
+| `position` | `sticky` | Scroll'dagacha fixed |
+
+---
+
+## 🎯 Position va Display Qisqacha
+
+- **Display:** Elementning ko'rinishi
+- **Position:** Elementning joylashgani
+- **Fixed header:** `position: fixed; top: 0; z-index: 1000;`
+- **Sticky nav:** `position: sticky; top: 60px;`
+- **Modal:** `position: fixed; z-index: 2000;`
+- **Z-index:** Qavat tartibini boshqarish
+
+---
+
+Keyingi darsda **Responsive Dizayn va Animatsiya**ni o'rganamiz!

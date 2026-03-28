@@ -1,0 +1,495 @@
+---
+title: "CSS Layout - Flexbox"
+description: "Yechilgan elementlarni turli yo'lda joylashtirishning zamona usuli"
+category: "html-css-js"
+order: 15
+tags:
+  - css
+  - flexbox
+  - layout
+  - responsive
+status: "published"
+---
+
+# CSS Layout - Flexbox
+
+**Flexbox** - zamonaviy joylashtirishning eng oson va kuchli usuli. Elementlarni bir qatorga yoki bir ustuniga joylashtirishni osonlashtiradi.
+
+---
+
+## Flexbox Nima?
+
+Flexbox sizga ruxsat beradi:
+- ✅ Elementlarni egri satr yoki ustun bo'ylab joylashtirill
+- ✅ Elementlarni markazga joylashtirill
+- ✅ Bo'sh joyni teng taqsimla
+- ✅ Responsive dizayn yaratish
+- ✅ Tartibi bilan oynashish
+
+---
+
+## 1️⃣ Display: Flex
+
+Flexbox'ni aktivlashtirish uchun:
+
+```css
+.container {
+  display: flex;
+}
+```
+
+---
+
+## 2️⃣ Flex Direction (Yo'nalishi)
+
+Elementlarni qanday yo'nalishda joylashtirill:
+
+```css
+.container {
+  display: flex;
+
+  /* Default - qatorga */
+  flex-direction: row;
+}
+
+/* Ustuniga */
+.container {
+  flex-direction: column;
+}
+
+/* Teskari qatorga */
+.container {
+  flex-direction: row-reverse;
+}
+
+/* Teskari ustuniga */
+.container {
+  flex-direction: column-reverse;
+}
+```
+
+---
+
+## 3️⃣ Justify Content (Asosiy Joylashtirish)
+
+Horizontal tekislashturuvi:
+
+```css
+.container {
+  display: flex;
+
+  /* Default - chapiga */
+  justify-content: flex-start;
+}
+
+/* O'ngiga */
+.container {
+  justify-content: flex-end;
+}
+
+/* Markazga */
+.container {
+  justify-content: center;
+}
+
+/* Aralarda bo'sh joy */
+.container {
+  justify-content: space-around;
+}
+
+/* Oralig'iga */
+.container {
+  justify-content: space-between;
+}
+
+/* Teng oralig'i bo'lgan */
+.container {
+  justify-content: space-evenly;
+}
+```
+
+---
+
+## 4️⃣ Align Items (Vertikal Joylashtirish)
+
+Vertikal tekislashturuvi:
+
+```css
+.container {
+  display: flex;
+  height: 300px;
+
+  /* Ustuniga */
+  align-items: flex-start;
+}
+
+/* Pastiga */
+.container {
+  align-items: flex-end;
+}
+
+/* Markazga */
+.container {
+  align-items: center;
+}
+
+/* Stretch - to'liq balandlik */
+.container {
+  align-items: stretch;
+}
+
+/* Baseline - basis chiziqiga */
+.container {
+  align-items: baseline;
+}
+```
+
+---
+
+## 5️⃣ Wrap (O'ramlash)
+
+Elementlarni qo'shni satrda joylashtirilsa, yangi satrga o'tiss:
+
+```css
+.container {
+  display: flex;
+
+  /* Default - bitta satrda */
+  flex-wrap: nowrap;
+}
+
+/* Bir nechta satrlar */
+.container {
+  flex-wrap: wrap;
+}
+
+/* Teskari o'rab */
+.container {
+  flex-wrap: wrap-reverse;
+}
+```
+
+---
+
+## 6️⃣ Gap (Bo'sh Joy)
+
+Elementlar orasida bo'sh joy:
+
+```css
+.container {
+  display: flex;
+
+  /* Horizontal va vertical */
+  gap: 20px;
+}
+
+/* Alohida */
+.container {
+  row-gap: 20px;      /* Satrlar orasida */
+  column-gap: 15px;   /* Ustunlar orasida */
+}
+```
+
+---
+
+## 7️⃣ Flex Grow (O'sshni)
+
+Elementlar qancha o'sshini boshqarish:
+
+```css
+.item {
+  flex-grow: 0;    /* Default - o'shmaydi */
+}
+
+.item.grow {
+  flex-grow: 1;    /* Bo'sh joyni egallaydi */
+}
+
+.item.grow-more {
+  flex-grow: 2;    /* Boshqalardan 2 marta ko'p */
+}
+```
+
+---
+
+## 8️⃣ Flex Shrink (Kichiklashtirish)
+
+Elementlar qancha kichiklagishi mumkin:
+
+```css
+.item {
+  flex-shrink: 1;  /* Default - kichiklagishi mumkin */
+}
+
+.item.no-shrink {
+  flex-shrink: 0;  /* Kichiklamaydi */
+}
+```
+
+---
+
+## 9️⃣ Flex Basis (Asosiy O'lchami)
+
+Elementning asosiy o'lchami:
+
+```css
+.item {
+  flex-basis: auto;     /* Content o'lchamiga */
+}
+
+.item {
+  flex-basis: 200px;    /* Tik 200px */
+}
+```
+
+---
+
+## Flex (Qisqacha)
+
+Barcha flex xususiyatlari bir qatorda:
+
+```css
+.item {
+  /* flex: grow shrink basis */
+  flex: 1 0 200px;
+}
+
+/* Teng o'sishi */
+.item {
+  flex: 1;
+}
+
+/* O'sshmasligi */
+.item {
+  flex: 0 0 200px;
+}
+```
+
+---
+
+## Praktik Misol - Flexbox
+
+<CodeBlock language="html" title="Flexbox Misoli">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background-color: #2563eb;
+            color: white;
+            padding: 20px;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* Layout - 3 ta matn */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .card {
+            flex: 1 1 300px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Sidebar + Main */
+        .main-flex {
+            display: flex;
+            gap: 20px;
+        }
+
+        .sidebar {
+            flex: 0 0 250px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .content {
+            flex: 1;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        /* Tugmalar */
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #10b981;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #059669;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .cards {
+                flex-direction: column;
+            }
+
+            .main-flex {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <nav class="nav">
+            <a href="#">Bosh saxifa</a>
+            <a href="#">Hujjatlar</a>
+            <a href="#">Admin</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <h1>Flexbox Layout</h1>
+
+        <h2 style="margin-top: 30px; margin-bottom: 20px;">Kartalari:</h2>
+        <div class="cards">
+            <div class="card">
+                <h2>Karta 1</h2>
+                <p>Bu flexbox bilan yaratilgan. Barcha kartalari teng o'lchamda.</p>
+            </div>
+            <div class="card">
+                <h2>Karta 2</h2>
+                <p>Ular responsive va responsive ekranlarda qatori o'zgaradi.</p>
+            </div>
+            <div class="card">
+                <h2>Karta 3</h2>
+                <p>Gap xususiyati oraliqdagi bo'sh joyni boshqaradi.</p>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 30px; margin-bottom: 20px;">Sidebar + Content:</h2>
+        <div class="main-flex">
+            <div class="sidebar">
+                <h3>Menu</h3>
+                <ul style="list-style: none;">
+                    <li><a href="#">Maqola 1</a></li>
+                    <li><a href="#">Maqola 2</a></li>
+                    <li><a href="#">Maqola 3</a></li>
+                </ul>
+            </div>
+
+            <div class="content">
+                <h2>Asosiy Kontent</h2>
+                <p>
+                    Bu flex: 1 bilan yozilgan, ya'ni barcha bo'sh joyni egallaydi.
+                    Sidebar esa flex: 0 0 250px, ya'ni 250px bo'ladi va o'shmaydi.
+                </p>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button>Bosing</button>
+            <button>Yana bosing</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Flexbox Misoli</p>
+    </footer>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## Flexbox Cheat Sheet
+
+| Xususiyat | Qiymat | Maqsadi |
+|-----------|--------|---------|
+| `display` | `flex` | Flexbox'ni aktivlashtirish |
+| `flex-direction` | `row`, `column` | Yo'nalishi |
+| `justify-content` | `center`, `space-between` | Asosiy joylashtirish |
+| `align-items` | `center`, `flex-start` | Vertikal joylashtirish |
+| `flex-wrap` | `wrap`, `nowrap` | O'ramlash |
+| `gap` | `20px` | Bo'sh joy |
+| `flex` | `1 0 200px` | Grow shrink basis |
+
+---
+
+## 🎯 Flexbox Qisqacha
+
+- `display: flex` → Flexbox faolashuvi
+- `justify-content` → Horizontal tekislashturuvi
+- `align-items` → Vertikal tekislashturuvi
+- `gap` → Elementlar orasida bo'sh joy
+- `flex: 1` → O'sshni va kichiklagishi
+- **TAVSIYA:** Responsive dizayn uchun Flexbox eng yaxshi!
+
+---
+
+Keyingi darsda **Layout: Grid**ni o'rganamiz!

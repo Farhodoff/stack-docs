@@ -1,0 +1,336 @@
+---
+title: "CSS Box Model (Muhim!)"
+description: "Margin, padding, border, width va height - elementlar qanday ish qiladi"
+category: "html-css-js"
+order: 13
+tags:
+  - css
+  - box-model
+  - margin
+  - padding
+  - border
+status: "published"
+---
+
+# CSS Box Model
+
+Box Model - HTML elementining qanday joylashgani va o'lchamlanishi haqida hamma narsani tushuntiradi.
+
+Har bir element 4 ta qatlamdan iborat:
+
+```
+┌─────────────────────────────────────┐
+│ MARGIN (Tashqari bo'sh joy)         │
+│ ┌───────────────────────────────┐   │
+│ │ BORDER (Chegarasi)            │   │
+│ │ ┌─────────────────────────┐   │   │
+│ │ │ PADDING (Ichki bo'sh joy) │   │   │
+│ │ │ ┌───────────────────┐ │   │   │
+│ │ │ │ CONTENT (Matn)    │ │   │   │
+│ │ │ └───────────────────┘ │   │   │
+│ │ └─────────────────────────┘   │   │
+│ └───────────────────────────────┘   │
+└─────────────────────────────────────┘
+```
+
+---
+
+## 1️⃣ CONTENT (Matn/Rasm)
+
+Elementning asosiy mazmuni:
+
+```css
+div {
+  width: 300px;    /* Kenglik */
+  height: 100px;   /* Balandlik */
+}
+
+p {
+  width: 100%;
+  height: auto;    /* Avtomatik balandlik */
+}
+```
+
+---
+
+## 2️⃣ PADDING (Ichki Bo'sh Joy)
+
+Elementning **ichki** tarafida bo'sh joy, contentin atrofida:
+
+```css
+/* Hamma tarafga bir xil */
+p {
+  padding: 20px;
+}
+
+/* Yuqori, o'ng, pastki, chap */
+div {
+  padding: 10px 20px 15px 25px;
+}
+
+/* Yuqori/pastki, o'ng/chap */
+button {
+  padding: 10px 20px;    /* Yuqori-pastki: 10px, o'ng-chap: 20px */
+}
+
+/* Alohida tomonlar */
+box {
+  padding-top: 10px;
+  padding-right: 20px;
+  padding-bottom: 15px;
+  padding-left: 25px;
+}
+```
+
+---
+
+## 3️⃣ BORDER (Chegarasi)
+
+Elementning chegarasi:
+
+```css
+/* Barcha tomonlar bir xil */
+button {
+  border: 2px solid #333;
+}
+
+/* Border uslublari */
+div {
+  border: 3px solid blue;        /* Solid - qattiq */
+  border: 2px dashed red;        /* Dashed - tire */
+  border: 1px dotted green;      /* Dotted - nuqtalangan */
+  border: 4px double purple;     /* Double - ikki qatorli */
+}
+
+/* Alohida tomonlar */
+box {
+  border-top: 2px solid red;
+  border-right: 3px solid green;
+  border-bottom: 2px solid blue;
+  border-left: 3px solid yellow;
+}
+
+/* Border radiusi - burchaklari yumaloq */
+card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+/* Barcha burchaklar aylanish */
+circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+}
+```
+
+---
+
+## 4️⃣ MARGIN (Tashqari Bo'sh Joy)
+
+Elementning **tashqari** tarafida bo'sh joy, boshqa elementlardan uzoqlashish:
+
+```css
+/* Hamma tarafga bir xil */
+section {
+  margin: 30px;
+}
+
+/* Yuqori, o'ng, pastki, chap */
+div {
+  margin: 10px 20px 15px 25px;
+}
+
+/* Yuqori/pastki, o'ng/chap */
+p {
+  margin: 20px 0;    /* Yuqori-pastki: 20px, o'ng-chap: 0 */
+}
+
+/* Alohida tomonlar */
+card {
+  margin-top: 20px;
+  margin-right: 15px;
+  margin-bottom: 20px;
+  margin-left: 15px;
+}
+
+/* Avtomatik - markazga qo'yish */
+container {
+  margin: 0 auto;    /* Yuqori-pastki: 0, o'ng-chap: avtomatik */
+}
+```
+
+---
+
+## Box Sizing
+
+**Problem:** Width 300px + padding 20px = 340px (aytilganidan katta!)
+
+**Solution:** `box-sizing: border-box;`
+
+```css
+/* Standart (content-box) */
+div {
+  width: 300px;
+  padding: 20px;      /* Jami: 340px */
+  box-sizing: content-box;
+}
+
+/* Yaxshi usul (border-box) */
+div {
+  width: 300px;
+  padding: 20px;      /* Jami: 300px */
+  box-sizing: border-box;
+}
+
+/* Hamma elementga */
+* {
+  box-sizing: border-box;
+}
+```
+
+---
+
+## Praktik Misol - Box Model
+
+<CodeBlock language="html" title="Box Model Misoli">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .box {
+            background-color: white;
+            width: 300px;
+            height: 150px;
+
+            /* Content area */
+            padding: 20px;
+
+            /* Border */
+            border: 2px solid #ddd;
+            border-radius: 8px;
+
+            /* Margin */
+            margin: 20px;
+        }
+
+        .box h2 {
+            padding: 10px;
+            background-color: #2563eb;
+            color: white;
+            margin: 0 -20px 10px -20px;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .box p {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px 0;
+            background-color: #10b981;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background-color: #059669;
+        }
+
+        .demo-boxes {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .small-box {
+            width: 150px;
+            height: 100px;
+            background-color: #3b82f6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin: 10px;
+        }
+
+        .with-padding {
+            padding: 30px;
+        }
+
+        .with-border {
+            border: 3px solid #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Box Model - Margin, Padding, Border</h1>
+
+        <div class="box">
+            <h2>Element</h2>
+            <p>Bu element padding, border va margin'ni ko'rsatadi.</p>
+            <button>Bosing!</button>
+        </div>
+
+        <h3>Turli Box Examples:</h3>
+
+        <div class="demo-boxes">
+            <div class="small-box">Oddiy</div>
+            <div class="small-box with-padding">Padding</div>
+            <div class="small-box with-border">Border</div>
+        </div>
+    </div>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## Box Model Qoidalari
+
+| Xususiyat | Maqsadi | Misol |
+|-----------|---------|-------|
+| `width` | Kenglik | `width: 300px` |
+| `height` | Balandlik | `height: 200px` |
+| `padding` | Ichki bo'sh joy | `padding: 20px` |
+| `border` | Chegarasi | `border: 2px solid` |
+| `margin` | Tashqari bo'sh joy | `margin: 20px` |
+| `box-sizing` | O'lchash usuli | `box-sizing: border-box` |
+
+---
+
+## 🎯 Box Model Qisqacha
+
+- **Content:** Asosiy matn/rasm
+- **Padding:** Ichkari bo'sh joy
+- **Border:** Chegarasi
+- **Margin:** Tashqari bo'sh joy
+- **TAVSIYA:** Har doim `box-sizing: border-box` ishlatish!
+
+---
+
+Keyingi darsda **Matn va Fontlar**ni o'rganamiz!
