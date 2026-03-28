@@ -10,6 +10,7 @@ import { getAllCategoriesAction } from '@/app/admin/actions'
 
 interface Document {
   slug: string
+  filePath: string
   title: string
   description: string
   category: string
