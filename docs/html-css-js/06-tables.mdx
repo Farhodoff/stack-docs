@@ -1,0 +1,396 @@
+---
+title: "HTML Jadvallar (Tables)"
+description: "HTML'da jadvallar, satrlar, ustunlar, colspan va rowspan"
+category: "html-css-js"
+order: 6
+tags:
+  - html
+  - tables
+  - data
+status: "published"
+---
+
+# HTML Jadvallar (Tables)
+
+## 📊 Jadvallar Nima?
+
+**Jadvallar** – ma'lumotlarni satr va ustunlar ko'rinishida (grid formato'da) ko'rsatish uchun ishlatiladi.
+
+Masalan:
+- Talabalar ro'yxati
+- Narx quymasi
+- Grafik yoki holatlar
+- Qo'shilgan ma'lumotlar
+
+---
+
+## 🏗️ Jadvalni Tuzilishi
+
+<CodeBlock language="html" title="Asosiy Jadval Struktura">
+```html
+<table border="1">
+    <thead>
+        <tr>
+            <th>Sarlavha 1</th>
+            <th>Sarlavha 2</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Ma'lumot 1</td>
+            <td>Ma'lumot 2</td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr>
+            <td>Juga</td>
+            <td>Summа</td>
+        </tr>
+    </tfoot>
+</table>
+```
+</CodeBlock>
+
+### Jadval Elementlari
+
+| Element | Ma'nosi |
+|---------|---------|
+| `<table>` | Jadvalni o'ramlash |
+| `<thead>` | Sarlavhalar (yuqori) |
+| `<tbody>` | Asosiy ma'lumotlar |
+| `<tfoot>` | Juga (pastki) |
+| `<tr>` | Satr (table row) |
+| `<th>` | Sarlavha cell (qalin, markazda) |
+| `<td>` | Ma'lumot cell (table data) |
+
+---
+
+## 🎨 Jadval Atributlari
+
+| Atribut | Ma'nosi | Misol |
+|---------|---------|-------|
+| `border` | Chiziqning qalinligi | `border="1"` |
+| `cellpadding` | Cell ichidagi joy | `cellpadding="10"` |
+| `cellspacing` | Celllar orasidagi jo'y | `cellspacing="5"` |
+| `width` | Jadvallning kengligini | `width="500"` |
+| `height` | Jadvallning balandiligini | `height="300"` |
+
+---
+
+## 📋 Oddiy Jadval Misoli
+
+<CodeBlock language="html" title="Talabalar Jadavali">
+```html
+<table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Ism</th>
+            <th>Yoshi</th>
+            <th>Shahar</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Ali</td>
+            <td>25</td>
+            <td>Toshkent</td>
+        </tr>
+        <tr>
+            <td>Laylo</td>
+            <td>22</td>
+            <td>Samarqand</td>
+        </tr>
+        <tr>
+            <td>Karim</td>
+            <td>28</td>
+            <td>Buxoro</td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3">Jami: 3 ta talaba</td>
+        </tr>
+    </tfoot>
+</table>
+```
+</CodeBlock>
+
+---
+
+## 🔗 Colspan (Ustunlarni Birlashtirish)
+
+**colspan** – ma'lumotni bir nechta ustunlar orasida cho'zish:
+
+<CodeBlock language="html" title="Colspan Misoli">
+```html
+<table border="1" cellpadding="8">
+    <tr>
+        <th colspan="3">Eng Muhim Ma'lumotlar</th>
+        <!-- Bu sarlavha 3 ta ustunni egallaydi -->
+    </tr>
+    <tr>
+        <th>Ism</th>
+        <th>Yoshi</th>
+        <th>Shahar</th>
+    </tr>
+    <tr>
+        <td>Ali</td>
+        <td>25</td>
+        <td>Toshkent</td>
+    </tr>
+    <tr>
+        <td colspan="2">Ali Toshkentda yasaydi</td>
+        <!-- 2 ta ustunni egallaydi -->
+        <td>Toshkent</td>
+    </tr>
+</table>
+```
+</CodeBlock>
+
+---
+
+## 📏 Rowspan (Satrlarni Birlashtirish)
+
+**rowspan** – ma'lumotni bir nechta satrlar orasida cho'zish:
+
+<CodeBlock language="html" title="Rowspan Misoli">
+```html
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Ism</th>
+        <th>Savdo Mahsulotlari</th>
+        <th>Narx</th>
+    </tr>
+    <tr>
+        <td rowspan="3">Ali</td>
+        <!-- Ali 3 ta qator ichida ko'rinadi -->
+        <td>Olma</td>
+        <td>50,000 so'm</td>
+    </tr>
+    <tr>
+        <!-- Ali bu qatorda ham ko'rinadi -->
+        <td>Banan</td>
+        <td>30,000 so'm</td>
+    </tr>
+    <tr>
+        <!-- Ali bu qatorda ham ko'rinadi -->
+        <td>Gilos</td>
+        <td>60,000 so'm</td>
+    </tr>
+</table>
+```
+</CodeBlock>
+
+---
+
+## 🎨 CSS bilan Jadval Styling
+
+<CodeBlock language="html" title="Stilizatsiya Qilingan Jadval">
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        thead {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tfoot {
+            background-color: #e5e7eb;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>Mahsulot</th>
+                <th>Narx</th>
+                <th>Miqdor</th>
+                <th>Umumiy</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Sharbatlar</td>
+                <td>10,000 so'm</td>
+                <td>5</td>
+                <td>50,000 so'm</td>
+            </tr>
+            <tr>
+                <td>Chipslar</td>
+                <td>8,000 so'm</td>
+                <td>3</td>
+                <td>24,000 so'm</td>
+            </tr>
+            <tr>
+                <td>Biskvitlar</td>
+                <td>5,000 so'm</td>
+                <td>4</td>
+                <td>20,000 so'm</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">Juga:</td>
+                <td>94,000 so'm</td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 📊 Murakkab Jadval Misoli
+
+<CodeBlock language="html" title="O'quv Jadvali">
+```html
+<table border="1" cellpadding="10">
+    <thead>
+        <tr>
+            <th>Soat</th>
+            <th>Dushanba</th>
+            <th>Seshanba</th>
+            <th>Chorshanba</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>09:00</td>
+            <td rowspan="2">HTML</td>
+            <td>CSS</td>
+            <td>JavaScript</td>
+        </tr>
+        <tr>
+            <td>10:00</td>
+            <!-- HTML bu qatorda ham -->
+            <td>Responsive</td>
+            <td>DOM</td>
+        </tr>
+        <tr>
+            <td>11:00</td>
+            <td>React</td>
+            <td colspan="2">Proyekt Ishlab Chiqish</td>
+            <!-- Proyekt 2 ta ustunni egallaydi -->
+        </tr>
+    </tbody>
+</table>
+```
+</CodeBlock>
+
+---
+
+## ✅ Jadval Atributlarining Jadvali
+
+| Atribut | Ma'nosi | Misol |
+|---------|---------|-------|
+| `colspan` | Ustunlarni birlashtirish | `colspan="3"` |
+| `rowspan` | Satrlarni birlashtirish | `rowspan="2"` |
+| `border` | Chiziqlar | `border="1"` |
+| `cellpadding` | Cell ichidagi joy | `cellpadding="10"` |
+| `cellspacing` | Celllar orasidagi joy | `cellspacing="0"` |
+| `width` | Kenglik | `width="500px"` |
+| `height` | Balandlik | `height="300px"` |
+| `align` | Tekishlash (left, center, right) | `align="center"` |
+| `valign` | Vertikal tekishlash (top, middle, bottom) | `valign="middle"` |
+
+---
+
+## 🎯 Best Practices
+
+1. **`<thead>`, `<tbody>`, `<tfoot>` ishlatish** – Semantik va strukturali
+2. **CSS bilan styling qilish** – HTML atributlaridan emas
+3. **`border-collapse: collapse`** – Chiziqlar takrorlanmasligi uchun
+4. **Responsive tablalar** – Mobil'da horizontal scroll
+5. **Accessibility** – Screen reader'lar uchun kabi atributlar
+
+---
+
+## 📱 Responsive Jadval (CSS bilan)
+
+<CodeBlock language="html" title="Responsive Jadval">
+```html
+<style>
+    @media (max-width: 600px) {
+        table, thead, tbody, th, td, tr {
+            display: block;
+        }
+
+        thead tr {
+            display: none;
+        }
+
+        td {
+            padding-left: 50%;
+            position: relative;
+        }
+
+        td:before {
+            content: attr(data-label);
+            position: absolute;
+            left: 6px;
+            font-weight: bold;
+        }
+    }
+</style>
+
+<table>
+    <thead>
+        <tr>
+            <th>Ism</th>
+            <th>Yoshi</th>
+            <th>Shahar</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td data-label="Ism">Ali</td>
+            <td data-label="Yoshi">25</td>
+            <td data-label="Shahar">Toshkent</td>
+        </tr>
+    </tbody>
+</table>
+```
+</CodeBlock>
+
+---
+
+## 🎓 Xulosa
+
+HTML Jadvallar:
+- ✅ Ma'lumotlarni tuzilishli ko'rsatish
+- ✅ thead, tbody, tfoot bilan semantik
+- ✅ colspan va rowspan'dan foydalanish
+- ✅ CSS bilan styling
+- ✅ Responsive va accessible
+
+---
+
+## 🚀 Keyingi Darsda
+
+HTML5 Media (`<video>`, `<audio>`), CSS Asoslari, va Responsive Design o'rganamiz!
