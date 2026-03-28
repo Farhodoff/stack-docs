@@ -13,6 +13,7 @@ import { DeleteDialog } from './delete-dialog'
 interface DocListProps {
   docs: Array<{
     slug: string
+    filePath: string
     title: string
     description: string
     category: string
@@ -55,8 +56,10 @@ export function DocList({ docs, onDocumentDeleted }: DocListProps) {
     }
   }
 
-  const handleEdit = (slug: string) => {
-    router.push(`/admin/edit/${slug}`)
+  const handleEdit = (filePath: string) => {
+    // Encode the filepath to safely pass through URL
+    const encoded = encodeURIComponent(filePath.replace('.mdx', ''))
+    router.push(`/admin/edit/${encoded}`)
   }
 
   const handlePreview = (slug: string) => {
@@ -135,7 +138,7 @@ export function DocList({ docs, onDocumentDeleted }: DocListProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEdit(doc.slug)}
+                        onClick={() => handleEdit(doc.filePath)}
                         title="Tahrirlash"
                       >
                         <Pencil className="h-4 w-4" />

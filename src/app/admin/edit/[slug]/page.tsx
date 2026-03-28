@@ -8,7 +8,9 @@ interface EditDocPageProps {
 
 export default async function EditDocPage({ params }: EditDocPageProps) {
   const { slug } = await params
-  const doc = await getDocBySlugAction(slug)
+  // Decode the encoded filepath
+  const filePath = decodeURIComponent(slug)
+  const doc = await getDocBySlugAction(filePath)
 
   if (!doc) {
     notFound()

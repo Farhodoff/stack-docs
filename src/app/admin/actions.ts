@@ -129,7 +129,7 @@ export async function getAllDocsAction() {
         const stats = await fs.stat(filePath);
 
         return {
-          slug: (file as string).replace(".mdx", "").split(path.sep).join("/"),
+          slug: (file as string).replace(".mdx", "").replace(/\//g, "-"),
           filePath: file,
           title: titleMatch?.[1]?.trim() || "Untitled",
           description: descMatch?.[1]?.trim() || "",
