@@ -8,6 +8,20 @@ import { z } from "zod";
 const docsDir = path.join(process.cwd(), "docs");
 const categoriesJsonPath = path.join(docsDir, "config", "categories.json");
 
+// Check if we're in a read-only environment
+const isReadOnlyEnv = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+
+// Helper function to check write access
+async function checkWriteAccess(): Promise<{ writable: boolean; message?: string }> {
+  if (isReadOnlyEnv) {
+    return {
+      writable: false,
+      message: "Admin panel qo'shish Vercel production'da ishlamaydi. Iltimos, darslarni GitHub'ga to'g'ridan-to'g'ri push qiling: https://github.com/Farhodoff/stack-docs/tree/main/docs",
+    };
+  }
+  return { writable: true };
+}
+
 // Schema for document creation/update
 const docSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -226,6 +240,12 @@ async function readDocFile(filePath: string) {
  */
 export async function createDocAction(data: DocFormData) {
   try {
+    // Check if environment is writable
+    const { writable, message } = await checkWriteAccess();
+    if (!writable) {
+      return { error: message || "Cannot create documents in this environment" };
+    }
+
     const validated = docSchema.parse(data);
 
     // Create category directory if it doesn't exist
@@ -278,6 +298,12 @@ tags: [${validated.tags.map((t) => `"${t}"`).join(", ")}]
  */
 export async function updateDocAction(slug: string, data: DocFormData) {
   try {
+    // Check if environment is writable
+    const { writable, message } = await checkWriteAccess();
+    if (!writable) {
+      return { error: message || "Cannot update documents in this environment" };
+    }
+
     const validated = docSchema.parse(data);
 
     // Find the existing file
@@ -326,6 +352,12 @@ tags: [${validated.tags.map((t) => `"${t}"`).join(", ")}]
  */
 export async function deleteDocAction(slug: string) {
   try {
+    // Check if environment is writable
+    const { writable, message } = await checkWriteAccess();
+    if (!writable) {
+      return { error: message || "Cannot delete documents in this environment" };
+    }
+
     const doc = await getDocBySlugAction(slug);
     if (!doc) {
       return { error: "Document not found" };
