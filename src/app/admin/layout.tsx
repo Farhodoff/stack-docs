@@ -33,7 +33,36 @@ export default function AdminLayout({
     router.push("/admin/login");
   };
 
-  const NavLinks = () => (
+  const DesktopNavLinks = () => (
+    <>
+      <Link
+        href="/admin"
+        className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium"
+      >
+        <LayoutDashboard size={18} /> Dashboard
+      </Link>
+      <Link
+        href="/admin/documents"
+        className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium"
+      >
+        <FileText size={18} /> Hujjatlar
+      </Link>
+      <Link
+        href="/admin/categories"
+        className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium"
+      >
+        <Layers size={18} /> Kategoriyalar
+      </Link>
+      <Link
+        href="/admin/settings"
+        className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm font-medium"
+      >
+        <Settings size={18} /> Sozlamalar
+      </Link>
+    </>
+  );
+
+  const MobileNavLinks = () => (
     <>
       <SheetClose asChild>
         <Link
@@ -82,7 +111,7 @@ export default function AdminLayout({
           </Link>
         </div>
         <nav className="flex-1 p-4 space-y-2">
-          <NavLinks />
+          <DesktopNavLinks />
         </nav>
         <div className="p-4 border-t">
           <Button
@@ -113,7 +142,7 @@ export default function AdminLayout({
               </Link>
             </div>
             <nav className="flex flex-col space-y-2">
-              <NavLinks />
+              <MobileNavLinks />
             </nav>
             <div className="mt-8 pt-4 border-t">
               <Button
