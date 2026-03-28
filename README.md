@@ -2,7 +2,7 @@
 
 Open-source fullstack learning platform.
 
-**Live**: https://stack-lovat-eight.vercel.app
+**Live**: stack-docs.vercel.app
 
 ## Quick Start
 
