@@ -1,0 +1,375 @@
+---
+title: "HTML Linklar, Rasmlar va Ro'yxatlar"
+description: "HTML'da linklar, rasmlar, va har xil ro'yxat turlarini ishlash"
+category: "html-css-js"
+order: 5
+tags:
+  - html
+  - links
+  - images
+  - lists
+status: "published"
+---
+
+# HTML Linklar, Rasmlar va Ro'yxatlar
+
+Bu darsda HTML'dagi **linklar**, **rasmlar**, va **ro'yxatlar**ni o'rganamiz.
+
+---
+
+## 🔗 Linklar (`<a>` Tegi)
+
+**`<a>` tegi** - havolalar yaratish uchun ishlatiladi.
+
+### Asosiy Link Struktura
+
+<CodeBlock language="html" title="Link Misoli">
+```html
+<a href="https://google.com" target="_blank">Google ga o'tish</a>
+```
+</CodeBlock>
+
+### Link Atributlari
+
+| Atribut | Ma'nosi | Misol |
+|---------|---------|-------|
+| `href` | Havolaning manzili (MAJBURIY) | `href="https://example.com"` |
+| `target` | Havolani qayerda ochish | `target="_blank"` |
+| `title` | Ko'rsatiluvchi tekst (tooltip) | `title="Bunga hover qilsangiz..."` |
+| `download` | Faylni yuklab olish | `download="file.pdf"` |
+
+### Link Turları
+
+#### 1️⃣ Tashqi Sayt Linklar
+
+Boshqa saytga o'tish (`target="_blank"` yangi oynada ochadi):
+
+```html
+<!-- Shunga oynada -->
+<a href="https://google.com">Google</a>
+
+<!-- Yangi oynada -->
+<a href="https://youtube.com" target="_blank">YouTube (Yangi oynada)</a>
+```
+
+#### 2️⃣ Ichki Sahifa Linklar
+
+O'z saytingiz ichidagi sahifalarga:
+
+```html
+<a href="about.html">Haqida sahifasi</a>
+<a href="/contact">Kontakt sahifasi</a>
+<a href="/products/phone">Telefon mahsulotlar</a>
+```
+
+#### 3️⃣ Sahifa Ichidagi Bo'limlarga Link
+
+Anchor (kotva) linklar - sahifa ichida o'tish:
+
+```html
+<!-- Link -->
+<a href="#bolim1">Bo'lim 1 ga o'tish</a>
+<a href="#bolim2">Bo'lim 2 ga o'tish</a>
+
+<!-- Bo'limlar -->
+<h2 id="bolim1">Bo'lim 1</h2>
+<p>Bu bo'limning kontenti...</p>
+
+<h2 id="bolim2">Bo'lim 2</h2>
+<p>Bu bo'limning kontenti...</p>
+```
+
+#### 4️⃣ Email Linklar
+
+Foydalanuvchi email yuborish uchun:
+
+```html
+<a href="mailto:info@example.com">Bidirish yo'llang</a>
+
+<!-- Subject va body bilan -->
+<a href="mailto:info@example.com?subject=Assalomu&body=Salomu...">
+    Email yuborish
+</a>
+```
+
+#### 5️⃣ Telefon Linklar
+
+Mobil'dan telefon qo'ng'iroq qilish:
+
+```html
+<a href="tel:+998901234567">+998 90 123 45 67</a>
+```
+
+#### 6️⃣ Faylni Yuklab Olish
+
+```html
+<a href="document.pdf" download>PDF ni Yuklab Olish</a>
+<a href="image.jpg" download="my-image.jpg">Rasmni Yuklab Olish</a>
+```
+
+---
+
+## 🖼️ Rasmlar (`<img>` Tegi)
+
+**`<img>` tegi** - veb-sahifada rasmlar ko'rsatish uchun.
+
+### Asosiy Rasm Struktura
+
+<CodeBlock language="html" title="Rasm Misoli">
+```html
+<img src="photo.jpg" alt="Tavsif matni" width="300" height="200">
+```
+</CodeBlock>
+
+### Rasm Atributlari
+
+| Atribut | Ma'nosi | Misol |
+|---------|---------|-------|
+| `src` | Rasm yo'li (MAJBURIY) | `src="image.jpg"` |
+| `alt` | Rasm yuklanmasa yoki screen reader uchun | `alt="Rasm tavsifi"` |
+| `width` | Kenglik | `width="300"` |
+| `height` | Balandlik | `height="200"` |
+| `title` | Tooltip matn | `title="Rasmga hover..."` |
+
+### Rasm Yo'llari
+
+#### Absolyut Yo'l
+
+```html
+<!-- Tashqi saytdan -->
+<img src="https://example.com/image.jpg" alt="Tashqi rasm">
+
+<!-- Proyekt ichidagi root'dan -->
+<img src="/images/logo.png" alt="Logotip">
+```
+
+#### Nisbiy Yo'l
+
+```html
+<!-- Joriy papkada -->
+<img src="photo.jpg" alt="Rasm">
+
+<!-- Ata papkada -->
+<img src="../images/photo.jpg" alt="Rasm">
+```
+
+### Responsive Rasm
+
+```html
+<!-- Width va height nisbati -->
+<img src="image.jpg" alt="Rasm" width="400" height="300">
+
+<!-- Responsive (CSS bilan) -->
+<img src="image.jpg" alt="Rasm" style="max-width: 100%; height: auto;">
+```
+
+### Picture (Turli Rasmlar, Turli Ekranlar Uchun)
+
+```html
+<picture>
+    <!-- Malenkiy ekran -->
+    <source media="(max-width: 480px)" srcset="image-small.jpg">
+    
+    <!-- O'rtacha ekran -->
+    <source media="(max-width: 768px)" srcset="image-medium.jpg">
+    
+    <!-- Katta ekran -->
+    <img src="image-large.jpg" alt="Responsive Rasm">
+</picture>
+```
+
+---
+
+## 📝 Ro'yxatlar
+
+HTML'da 3 xil ro'yxat turi bor: tartibsiz, tartibli, va izohli.
+
+### 1️⃣ Tartibsiz Ro'yxat (`<ul>`)
+
+Tartibi muhim emas. Har bir element bosh nuqta bilan ko'rinadi:
+
+<CodeBlock language="html" title="Tartibsiz Ro'yxat">
+```html
+<ul>
+    <li>Olma</li>
+    <li>Banan</li>
+    <li>Gilos</li>
+    <li>Anor</li>
+</ul>
+```
+</CodeBlock>
+
+**Ko'rinadi:**
+- Olma
+- Banan
+- Gilos
+- Anor
+
+### 2️⃣ Tartibli Ro'yxat (`<ol>`)
+
+Tartibi muhim. Har bir element raqam bilan ko'rinadi:
+
+<CodeBlock language="html" title="Tartibli Ro'yxat">
+```html
+<ol>
+    <li>Birinchi qadam</li>
+    <li>Ikkinchi qadam</li>
+    <li>Uchinchi qadam</li>
+</ol>
+```
+</CodeBlock>
+
+**Ko'rinadi:**
+1. Birinchi qadam
+2. Ikkinchi qadam
+3. Uchinchi qadam
+
+### 3️⃣ Izohli Ro'yxat (`<dl>`)
+
+Shartlar va ularning ta'riflari. `<dt>` - shart, `<dd>` - ta'rif:
+
+<CodeBlock language="html" title="Izohli Ro'yxat">
+```html
+<dl>
+    <dt>HTML</dt>
+    <dd>Veb-sahifaning tuzilishi va kontenti</dd>
+    
+    <dt>CSS</dt>
+    <dd>Veb-sahifaning ko'rinishi va stilizatsiya</dd>
+    
+    <dt>JavaScript</dt>
+    <dd>Veb-sahifaning interaktivligi va dinamikasi</dd>
+</dl>
+```
+</CodeBlock>
+
+---
+
+## 🎯 Ichma-Ichlik Ro'yxatlar (Nested Lists)
+
+Ro'yxat ichida ro'yxat:
+
+<CodeBlock language="html" title="Ichma-Ichlik Ro'yxatlar">
+```html
+<ul>
+    <li>Frontend
+        <ul>
+            <li>HTML</li>
+            <li>CSS</li>
+            <li>JavaScript</li>
+        </ul>
+    </li>
+    <li>Backend
+        <ul>
+            <li>Node.js</li>
+            <li>Python</li>
+            <li>Java</li>
+        </ul>
+    </li>
+</ul>
+```
+</CodeBlock>
+
+**Ko'rinadi:**
+- Frontend
+  - HTML
+  - CSS
+  - JavaScript
+- Backend
+  - Node.js
+  - Python
+  - Java
+
+---
+
+## 📋 To'liq Misol - Mahsulot Sahifasi
+
+<CodeBlock language="html" title="E-commerce Sahifasi">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <title>Elektronika Dokon</title>
+</head>
+<body>
+    <header>
+        <h1>📱 Elektronika Dokon</h1>
+        <nav>
+            <a href="/">Bosh sahifa</a>
+            <a href="/products">Mahsulotlar</a>
+            <a href="tel:+998901234567">Qo'ng'iroq qilish</a>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Bizning Mahsulotlar</h2>
+
+            <!-- Mahsulot 1 -->
+            <article>
+                <h3>Smartphone</h3>
+                <img src="smartphone.jpg" alt="Smartphone" width="300">
+                <p>Eng so'nggi smartphoneler:</p>
+                <ul>
+                    <li>iPhone 15</li>
+                    <li>Samsung Galaxy S24</li>
+                    <li>Google Pixel 8</li>
+                </ul>
+                <a href="tel:+998901234567">Narxi so'rash uchun qo'ng'iroq qiling</a>
+            </article>
+
+            <!-- Mahsulot 2 -->
+            <article>
+                <h3>Kompyuter</h3>
+                <img src="computer.jpg" alt="Laptop" width="300">
+                <p>Kompyuter turi:</p>
+                <ol>
+                    <li>Laptop</li>
+                    <li>Desktop</li>
+                    <li>Tablet</li>
+                </ol>
+                <a href="mailto:sales@shop.com">Email yuborish</a>
+            </article>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Elektronika Dokon</p>
+        <nav>
+            <a href="#top">Yuqoriga</a>
+            <a href="/privacy">Maxfiylik</a>
+            <a href="/contact">Kontakt</a>
+        </nav>
+    </footer>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## ✅ Best Practices
+
+1. **Alt text'i mingli yozing** - Screen reader'lar uchun muhim
+2. **Rasm o'lchamini belgilang** - Layout shift'ni oldini olish
+3. **Responsive rasmlar** - Turli ekranlar uchun
+4. **Link target'i to'g'ri** - `target="_blank"` kerak payti
+5. **Semantik ro'yxatlar** - `<div>` dan emas, `<ul>`/`<ol>` dan bo'lsin
+
+---
+
+## 🎓 Xulosa
+
+| Element | Ma'nosi | Misol |
+|---------|---------|-------|
+| `<a>` | Link | `<a href="...">` |
+| `<img>` | Rasm | `<img src="..." alt="...">` |
+| `<ul>` | Tartibsiz ro'yxat | Bosh nuqtalar |
+| `<ol>` | Tartibli ro'yxat | Raqamlar |
+| `<dl>` | Izohli ro'yxat | Shartlar/ta'riflar |
+
+---
+
+## 🚀 Keyingi Darsda
+
+HTML tablalar (`<table>`), advanced form'lar, va HTML5 audio/video elementlarini o'rganamiz!
