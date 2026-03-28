@@ -149,12 +149,19 @@ export function getNavigationItems() {
 }
 
 /**
- * Get previous and next docs for pagination
+ * Get previous and next docs for pagination (CATEGORY-AWARE)
  * @param currentSlug - Current document slug
- * @returns Previous and next doc metadata
+ * @param category - Category to filter by (only navigate within same category)
+ * @returns Previous and next doc metadata within the same category
  */
-export function getPrevNextDocs(currentSlug: string) {
-  const docs = getAllDocs();
+export function getPrevNextDocs(currentSlug: string, category?: string) {
+  let docs = getAllDocs();
+  
+  // Filter by category if provided
+  if (category) {
+    docs = docs.filter((doc) => doc.category === category);
+  }
+  
   const currentIndex = docs.findIndex((doc) => doc.slug === currentSlug);
 
   return {

@@ -20,7 +20,9 @@ export default async function DocPage(props: {
     notFound();
   }
 
-  const { prev, next } = getPrevNextDocs(slugStr);
+  // Get prev/next docs WITHIN THE SAME CATEGORY
+  const { prev, next } = getPrevNextDocs(slugStr, doc.category);
+  
   const fileContent = fs.readFileSync(doc.filePath, "utf-8");
   const contentWithoutFrontmatter = fileContent
     .replace(/^---\s*\n([\s\S]*?)\n---/, "")
