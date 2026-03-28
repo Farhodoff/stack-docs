@@ -1,0 +1,343 @@
+---
+title: "Semantik HTML5 va Sahifa Tuzilishi"
+description: "Semantik HTML elementlari, sahifa tuzilishi, va SEO uchun muhimlik"
+category: "html-css-js"
+order: 3
+tags:
+  - html
+  - semantic
+  - html5
+  - seo
+status: "published"
+---
+
+# Semantik HTML5 va Sahifa Tuzilishi
+
+## 🎯 Semantik HTML Nima?
+
+**Semantik HTML** - elementlarning ma'nosiga qarab to'g'ri ishlatish.
+
+Masalan:
+- ❌ **Semantik emas:** `<div>Saytning sarlavhasi</div>`
+- ✅ **Semantik:** `<header>Saytning sarlavhasi</header>`
+
+**Nima uchun muhim?**
+1. **SEO (Search Engine Optimization)** - Google saytingizni yaxshi tushinadi
+2. **Accessibility (A11y)** - Screen readers va i-readers uchun
+3. **Kod o'qilishi** - Dasturchilar oson tushunadi
+4. **Maintenance** - Kodni tahrirlash oson
+
+---
+
+## 🏗️ Asosiy Semantik Teglar
+
+### `<header>` - Saytning Sarlavha Qismi
+
+Saytning yoki qismining yuqori qismida turadi. Logo, navigatsiya, qidiruv bo'lishi mumkin:
+
+```html
+<header>
+    <h1>Mening Blogim</h1>
+    <p>Frontend dasturlash haqida maqolalar</p>
+</header>
+```
+
+### `<nav>` - Navigatsiya
+
+Asosiy havolalar va menyu uchun:
+
+```html
+<nav>
+    <a href="/">Bosh sahifa</a>
+    <a href="/maqolalar">Maqolalar</a>
+    <a href="/haqida">Haqida</a>
+    <a href="/bog'lanish">Bog'lanish</a>
+</nav>
+```
+
+### `<main>` - Asosiy Kontent
+
+Sahifaning asosiy, o'ziga xos kontenti. **Har bir sahifada faqat bir marta**:
+
+```html
+<main>
+    <h1>Xush kelibsiz!</h1>
+    <p>Bu asosiy kontent...</p>
+</main>
+```
+
+### `<section>` - Tematik Bo'lim
+
+Muvofiqlashtirilgan tematik guruhlash:
+
+```html
+<section>
+    <h2>So'nggi Maqolalar</h2>
+    <article>...</article>
+    <article>...</article>
+</section>
+
+<section>
+    <h2>Ijtimoiy Tarmoqlar</h2>
+    <p>Bizni kuzating...</p>
+</section>
+```
+
+### `<article>` - Mustaqil Kontent
+
+Blog post, yangilik, forum post kabi o'z-o'zida to'liq kontent:
+
+```html
+<article>
+    <h2>HTML5 Semantic Tags Haqida</h2>
+    <p>Muallif: Ali</p>
+    <p>Nashr: 2026-03-28</p>
+    <p>HTML5 juda yaxshi...</p>
+</article>
+```
+
+### `<aside>` - Yon Panel
+
+Asosiy kontentga qo'shimcha ma'lumot. Sidebar, catchy boxes:
+
+```html
+<aside>
+    <h3>Qiziqarli Havolalar</h3>
+    <ul>
+        <li><a href="#">MDN Docs</a></li>
+        <li><a href="#">W3C Standarti</a></li>
+    </ul>
+</aside>
+```
+
+### `<footer>` - Pastki Qism
+
+Mualliflik huquqi, qo'shimcha havolalar, kontakt ma'lumoti:
+
+```html
+<footer>
+    <p>&copy; 2026 Mening Blogim. Barcha huquqlar himoyalangan.</p>
+    <nav>
+        <a href="/privacy">Maxfiylik Siyosati</a>
+        <a href="/terms">Foydalanish Shartlari</a>
+    </nav>
+</footer>
+```
+
+---
+
+## ❌ Semantik Emas. Faqat Stil Uchun
+
+### `<div>` - Umumiy Konteyner
+
+Semantik ma'nosi yo'q. CSS/JavaScript uchun guruhlash:
+
+```html
+<!-- Semantik emas, faqat stil/JS uchun -->
+<div class="product-card">
+    <h3>Mahsulot</h3>
+    <p>Narxi: $100</p>
+</div>
+```
+
+### `<span>` - Umumiy Inline Konteyner
+
+Inline tekstni guruhlash, CSS/JS uchun:
+
+```html
+<p>Bu <span class="highlight">muhim</span> so'z.</p>
+```
+
+---
+
+## 📐 To'liq Semantik Sahifa Misoli
+
+<CodeBlock language="html" title="To'liq HTML5 Sahifasi">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mening Blogim - Frontend Dasturlash</title>
+</head>
+<body>
+    <!-- Saytning sarlavha qismi -->
+    <header>
+        <h1>🚀 Mening Blogim</h1>
+        <p>Frontend dasturlash, React, va Web Development</p>
+    </header>
+
+    <!-- Navigatsiya -->
+    <nav>
+        <ul>
+            <li><a href="/">Bosh sahifa</a></li>
+            <li><a href="/maqolalar">Maqolalar</a></li>
+            <li><a href="/kategoriyalar">Kategoriyalar</a></li>
+            <li><a href="/haqida">Haqida</a></li>
+        </ul>
+    </nav>
+
+    <!-- Asosiy kontent -->
+    <main>
+        <!-- Bo'lim 1: So'nggi maqolalar -->
+        <section>
+            <h2>📰 So'nggi Maqolalar</h2>
+
+            <article>
+                <h3>HTML5 Semantic Tags Haqida</h3>
+                <p><strong>Muallif:</strong> Ali</p>
+                <p><em>Nashr: 2026-03-28</em></p>
+                <p>
+                    HTML5 semantic tags saytningizni yanada
+                    tushunarli va SEO-friendly qiladi...
+                </p>
+                <a href="/articles/html5-semantic">To'liq O'qish →</a>
+            </article>
+
+            <article>
+                <h3>CSS Flexbox vs Grid</h3>
+                <p><strong>Muallif:</strong> Fatima</p>
+                <p><em>Nashr: 2026-03-25</em></p>
+                <p>
+                    Flexbox va Grid ikkalasi layout uchun,
+                    lekin har birining o'ziga khusiyatlari bor...
+                </p>
+                <a href="/articles/flexbox-grid">To'liq O'qish →</a>
+            </article>
+        </section>
+
+        <!-- Bo'lim 2: Tavsiyalangan -->
+        <section>
+            <h2>⭐ Tavsiyalangan Maqolalar</h2>
+            <article>
+                <h3>JavaScript Async/Await</h3>
+                <p>Aynchronous dasturlash haqida to'liq qo'llanma...</p>
+                <a href="/articles/async-await">O'qish →</a>
+            </article>
+        </section>
+    </main>
+
+    <!-- Yon panel -->
+    <aside>
+        <h3>📚 Qiziqarli Havolalar</h3>
+        <ul>
+            <li><a href="https://developer.mozilla.org">MDN Docs</a></li>
+            <li><a href="https://www.w3.org">W3C Standarti</a></li>
+            <li><a href="https://caniuse.com">CanIUse</a></li>
+        </ul>
+
+        <h3>🏷️ Kategoriyalar</h3>
+        <ul>
+            <li><a href="/cat/html">HTML (5)</a></li>
+            <li><a href="/cat/css">CSS (8)</a></li>
+            <li><a href="/cat/javascript">JavaScript (12)</a></li>
+            <li><a href="/cat/react">React (6)</a></li>
+        </ul>
+    </aside>
+
+    <!-- Pastki qism -->
+    <footer>
+        <p>&copy; 2026 Mening Blogim. Barcha huquqlar himoyalangan.</p>
+        <nav>
+            <a href="/privacy">Maxfiylik Siyosati</a> |
+            <a href="/terms">Foydalanish Shartlari</a> |
+            <a href="/contact">Bog'lanish</a>
+        </nav>
+    </footer>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 🔍 Faydalar
+
+### SEO Uchun
+
+Qidiruv tizimlari semantik tag'larni ko'rib, sahifaning tuzilishini tushunadi:
+
+```html
+<!-- ✅ Yaxshi SEO -->
+<article>
+    <h1>Blog Post Title</h1>
+    <p>Qo'shimcha ma'lumot...</p>
+</article>
+
+<!-- ❌ Yomon SEO -->
+<div>
+    <div>Blog Post Title</div>
+    <div>Qo'shimcha ma'lumot...</div>
+</div>
+```
+
+### Accessibility Uchun
+
+Screen reader'lar sahifaning strukturasini o'qiy oladi:
+
+```html
+<!-- Screen reader: "Header, navigation, main, article, footer" -->
+<body>
+    <header>...</header>
+    <nav>...</nav>
+    <main>...</main>
+    <footer>...</footer>
+</body>
+```
+
+### Kod Kalitesi
+
+Dasturchilar kodni oson tushunadi:
+
+```html
+<!-- Aniq va tushunarli -->
+<header>Logo va menu</header>
+
+<!-- Noma'lum -->
+<div id="header">Logo va menu</div>
+```
+
+---
+
+## 📋 Semantik vs Non-Semantik Comparison
+
+| Semantik | Non-Semantik | Vazifasi |
+|----------|--------------|---------|
+| `<header>` | `<div class="header">` | Sayt sarlavhasi |
+| `<nav>` | `<div class="nav">` | Menyu/Navigatsiya |
+| `<main>` | `<div class="main">` | Asosiy kontent |
+| `<section>` | `<div class="section">` | Bo'lim |
+| `<article>` | `<div class="article">` | Mustaqil kontent |
+| `<aside>` | `<div class="sidebar">` | Yon panel |
+| `<footer>` | `<div class="footer">` | Pastki qism |
+
+---
+
+## ✅ Best Practices
+
+1. **`<main>` faqat bir marta** - Har bir sahifada maksimum bir `<main>`
+2. **`<header>` va `<footer>` qayta ishlatilishi mumkin** - Har qismda bo'lishi mumkin
+3. **`<article>` o'z-o'zida to'liq` - O'zida h1-h6, paragraf, shunga o'xshashlar bo'lishi kerak
+4. **`<section>` toplamtalash uchun** - Tegishli kontent'larni guruhlonish
+5. **`<aside>` asosiy kontent'ga bog'liq** - Shuning iq'tisodiy ma'lumat
+6. **Nesting to'g'ri** - `<header><nav></nav></header>` - nesting to'g'ri
+
+---
+
+## 🎓 Xulosa
+
+Semantik HTML5:
+- ✅ SEO-friendly
+- ✅ Accessible (hammer uchun)
+- ✅ O'qilishi oson
+- ✅ Maintenance qulayroq
+- ✅ Standards-compliant
+
+**Har doim semantik tag'larni ishlatishga harakat qiling!**
+
+---
+
+## 🚀 Keyingi Darsda
+
+Linklar (`<a>`), rasmlar (`<img>`), va formalar (`<form>`, `<input>`, `<textarea>`, `<button>`) o'rganamiz!
