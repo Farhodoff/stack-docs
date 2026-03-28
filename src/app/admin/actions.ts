@@ -129,7 +129,7 @@ export async function getAllDocsAction() {
         const stats = await fs.stat(filePath);
 
         return {
-          slug: file.replace(".mdx", "").replace(/\//g, "-"),
+          slug: (file as string).replace(".mdx", "").split(path.sep).join("/"),
           filePath: file,
           title: titleMatch?.[1]?.trim() || "Untitled",
           description: descMatch?.[1]?.trim() || "",
@@ -159,32 +159,15 @@ export async function getAllDocsAction() {
 export async function getDocBySlugAction(slug: string) {
   if (!slug) return null;
   try {
-    // Convert slug back to file path
+    // Convert slug to file path (slug uses / separators like: "html-css-js/01-introduction")
     const filePath = path.join(docsDir, `${slug}.mdx`);
 
-    // Check if file exists
     try {
       await fs.access(filePath);
+      return await readDocFile(filePath);
     } catch {
-      // Try with category prefix
-      const parts = slug.split("-");
-      const category = parts[0];
-      const fileName = parts.slice(1).join("-");
-      const filePathWithCategory = path.join(
-        docsDir,
-        category,
-        `${fileName}.mdx`,
-      );
-
-      try {
-        await fs.access(filePathWithCategory);
-        return await readDocFile(filePathWithCategory);
-      } catch {
-        return null;
-      }
+      return null;
     }
-
-    return await readDocFile(filePath);
   } catch (error) {
     console.error("Error reading document:", error);
     return null;
@@ -215,8 +198,15 @@ async function readDocFile(filePath: string) {
   const stats = await fs.stat(filePath);
   const relativePath = path.relative(process.cwd(), filePath);
 
+  // Generate slug relative to docs directory with forward slashes
+  const relativeToDocsDir = path.relative(docsDir, filePath);
+  const slug = relativeToDocsDir
+    .replace(/\.mdx$/, "")
+    .split(path.sep)
+    .join("/");
+
   return {
-    slug: path.basename(filePath, ".mdx"),
+    slug: slug,
     filePath: relativePath,
     frontmatter: {
       title: titleMatch?.[1]?.trim() || "Untitled",
