@@ -1,53 +1,937 @@
 ---
-title: "CSS Nima va Nima Uchun Ishlatiladi"
-description: "CSS - veb-sahifalarni shakllantirish va dizayn qilish tili"
+title: "HTML Proyekti - Multi-page Website"
+description: "Bosh sahifa, haqida, kontakt formasi - 3-sahifali to'liq web-sayt loyihasi"
 category: "html-css-js"
 order: 10
 tags:
-  - css
-  - introduction
-  - styling
+  - html
+  - project
+  - website
+  - real-world
 status: "published"
 ---
 
-# CSS Nima va Nima Uchun Ishlatiladi
+# HTML Proyekti - Multi-page Website
 
-## 🎨 CSS Nima?
+Bu darsda siz **3-sahifali to'liq veb-sayt** yaratasiz: **Bosh Sahifa**, **Haqida** va **Kontakt** sahifalari. Bu proyekt barcha HTML darslarida o'rgangan narsalarni birlashtiradi.
 
-**CSS (Cascading Style Sheets)** – veb-sahifalarning ko'rinishini va joylashuvini boshqarish uchun ishlatiladigan til.
+---
 
-**HTML vs CSS:**
-- **HTML** - Sahifaning tuzilishi va tarkibi (suyak)
-- **CSS** - Sahifaning ko'rinishi va ranglanishi (teri, bo'yoq)
+## 📋 Proyektning Tavsifi
 
-## 🎯 Nima Uchun CSS Kerak?
+Biz **"Fullstack Docs" Blogging Platformasi** uchun veb-sayt yaratamiz:
 
-<CodeBlock language="html" title="CSS Siz">
-```html
-<!-- CSS siz - JUDA XUNUK -->
-<h1>Mening Bloggim</h1>
-<button>Bosing</button>
+- **Bosh Sahifa:** Saytning asosiy sahifasi, navbar, hero qismi
+- **Haqida Sahifasi:** Kompaniya haqida ma'lumot, misyon, ko'zlamalar
+- **Kontakt Sahifasi:** Kontakt formasi, xabar yuborish
+
+**Texnologiyalar:**
+- HTML5 (semantik)
+- CSS3 (qolipga qarang)
+- Responsive design
+
+---
+
+## 🏗️ Proyektning Fayl Strukturasi
+
 ```
-</CodeBlock>
+saytim/
+├── index.html          # Bosh sahifa
+├── about.html          # Haqida
+├── contact.html        # Kontakt
+├── css/
+│   └── styles.css      # Umumiy stillar
+└── images/
+    ├── logo.png
+    └── hero-image.jpg
+```
 
-<CodeBlock language="html" title="CSS Bilan">
+---
+
+## 1️⃣ Bosh Sahifa (index.html)
+
+<CodeBlock language="html" title="Bosh Sahifa">
 ```html
-<!-- CSS bilan - CHIROYLI! -->
-<h1 style="color: blue; font-size: 32px;">Mening Bloggim</h1>
-<button style="background: #007bff; color: white; padding: 10px;">Bosing</button>
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Fullstack Docs - Frontend va Backend Dasturlash Qo'llanmasi">
+    <title>Bosh Sahifa - Fullstack Docs</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- HEADER / NAVIGATION -->
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <h1 class="logo">📚 Fullstack Docs</h1>
+                <ul class="nav-links">
+                    <li><a href="index.html" class="active">Bosh Sahifa</a></li>
+                    <li><a href="about.html">Haqida</a></li>
+                    <li><a href="contact.html">Bog'lanish</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        <!-- HERO SECTION -->
+        <section class="hero">
+            <div class="container">
+                <h1>Frontend va Backend Dasturlashni O'rganin</h1>
+                <p>HTML, CSS, JavaScript, React, Node.js va ko'p boshqalarni o'rganish uchun to'liq qo'llanma</p>
+                <a href="about.html" class="btn btn-primary">Keyingi Qadam</a>
+            </div>
+        </section>
+
+        <!-- FEATURES SECTION -->
+        <section class="features">
+            <div class="container">
+                <h2>Nima Uchun Fullstack Docs?</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>📖 Mas'ul Darslar</h3>
+                        <p>Har bir dars amaliy misollar va mashqlar bilan to'liq.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>💻 Real-world Proyektlar</h3>
+                        <p>Haqiqiy dunyodagi loyihalarni yaratishni o'rganin.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🎯 Shaxsiylashtirilgan O'quv</h3>
+                        <p>O'zingiz uchun suitable darajada darslari tanlang.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🌍 Hamjamiyat Qo'llab-Quvvatlash</h3>
+                        <p>O'zbekcha samitga bog'lanib, savollaring javobini ol.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COURSES SECTION -->
+        <section class="courses">
+            <div class="container">
+                <h2>Kurslar</h2>
+                <div class="course-grid">
+                    <article class="course-card">
+                        <h3>HTML Asoslari</h3>
+                        <p>HTML5 semantik taglarni, formalarni va multimedia'ni o'rganin.</p>
+                        <span class="level">Boshlang'ich</span>
+                    </article>
+                    <article class="course-card">
+                        <h3>CSS Styling</h3>
+                        <p>Flexbox, Grid va Responsive Design'ni o'rganin.</p>
+                        <span class="level">Boshlang'ich</span>
+                    </article>
+                    <article class="course-card">
+                        <h3>JavaScript</h3>
+                        <p>DOM, Event'lar, Async/Await va Modern JS.</p>
+                        <span class="level">O'rta</span>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Fullstack Docs</h4>
+                    <p>Frontend va Backend Dasturlashning to'liq qo'llanmasi.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Havolalar</h4>
+                    <ul>
+                        <li><a href="index.html">Bosh Sahifa</a></li>
+                        <li><a href="about.html">Haqida</a></li>
+                        <li><a href="contact.html">Bog'lanish</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Qo'shimcha</h4>
+                    <ul>
+                        <li><a href="#privacy">Maxfiylik Siyosati</a></li>
+                        <li><a href="#terms">Foydalanish Shartlari</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <p class="footer-bottom">&copy; 2026 Fullstack Docs. Barcha huquqlar himoyalangan.</p>
+        </div>
+    </footer>
+</body>
+</html>
 ```
 </CodeBlock>
 
 ---
 
-## 📝 CSS Sintaksisi
+## 2️⃣ Haqida Sahifasi (about.html)
 
-**Har bir CSS qoidasi 3 ta qismdan iborat:**
+<CodeBlock language="html" title="Haqida Sahifasi">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Fullstack Docs Haqida - Bizning Misyon va Ko'zlamalarimiz">
+    <title>Haqida - Fullstack Docs</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- HEADER / NAVIGATION -->
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <h1 class="logo">📚 Fullstack Docs</h1>
+                <ul class="nav-links">
+                    <li><a href="index.html">Bosh Sahifa</a></li>
+                    <li><a href="about.html" class="active">Haqida</a></li>
+                    <li><a href="contact.html">Bog'lanish</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
 
+    <!-- MAIN CONTENT -->
+    <main>
+        <!-- HERO SECTION -->
+        <section class="hero hero-secondary">
+            <div class="container">
+                <h1>Biz Haqida</h1>
+                <p>Dasturlashni oʻrganishning eng oson va samarali yo'li</p>
+            </div>
+        </section>
+
+        <!-- ABOUT CONTENT -->
+        <section class="about-section">
+            <div class="container">
+                <h2>Bizning Missiyamiz</h2>
+                <p>
+                    Fullstack Docs - Frontend va Backend Dasturlashni har bir kishiga
+                    o'zbekcha tilida o'rganish imkonini beruvchi platformamiz. Biz,
+                    yanada oson, oʻqilishi sodda va amaliy darslarni taʻminlamoqchi.
+                </p>
+            </div>
+        </section>
+
+        <!-- TEAM SECTION -->
+        <section class="team-section">
+            <div class="container">
+                <h2>Bizning Jamoa</h2>
+                <div class="team-grid">
+                    <article class="team-member">
+                        <h3>Ali Karimov</h3>
+                        <p class="role">Founder & Lead Developer</p>
+                        <p>10 yillik Frontend va Backend tajribasi</p>
+                    </article>
+                    <article class="team-member">
+                        <h3>Fatima Xalilov</h3>
+                        <p class="role">Content Creator</p>
+                        <p>Darslarni yozish va tahrirlashda mas'ul</p>
+                    </article>
+                    <article class="team-member">
+                        <h3>Akbar Abdullayev</h3>
+                        <p class="role">Community Manager</p>
+                        <p>Samitga qo'llab-quvvatlash va ijro</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- VALUES SECTION -->
+        <section class="values-section">
+            <div class="container">
+                <h2>Bizning Qadriyatlarimiz</h2>
+                <div class="values-grid">
+                    <div class="value-card">
+                        <h3>🎓 Ta'lim</h3>
+                        <p>Sifatli, qulaylik bilan accessible ta'lim berish.</p>
+                    </div>
+                    <div class="value-card">
+                        <h3>🌱 O'sish</h3>
+                        <p>Har bir talaba o'z qobiliyatlarini rivojlantisin.</p>
+                    </div>
+                    <div class="value-card">
+                        <h3>🤝 Hamkorlik</h3>
+                        <p>Kuchli va supportiv jamoa va hamjamiyat.</p>
+                    </div>
+                    <div class="value-card">
+                        <h3>💡 Innovatsiya</h3>
+                        <p>Eng yangi texnologiyalar va usullarni ishlatish.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Fullstack Docs</h4>
+                    <p>Frontend va Backend Dasturlashning to'liq qo'llanmasi.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Havolalar</h4>
+                    <ul>
+                        <li><a href="index.html">Bosh Sahifa</a></li>
+                        <li><a href="about.html">Haqida</a></li>
+                        <li><a href="contact.html">Bog'lanish</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Qo'shimcha</h4>
+                    <ul>
+                        <li><a href="#privacy">Maxfiylik Siyosati</a></li>
+                        <li><a href="#terms">Foydalanish Shartlari</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <p class="footer-bottom">&copy; 2026 Fullstack Docs. Barcha huquqlar himoyalangan.</p>
+        </div>
+    </footer>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 3️⃣ Kontakt Sahifasi (contact.html)
+
+<CodeBlock language="html" title="Kontakt Sahifasi">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Fullstack Docs'ga Bog'lanish - Kontakt Ma'lumotlari">
+    <title>Bog'lanish - Fullstack Docs</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- HEADER / NAVIGATION -->
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <h1 class="logo">📚 Fullstack Docs</h1>
+                <ul class="nav-links">
+                    <li><a href="index.html">Bosh Sahifa</a></li>
+                    <li><a href="about.html">Haqida</a></li>
+                    <li><a href="contact.html" class="active">Bog'lanish</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        <!-- HERO SECTION -->
+        <section class="hero hero-secondary">
+            <div class="container">
+                <h1>Biz Bilan Bog'lanish</h1>
+                <p>Savollar yoki takliflar uchun biz bilan aloqaga chiqin</p>
+            </div>
+        </section>
+
+        <!-- CONTACT SECTION -->
+        <section class="contact-section">
+            <div class="container">
+                <div class="contact-content">
+                    <!-- CONTACT FORM -->
+                    <div class="contact-form-wrapper">
+                        <h2>Forma Orqali Bog'lanish</h2>
+                        <form action="/api/contact" method="POST">
+                            <!-- Ism -->
+                            <div class="form-group">
+                                <label for="name" class="required">To'liq Ismingiz</label>
+                                <input type="text"
+                                       id="name"
+                                       name="name"
+                                       placeholder="Ismingiz va Familiyangiz"
+                                       required>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="form-group">
+                                <label for="email" class="required">Email Manzili</label>
+                                <input type="email"
+                                       id="email"
+                                       name="email"
+                                       placeholder="your@email.com"
+                                       required>
+                            </div>
+
+                            <!-- Telefon -->
+                            <div class="form-group">
+                                <label for="phone">Telefon Raqami</label>
+                                <input type="tel"
+                                       id="phone"
+                                       name="phone"
+                                       placeholder="+998 90 123 45 67">
+                            </div>
+
+                            <!-- Mavzu -->
+                            <div class="form-group">
+                                <label for="subject" class="required">Mavzu</label>
+                                <input type="text"
+                                       id="subject"
+                                       name="subject"
+                                       placeholder="Xabaringizning mavzusi"
+                                       required>
+                            </div>
+
+                            <!-- Xabar -->
+                            <div class="form-group">
+                                <label for="message" class="required">Xabar</label>
+                                <textarea id="message"
+                                          name="message"
+                                          rows="6"
+                                          placeholder="Bu yerga xabaringizni yozing..."
+                                          required></textarea>
+                            </div>
+
+                            <!-- Shartlar -->
+                            <div class="form-group">
+                                <input type="checkbox" id="privacy" name="privacy" required>
+                                <label for="privacy" style="display: inline;">
+                                    Maxfiylik Siyosatini Qabul Qilaman
+                                </label>
+                            </div>
+
+                            <!-- Tugma -->
+                            <button type="submit" class="btn btn-primary">Xabar Yuborish</button>
+                        </form>
+                    </div>
+
+                    <!-- CONTACT INFO -->
+                    <div class="contact-info-wrapper">
+                        <h2>Boshqa Bog'lanish Usullari</h2>
+                        <div class="contact-info">
+                            <h3>📍 Manzil</h3>
+                            <p>
+                                Toshkent, O'zbekiston<br>
+                                Mirabad tumani, 123-ko'cha
+                            </p>
+                        </div>
+
+                        <div class="contact-info">
+                            <h3>📞 Telefon</h3>
+                            <p>
+                                <a href="tel:+998901234567">+998 90 123 45 67</a><br>
+                                <a href="tel:+998901234567">+998 71 123 45 67</a>
+                            </p>
+                        </div>
+
+                        <div class="contact-info">
+                            <h3>📧 Email</h3>
+                            <p>
+                                <a href="mailto:info@fullstackdocs.uz">info@fullstackdocs.uz</a><br>
+                                <a href="mailto:support@fullstackdocs.uz">support@fullstackdocs.uz</a>
+                            </p>
+                        </div>
+
+                        <div class="contact-info">
+                            <h3>🕐 Ish Vaqti</h3>
+                            <p>
+                                Dushanba - Juma: 09:00 - 18:00<br>
+                                Shanba: 10:00 - 16:00<br>
+                                Yakshanba: Yopiq
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ SECTION -->
+        <section class="faq-section">
+            <div class="container">
+                <h2>Tez-tez So'raluvchi Savollar</h2>
+                <details>
+                    <summary>Kurslar to'lovli mi?</summary>
+                    <p>Hayir, barcha kurslar va darslar to'liq bepul. Biz open-source platformamiz.</p>
+                </details>
+                <details>
+                    <summary>Qanday qilib ro'yxatdan o'taman?</summary>
+                    <p>Siz ro'yxatdan o'tish sarharifi yo'q. Faqat saytga kirip darslarni o'qiyishni boshlang.</p>
+                </details>
+                <details>
+                    <summary>Sertifikat olamam?</summary>
+                    <p>Hozirgi vaqtda sertifikat yo'q, lekin turingga kiritilayotgan features'lar orasida bor.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Fullstack Docs</h4>
+                    <p>Frontend va Backend Dasturlashning to'liq qo'llanmasi.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Havolalar</h4>
+                    <ul>
+                        <li><a href="index.html">Bosh Sahifa</a></li>
+                        <li><a href="about.html">Haqida</a></li>
+                        <li><a href="contact.html">Bog'lanish</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Qo'shimcha</h4>
+                    <ul>
+                        <li><a href="#privacy">Maxfiylik Siyosati</a></li>
+                        <li><a href="#terms">Foydalanish Shartlari</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <p class="footer-bottom">&copy; 2026 Fullstack Docs. Barcha huquqlar himoyalangan.</p>
+        </div>
+    </footer>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 4️⃣ CSS Styling (css/styles.css)
+
+<CodeBlock language="css" title="Umumiy Stillar">
 ```css
-selector {
-  property: value;
+/* ===== GLOBAL STYLES ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+h1, h2, h3, h4 { margin-bottom: 15px; }
+p { margin-bottom: 10px; }
+
+/* ===== HEADER / NAVBAR ===== */
+header {
+    background-color: #2563eb;
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    transition: opacity 0.3s;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+/* ===== HERO SECTION ===== */
+.hero {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    color: white;
+    padding: 100px 0;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+}
+
+.hero-secondary {
+    padding: 60px 0;
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+    display: inline-block;
+    padding: 12px 30px;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s;
+    cursor: pointer;
+    border: none;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background-color: #059669;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #047857;
+    transform: translateY(-2px);
+}
+
+/* ===== SECTIONS ===== */
+.features,
+.courses,
+.about-section,
+.team-section,
+.values-section,
+.contact-section,
+.faq-section {
+    padding: 60px 0;
+}
+
+.features,
+.about-section,
+.values-section,
+.faq-section {
+    background-color: white;
+}
+
+section h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 40px;
+    color: #2563eb;
+}
+
+/* ===== GRIDS ===== */
+.feature-grid,
+.course-grid,
+.team-grid,
+.values-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+}
+
+.feature-card,
+.course-card,
+.team-member,
+.value-card {
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.feature-card:hover,
+.course-card:hover,
+.team-member:hover,
+.value-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.feature-card h3,
+.course-card h3,
+.value-card h3 {
+    color: #2563eb;
+    margin-bottom: 15px;
+}
+
+.course-card .level {
+    display: inline-block;
+    background-color: #e0f2fe;
+    color: #0369a1;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+.team-member .role {
+    color: #059669;
+    font-weight: bold;
+}
+
+/* ===== FORMS ===== */
+.contact-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.required::after {
+    content: " *";
+    color: red;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+textarea,
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+}
+
+.contact-info {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f3f4f6;
+    border-radius: 5px;
+}
+
+.contact-info h3 {
+    color: #2563eb;
+    margin-bottom: 10px;
+}
+
+.contact-info a {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.contact-info a:hover {
+    text-decoration: underline;
+}
+
+/* ===== FAQ ===== */
+details {
+    margin-bottom: 15px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+details summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #2563eb;
+}
+
+details[open] summary {
+    margin-bottom: 15px;
+}
+
+details p {
+    color: #555;
+}
+
+/* ===== FOOTER ===== */
+footer {
+    background-color: #1f2937;
+    color: white;
+    padding: 40px 0 20px;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.footer-section h4 {
+    margin-bottom: 15px;
+    color: #59f0ff;
+}
+
+.footer-section ul {
+    list-style: none;
+}
+
+.footer-section ul li {
+    margin-bottom: 8px;
+}
+
+.footer-section a {
+    color: #d1d5db;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.footer-section a:hover {
+    color: #59f0ff;
+}
+
+footer hr {
+    margin: 20px 0;
+    border: none;
+    border-top: 1px solid #374151;
+}
+
+.footer-bottom {
+    text-align: center;
+    color: #9ca3af;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .nav-links {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .hero h1 {
+        font-size: 1.8rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    .hero {
+        padding: 60px 0;
+    }
+
+    .contact-content {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-grid,
+    .course-grid,
+    .team-grid,
+    .values-grid {
+        grid-template-columns: 1fr;
+    }
+}
+```
+</CodeBlock>
+
+---
+
+## 🎯 Proyektni Yaratish Qadam-bosqich
+
+1. **Fayl tuzilmasini yarating:** `index.html`, `about.html`, `contact.html`, `css/styles.css`
+2. **HTML kodni nusxalang** - yuqoridagi kodlarni har bir faylga joylang
+3. **CSS kodni nusxalang** - `css/styles.css` fayliga qo'shing
+4. **Brauzerda test qiling** - Barcha sahifalarni test qiling
+5. **Responsive test qiling** - Mobilda va desktopdagi ko'rinishni sinab ko'ring
+6. **Linklar to'g'riligini tekshiring** - Navbar va footer linklar ishlashini test qiling
+
+---
+
+## ✅ Best Practices Checklist
+
+- ✅ Semantik HTML taglarni ishlatish
+- ✅ Responsive dizayn (mobile-first)
+- ✅ Accessibility (alt text, labels)
+- ✅ Performance (cached CSS)
+- ✅ SEO (meta tags, title)
+- ✅ Valid HTML (closing tags)
+- ✅ Navigation konsistentligi
+- ✅ Contact forma validatsiyasi
+
+---
+
+## 🎓 Qo'shimcha Vazifalar
+
+**Advanced Tasks:**
+1. JavaScript bilan forma validation qo'shing
+2. Dark mode toggle yaratish
+3. Search funksiyasini qo'shing
+4. Blog bo'limini kengaytiring
+5. Multi-language support
+
+---
+
+## 🎯 Xulosa
+
+Bu darsda siz o'rgandingiz:
+- ✅ 3-sahifali veb-sayt yaratish
+- ✅ HTML struktura va semantika
+- ✅ CSS responsive dizayn
+- ✅ Navigation va internal linklar
+- ✅ Forms va contact sahifalar
+- ✅ Footer va header kompozitsiya
+- ✅ Real-world best practices
+
+---
+
+## 🚀 Keyingi Qadam
+
+Endi siz HTML'ni to'liq o'rgandingiz! Keyingi qadamlar:
+1. **CSS'ni chuqurroq o'rganish** - Flexbox, Grid, Animations
+2. **JavaScript'ni o'rganish** - DOM, Events, API's
+3. **React'ni o'rganish** - Modern Framework
+4. **Backend'ni o'rganish** - Node.js, Databases
+5. **Deploy qilish** - GitHub Pages, Vercel
+
+Omadlar sizga! 🎉
+
 ```
 
 **Misol:**

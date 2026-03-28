@@ -1,41 +1,69 @@
 ---
-title: "HTML, CSS va JavaScript-ga Kirish"
-description: "Frontend veb-ishlab chiqishning asosiy ustunlari."
+title: "HTML Asoslari va Tuzilma"
+description: "HTML nima, veb nima, DOCTYPE, meta taglar, semantik struktura, va best practices"
 category: "html-css-js"
 order: 1
 tags:
   - html
-  - css
-  - javascript
-  - frontend
+  - basics
+  - structure
+  - introduction
+status: "published"
 ---
 
-# Vebning Asosiy Ustunlari
+# HTML Asoslari va Tuzilma
 
-Internetdagi har bir veb-sayt, qanchalik murakkab bo'lmasin, uchta asosiy texnologiya yordamida quriladi: **HTML**, **CSS** va **JavaScript**. Ularni veb-sahifaning **suyagi**, **terisi** va **mushaklari** deb tasavvur qilishingiz mumkin.
+HTML (HyperText Markup Language) - bu veb-sahifalarni yaratishning asosiy tili. U sahifaning tuzilmasini, matnini, rasmlarini va boshqa kontentni brauzerga qanday ko'rsatish kerakligini belgilaydi.
 
-Ushbu o'quv yo'nalishida siz zamonaviy, moslashuvchan va interaktiv foydalanuvchi interfeyslarini yaratish uchun ushbu uchta asosiy tilni o'zlashtirasiz.
+Bu darsda siz HTML'ning asosiy strukturasini, muhim taglarni va professional web-sahifa yaratishning best practice'larini o'rganasiz.
 
 ---
 
-## 1. HTML: Tuzilishi (Suyak)
+## 🌐 Veb Nima?
 
-**HTML (HyperText Markup Language)** – veb-brauzerda ko'rsatish uchun mo'ljallangan hujjatlar uchun standart belgilash tilidir. U saytning asosiy tuzilishini ta'minlaydi.
+Veb - bu **taqsimlangan informatsiya tizimi**, bu erda:
+- **Server** - ma'lumotni saqlaydi va yuboradi
+- **Internet** - server va foydalanuvchini bog'lash
+- **Brauzer** - foydalanuvchining kompyuterida HTML, CSS, JavaScript ko'rsatadi
 
-- **Maqsadi:** Tarkib va joylashuvni belgilaydi (sarlavhalar, paragraflar, rasmlar, havolalar).
-- **O'xshatish:** Uyning g'ishtlari va poydevori.
+Qachon siz veb-sahifaga tashrif buyurganizda:
+1. Brauzer server'ga so'rov yuboradi
+2. Server HTML faylini qaytaradi
+3. Brauzer HTML-ni CSS va JavaScript bilan birga ko'rsatadi
 
-<CodeBlock language="html" title="index.html">
+---
+
+## 📄 HTML Nima?
+
+**HTML** - bu belgilash tili (markup language). U:
+- Matnni, rasmlarni, videoları va boshqa kontentni organize qiladi
+- Sahifaning strukturasini belgilaydi
+- CSS va JavaScript bilan birgalikda ishlaydi
+
+**Taqqoslash:**
+- **HTML** = Uyning suyagi (struktura)
+- **CSS** = Uyning terisi (dizayn)
+- **JavaScript** = Uyning mushak va nerv sistemasi (xulq-atvor)
+
+---
+
+## 🏗️ HTML Dokumentining Asosiy Struktura
+
+<CodeBlock language="html" title="HTML Sahifasining Asosiy Tuzilishi">
 ```html
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <title>Mening Birinchi Saytim</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sahifaning qisqa tavsifi">
+    <title>Sahifa Nomi - Bu Brauzer Tegida Ko'rsatiladi</title>
+    <link rel="favicon" href="/favicon.ico">
 </head>
 <body>
-    <h1>Fullstack Docs-ga Xush Kelibsiz!</h1>
-    <p>Bu saytni tavsiflovchi matnli paragraf.</p>
-    <button>Meni Bosing!</button>
+    <!-- Sahifaning asosiy kontent shu yerda bo'ladi -->
+    <h1>Xush Kelibsiz!</h1>
+    <p>Bu paragraf.</p>
 </body>
 </html>
 ```
@@ -43,77 +71,404 @@ Ushbu o'quv yo'nalishida siz zamonaviy, moslashuvchan va interaktiv foydalanuvch
 
 ---
 
-## 2. CSS: Taqdimot (Teri)
+## 1️⃣ <!DOCTYPE html> - Dokumentning Turi
 
-**CSS (Cascading Style Sheets)** – veb-sahifalarni shakllantirish va tartibga solish uchun ishlatiladi. HTML brauzerga tarkib *nima* ekanligini aytsa, CSS brauzerga u *qanday* ko'rinishi kerakligini aytadi.
+```html
+<!DOCTYPE html>
+```
 
-- **Maqsadi:** Ranglar, shriftlar, masofalar, animatsiyalar va moslashuvchan dizaynni boshqaradi.
-- **O'xshatish:** Uyning bo'yog'i, interyer dizayni va arxitekturasi.
+Bu **veb-brauzerga** aytadi: "Bu HTML5 dokumenti". Har bir HTML faylining **boshida** bo'lmalı.
 
-<CodeBlock language="css" title="styles.css">
-```css
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f4f4f9;
-    color: #333;
-}
+**Nima uchun muhim:**
+- Brauzer fayl turini bilib oladi
+- Standart HTML5 rendering mode'da ishlaydi
+- Eski HTML versiyalari (HTML4, XHTML) kabi xatolarga yo'l qo'ymaydi
 
-h1 {
-    color: #2563eb; /* Chiroyli ko'k rang */
-    text-align: center;
-}
+---
 
-button {
-    background-color: #2563eb;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-}
+## 2️⃣ <html> - Ildiz Element
 
-button:hover {
-    background-color: #1d4ed8;
-}
+```html
+<html lang="uz">
+    <!-- Butun hujjat shu yerda bo'ladi -->
+</html>
+```
+
+- **Ildiz element** - HTML dokumentining eng tashqi konteyneri
+- `lang="uz"` atributi - sahifaning tilini belgilaydi (Uzbek tili)
+- Screen reader'lar va qidiruv tizimlari til ma'lumoti uchun bu atributdan foydalanadi
+
+**Boshqa tillar uchun:**
+```html
+<html lang="en">      <!-- English -->
+<html lang="ru">      <!-- Русский -->
+<html lang="ar">      <!-- العربية -->
+<html lang="zh">      <!-- 中文 -->
+```
+
+---
+
+## 3️⃣ <head> - Metadata va Konfiguratsiya
+
+`<head>` brauzerga va qidiruv tizimlarga **sahifa haqida ma'lumot** beradi, lekin foydalanuvchi ko'rish uchun ko'rsatilmaydi.
+
+### Meta Taglar (Metadata)
+
+<CodeBlock language="html" title="Muhim Meta Taglar">
+```html
+<head>
+    <!-- Belgilar kodlanishi (UTF-8 - boshqa tillar uchun) -->
+    <meta charset="UTF-8">
+
+    <!-- Responsive design uchun viewport metasi -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Sahifa tavsifi (Google qidiruva ko'rsatiladi) -->
+    <meta name="description" content="Bu veb-sahifaning qisqa tavsifi. 150-160 belgida bo'lsa yaxshi.">
+
+    <!-- Qidiruv tizimlari uchun kalit so'zlar -->
+    <meta name="keywords" content="html, css, javascript, web-development">
+
+    <!-- Muallif nomi -->
+    <meta name="author" content="Sizning Ismingiz">
+
+    <!-- Copyright -->
+    <meta name="copyright" content="© 2026 Sizning Kompaniyasi">
+
+    <!-- Mobile app integrasyon -->
+    <meta name="app-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2563eb">
+
+    <!-- Open Graph (Ijtimoiy tarmoqlar uchun) -->
+    <meta property="og:title" content="Sahifa Nomi">
+    <meta property="og:description" content="Sahifa tavsifi">
+    <meta property="og:image" content="/sahifa-rasm.jpg">
+    <meta property="og:url" content="https://example.com">
+</head>
+```
+</CodeBlock>
+
+**Nima uchun meta taglar muhim:**
+- ✅ Responsive design (mobilda to'g'ri ko'rinish)
+- ✅ SEO uchun qidiruv tizimlari sahifani to'g'ri indekslayd
+- ✅ Ijtimoiy tarmoqlarda to'g'ri ko'rinish
+- ✅ Brauzer xulq-atvori bilan bog'liq shunga o'xshashlar
+
+---
+
+## 4️⃣ <title> - Sahifa Nomi
+
+```html
+<head>
+    <title>HTML Darslar - Frontend Asoslari</title>
+</head>
+```
+
+- Brauzer **tegida** ko'rsatiladi
+- Qidiruv tizimlari uchun **muhim** (SEO)
+- Foydalanuvchi **browser history**dan sahifani tanlaganda ko'radi
+
+**Best Practice uchun:**
+- 30-60 belgida bo'lsa yaxshi
+- Kalit so'z avval, kompaniya nomi oxirida
+- Misal: `"HTML Darslar - Fullstack Docs"` - yaxshi ✅
+
+---
+
+## 5️⃣ Favicon - Sahifa Belgisi
+
+```html
+<head>
+    <link rel="icon" href="/favicon.ico">
+    <!-- yoki PNG formatida -->
+    <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+```
+
+- Brauzer **tegida** va address bar'da ko'rsatiladi
+- Foydalanuvchiga sahifani tanish qiladi
+- 16x16 yoki 32x32 piksel o'lchamda
+
+---
+
+## 6️⃣ <body> - Sahifaning Asosiy Kontent
+
+```html
+<body>
+    <!-- Foydalanuvchi ko'rishi kerak bo'lgan hamma kontent shu yerda bo'ladi -->
+    <h1>Sarlavha</h1>
+    <p>Paragraf matn</p>
+    <img src="/rasm.jpg" alt="Rasm tavsifi">
+</body>
+```
+
+- **Faqat bitta `<body>`** har bir HTML faylida
+- Brauzerda ko'rinadi (Head'dan farqli)
+- Barcha mashhur elementlar `<body>` ichida bo'ladi
+
+---
+
+## 📋 To'liq HTML5 Sahifasi Misoli
+
+<CodeBlock language="html" title="Profesional HTML5 Sahifasi">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <!-- Meta taglar va kodlanish -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Frontend dasturlashni o'rganish uchun to'liq qo'llanma.">
+    <meta name="keywords" content="html, css, javascript, web">
+    <meta name="author" content="Fullstack Docs">
+
+    <!-- Sahifa nomi -->
+    <title>HTML Darslar - Frontend Asoslari | Fullstack Docs</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/styles/main.css">
+
+    <!-- Open Graph ijtimoiy tarmoqlar uchun -->
+    <meta property="og:title" content="HTML Darslar">
+    <meta property="og:description" content="Frontend dasturlashni o'rganish">
+    <meta property="og:url" content="https://example.com/html">
+</head>
+<body>
+    <!-- Sahifa sarlavhasi -->
+    <header>
+        <h1>🚀 Frontend Darslar</h1>
+        <p>HTML, CSS, va JavaScript'ni o'rganin</p>
+    </header>
+
+    <!-- Navigatsiya -->
+    <nav>
+        <ul>
+            <li><a href="/">Bosh sahifa</a></li>
+            <li><a href="/darslar">Darslar</a></li>
+            <li><a href="/loyihalar">Loyihalar</a></li>
+            <li><a href="/haqida">Haqida</a></li>
+        </ul>
+    </nav>
+
+    <!-- Asosiy kontent -->
+    <main>
+        <section>
+            <h2>Xush Kelibsiz!</h2>
+            <p>Bu darsda siz HTML'ning asoslari haqida o'rganasiz.</p>
+        </section>
+    </main>
+
+    <!-- Pastki qism -->
+    <footer>
+        <p>&copy; 2026 Fullstack Docs. Barcha huquqlar himoyalangan.</p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="/scripts/main.js"></script>
+</body>
+</html>
 ```
 </CodeBlock>
 
 ---
 
-## 3. JavaScript: Xulq-atvor (Mushaklar)
+## 🎯 Semantik Dokumentning Tuzilishi
 
-**JavaScript (JS)** – bu dinamik o'zgaruvchan tarkib yaratish, multimedia boshqarish, tasvirlarni harakatga keltirish va boshqa ko'p narsalarni amalga oshirish imkonini beruvchi skript tilidir. U sizning statik HTML va CSS-ga "jon" kiritadi.
+**Semantik HTML** - elementlarning mantiqiy ma'nosiga qarab to'g'ri ishlatish:
 
-- **Maqsadi:** Interaktivlik, mantiq, ma'lumot olish va dinamik UI yangilanishlarini qo'shadi.
-- **O'xshatish:** Uyning elektr energiyasi, suv tizimi va aqlli uy tizimi.
+```html
+<body>
+    <!-- Sayt sarlavhasi va logo -->
+    <header>
+        <h1>Sayt Nomi</h1>
+        <nav><!-- Menu --></nav>
+    </header>
 
-<CodeBlock language="javascript" title="script.js">
-```javascript
-// HTML ichidagi tugma elementini topish
-const myButton = document.querySelector('button');
+    <!-- Asosiy kontent -->
+    <main>
+        <!-- Bo'limlar -->
+        <section>
+            <h2>Bo'lim 1</h2>
+            <article><!-- Maqola --></article>
+        </section>
+    </main>
 
-// Tugma bosilish (click) hodisasiga kuzatuvchi qo'shish
-myButton.addEventListener('click', () => {
-    // Bosilganda bildirishnoma ko'rsatish
-    alert('Salom! JavaScript dunyosiga xush kelibsiz!');
+    <!-- Yon panel -->
+    <aside>
+        <!-- Qo'shimcha ma'lumot -->
+    </aside>
 
-    // Tugma matnini o'zgartirish
-    myButton.textContent = 'Bosildi!';
-});
+    <!-- Pastki qism -->
+    <footer>
+        <p>Mualliflik huquqi</p>
+    </footer>
+</body>
 ```
-</CodeBlock>
+
+**Nima uchun muhim:**
+- ✅ Screen reader'lar strukturani tushunadi
+- ✅ Qidiruv tizimlari sahifani o'nglishni aniqroq qiladi
+- ✅ Kodni boshqa dasturchilar oson o'qiydi
+- ✅ Maintenance va tahrirlash osonroq
 
 ---
 
-## Qanday Qilib Ular Birgalikda Ishlaydi
+## ✅ Best Practices
 
-Foydalanuvchi veb-saytga tashrif buyurganida:
-1. Brauzer avval **HTML** faylini so'raydi va uni yuqoridan pastga o'qishni boshlaydi.
-2. Brauzer HTML ichida `<link>` tegini ko'rsa, **CSS** faylini yuklaydi va uslublarni qo'llaydi.
-3. Brauzer `<script>` tegiga duch kelganida, u **JavaScript** kodini bajaradi, bu esa o'z navbatida HTML yoki CSS-ni jarayon davomida o'zgartirishi mumkin.
+### 1. Har Doim UTF-8 Belgilardan Foydalaning
 
-<Callout type="info" title="Keyingi Qadam Nima?">
-Keyingi boblarda biz zamonaviy **HTML5 semantik teglarni**, **CSS3 Flexbox va Grid** maketlarini o'zlashtiramiz va **Zamonaviy JavaScript (ES6+)** qudratini, jumladan Arrow Functions, Promises va DOM API-ni tadqiq qilamiz.
-</Callout>
+```html
+<meta charset="UTF-8">
+```
 
-Vebni qurishga tayyormisiz? Keyingisiga o'ting!
+Bu **o'zbekcha harflar**, emoji va boshqa belgilar to'g'ri ko'rinishini ta'minlaydi.
+
+### 2. Responsive Viewport Metasini Ishlatish
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+```
+
+Bu **mobil qurilmalar** uchun sahifani to'g'ri o'lchashni ta'minlaydi.
+
+### 3. Semantik Taglarni Ishlatish
+
+```html
+<!-- ✅ Yaxshi -->
+<header>
+    <nav><!-- Menu --></nav>
+</header>
+<main>
+    <article><!-- Kontent --></article>
+</main>
+<footer><!-- Pastki qism --></footer>
+
+<!-- ❌ Yomon -->
+<div id="header">
+    <div id="nav"><!-- Menu --></div>
+</div>
+```
+
+### 4. Katta Head'dan Foydalanmang
+
+```html
+<!-- ❌ Yomon -->
+<h1>Sarlavha 1</h1>
+<h3>Sarlavha 3</h3>  <!-- h2 skip qilindi! -->
+
+<!-- ✅ Yaxshi -->
+<h1>Sarlavha 1</h1>
+<h2>Sarlavha 2</h2>
+<h3>Sarlavha 3</h3>
+```
+
+### 5. Alt Atributini Rasmlar Uchun Ishlatish
+
+```html
+<!-- ❌ Yomon -->
+<img src="/rasm.jpg">
+
+<!-- ✅ Yaxshi -->
+<img src="/rasm.jpg" alt="Yoshlar birgalikda dasturlash qilyapti">
+```
+
+### 6. Aniqlashni Ishlatish
+
+```html
+<!-- ❌ Yomon -->
+<link rel="stylesheet" href="styles.css">
+
+<!-- ✅ Yaxshi -->
+<link rel="stylesheet" href="/css/styles.css">
+```
+
+---
+
+## ❌ Keng Uchraydigan Xatoliklar
+
+### 1. DOCTYPE Yoʻqligi
+
+```html
+<!-- ❌ Yomon - DOCTYPE yoʻq -->
+<html>
+    <head>
+        <title>Mening Saytim</title>
+    </head>
+</html>
+
+<!-- ✅ Yaxshi - DOCTYPE bor -->
+<!DOCTYPE html>
+<html lang="uz">
+    <head>
+        <title>Mening Saytim</title>
+    </head>
+</html>
+```
+
+### 2. Til Atributini Belgilamamasliq
+
+```html
+<!-- ❌ Yomon -->
+<html>
+
+<!-- ✅ Yaxshi -->
+<html lang="uz">
+```
+
+### 3. Closing Taglarni Tashlab Qolish
+
+```html
+<!-- ❌ Yomon -->
+<body>
+    <h1>Sarlavha
+    <p>Paragraf
+
+<!-- ✅ Yaxshi -->
+<body>
+    <h1>Sarlavha</h1>
+    <p>Paragraf</p>
+</body>
+```
+
+### 4. Viewport Metasini Belgilamamasliq
+
+```html
+<!-- ❌ Mobilda mobilda yomon ko'rinadi -->
+<meta charset="UTF-8">
+
+<!-- ✅ Mobilda to'g'ri ko'rinadi -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+```
+
+---
+
+## 🎓 Amaliy Mashq
+
+**Mashq:** Qo'lni bilan 1-misoldagi HTML sahifasini o'zingizning kompyuteringizda yarating:
+
+1. Matn muharriri (VS Code, Sublime, yoki Notepad) oching
+2. 01-sahifa misoli kodini nusxalang
+3. `index.html` deb saqlang
+4. Firefox yoki Chrome brauzerda oching
+5. Nima ko'rganingizni aytib bering
+
+---
+
+## 🎯 Xulosa
+
+Bu darsda siz o'rgandingiz:
+- ✅ HTML nima va veb nima
+- ✅ HTML dokumentining asosiy struktura (`DOCTYPE`, `<html>`, `<head>`, `<body>`)
+- ✅ Meta taglarning ahamiyati
+- ✅ Semantik HTML'ning faydasi
+- ✅ Best practices va keng uchraydigan xatoliklar
+
+---
+
+## 🚀 Keyingi Darsda
+
+**Lesson 2: Sarlavha, Paragraf va Matn Formati** - `<h1>-<h6>`, `<p>`, `<br>`, `<hr>`, `<strong>`, `<em>`, va boshqa matn formati taglarini o'rganamiz!

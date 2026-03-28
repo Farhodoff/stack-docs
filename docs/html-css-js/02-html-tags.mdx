@@ -1,185 +1,366 @@
 ---
-title: "HTML Asoslari - Eng Muhim Taglar"
-description: "HTML'dagi eng muhim taglar va ularning vazifasi, matn bilan ishlash, blok va inline elementlar"
+title: "Sarlavha, Paragraf va Matn Formati"
+description: "H1-H6 teglar, paragraflar, matn formatlash, br, hr va semantik text taglar"
 category: "html-css-js"
 order: 2
 tags:
   - html
-  - tags
-  - elements
+  - text
+  - headings
+  - formatting
 status: "published"
 ---
 
-# HTML Asoslari - Eng Muhim Taglar
+# Sarlavha, Paragraf va Matn Formati
 
-Bu darsda HTML'dagi **eng muhim taglarni**, **matn bilan ishlash usullarini**, va **blok/inline elementlar** farqini o'rganamiz.
+Bu darsda siz HTML'da matn, sarlavhalar va formatlashning eng muhim usullarini o'rganasiz. Bu web-sahifaning **tuzilmasini** va **taqdimotini** aniqlaydigan asosiy elementlardir.
 
 ---
 
-## 1️⃣ Eng Muhim Taglar va Ularning Vazifasi
+## 1️⃣ Sarlavha Teglari (Heading Tags)
 
-HTML'da ko'p taglar bor, lekin eng asosiylarini bilsangiz, deyarli barcha web sahifalarni yarata olasiz.
+Sarlavhalar (`<h1>` dan `<h6>` gacha) **sahifaning tuzilmasini** belgilaydi. `<h1>` eng katta va muhim, `<h6>` eng kichik.
 
-### Sarlavha Teglari (Heading Tags)
-
-Sarlavhalar `<h1>` dan `<h6>` gacha mavjud. `<h1>` eng katta, `<h6>` eng kichik:
-
-<CodeBlock language="html" title="Sarlavha Misoli">
+<CodeBlock language="html" title="Sarlavha Teglarining Ierarxiyasi">
 ```html
-<h1>Eng muhim sarlavha</h1>
-<h2>Kichikroq sarlavha</h2>
-<h3>Yanada kichikroq</h3>
-<h4>To'rtinchi daraja sarlavha</h4>
-<h5>Beshinchi daraja sarlavha</h5>
-<h6>Eng kichik sarlavha</h6>
+<h1>Eng Muhim Sarlavha - Sahifa Nomi</h1>
+<p>Bu h1 ichida bo'ladi. Har bir sahifada faqat bir marta ishlatiladi.</p>
+
+<h2>Asosiy Bo'lim Sarlavhasi</h2>
+<p>Bo'lim tavsifi...</p>
+
+<h3>Kichikroq Bo'lim</h3>
+<p>Kichikroq bo'lim tavsifi...</p>
+
+<h4>Kichik Subsection</h4>
+<h5>Yanada Kichikroq</h5>
+<h6>Eng Kichik Sarlavha</h6>
 ```
 </CodeBlock>
 
-**Qachon ishlatish:**
-- `<h1>` - Sahifa nomi (faqat bir marta)
-- `<h2>` - Asosiy bo'lim
+### Sarlavhaların Foydalanish Qoidalari
+
+**✅ To'g'ri Qoida:**
+- `<h1>` - Har bir sahifada **faqat bir marta**
+- `<h2>` - Asosiy bo'limlar uchun
 - `<h3>`, `<h4>`, ... - Alt bo'limlar
+- **Ierarxiyani saqlang** (h1 → h2 → h3, h1 → h3 skip qilmang)
 
-### Paragraf Tegi
+**❌ Yomon Qoida:**
+```html
+<!-- ❌ Yomon - h1 dan h4 ga to'g'ridan-to'g'ri -->
+<h1>Sarlavha</h1>
+<h4>Alt sarlavha</h4>  <!-- h2 va h3 skip qilindi -->
 
-`<p>` tegi oddiy matn paragrafini belgilaydi:
+<!-- ✅ Yaxshi - Ierarxiya saqlandi -->
+<h1>Sarlavha</h1>
+<h2>Kichik sarlavha</h2>
+<h3>Yanada kichikroq</h3>
+```
+
+### Nima Uchun Muhim?
+
+| Qay'da | Foyda |
+|--------|--------|
+| Screen Readers | Strukturani tushunadi va o'qiydi |
+| SEO | Qidiruv tizimlari sahifani to'g'ri indekslayd |
+| Kod Oqilishi | Dasturchilar sahifani oson tushunadi |
+| Moslashuvchanliq | CSS bilan styling oson |
+
+---
+
+## 2️⃣ Paragraf Tegi (<p>)
+
+`<p>` tegi **matn paragraflarini** belgilaydi. Har bir `<p>` yangi paragraf yaratadi.
+
+<CodeBlock language="html" title="Paragraf Misollari">
+```html
+<!-- Birinchi paragraf -->
+<p>Bu birinchi paragraf. Brauzer avtomatik paragrafdan oldin va keyin joy qo'shadi.</p>
+
+<!-- Ikkinchi paragraf -->
+<p>Bu ikkinchi paragraf. Har bir p tegi yangi qatorga boshlanadi.</p>
+
+<!-- Paragraf ichida matn formati -->
+<p>Bu paragraf <strong>qalin</strong> va <em>kursiv</em> matnlarni o'z ichiga oladi.</p>
+```
+</CodeBlock>
+
+### Paragraflar O'rtasida Bo'shliq
+
+Brauzer `<p>` tegidan oldin va keyin **avtomatik bo'shliq** qo'shadi. Siz qo'lda bo'shliq qo'shishingiz shart emas.
 
 ```html
-<p>Bu oddiy matn paragrafi.</p>
-<p>Har bir p tegi yangi paragraf boshlaydi.</p>
+<!-- Kichik bo'shliq - faqat bitta p tegi o'rtasida -->
+<p>Birinchi paragraf</p>
+<p>Ikkinchi paragraf</p>
+
+<!-- Katta bo'shliq - bir nechta p tegisi o'rtasida -->
+<p>Birinchi paragraf</p>
+<p>Ikkinchi paragraf</p>
+<p>Uchinchi paragraf</p>
 ```
 
 ---
 
-## 2️⃣ Matn Bilan Ishlash
+## 3️⃣ Yangi Qator va Bo'limlar
 
-### Qalin va Kursiv Matn
+### <br> - Yangi Qator
 
-**Qalin matn** uchun:
-- `<strong>` - Semantik ahamiyatli qalin
-- `<b>` - Faqat vizual qalin (ahamiyatsiz)
+`<br>` tegi **yangi qatorga o'tkazadi**, lekin yangi paragraf yaratmaydi.
 
-**Kursiv matn** uchun:
-- `<em>` - Semantik urg'u berilgan
-- `<i>` - Faqat vizual kursiv
-
-<CodeBlock language="html" title="Matn Formatting">
+<CodeBlock language="html" title="BR Tegi Misoli">
 ```html
-<strong>Qalin matn (ahamiyatli)</strong>
-<b>Qalin matn (faqat vizual)</b>
+<!-- Bir qatorli matn -->
+<p>Birinchi qator<br>Ikkinchi qator<br>Uchinchi qator</p>
 
-<em>Kursiv (urg'u berilgan)</em>
-<i>Kursiv (faqat vizual)</i>
+<!-- Masalan: Manzil -->
+<p>
+    Oʻzbekiston Jumhuriyati<br>
+    Toshkent shahri<br>
+    Mirabad tumani<br>
+    123-ko'cha, 45-uy
+</p>
 
-<!-- Ikkalasini bir vaqtda -->
-<strong><em>Qalin va kursiv</em></strong>
+<!-- Masalan: Shoir qo'shig'i -->
+<p>
+    Tugun bo'ldi nigohingiz,<br>
+    Chun bir marta ko'zining ato,<br>
+    Qalbimni ko'tardingiz.
+</p>
 ```
 </CodeBlock>
 
-**Tavsiya:** Semantik tag'larni (`<strong>` va `<em>`) ishlatish yaxshiroq. Ular search engine'lar va i-readers uchun ma'lum bo'ladi.
+### <hr> - Gorizontal Chiziq
 
-### Qator Almashtiruv va Bo'limlar
-
-Matn ichida `<br>` tegi yangi qatorga o'tkazadi:
-
-```html
-<p>Birinchi qator<br>Ikkinchi qator</p>
-```
-
-Katta bo'limni ajratish uchun `<hr>` (horizontal rule) ishlatiladi:
+`<hr>` tegi **bo'limlarni ajratish** uchun gorizontal chiziq yaratadi.
 
 ```html
 <h2>Bo'lim 1</h2>
-<p>Matn...</p>
+<p>Birinchi bo'lim matn...</p>
 
-<hr>  <!-- Gorizontal chiziq -->
+<hr>  <!-- Bo'limlarni ajratish -->
 
 <h2>Bo'lim 2</h2>
-<p>Matn...</p>
+<p>Ikkinchi bo'lim matn...</p>
+
+<hr>
+
+<h2>Bo'lim 3</h2>
+<p>Uchinchi bo'lim matn...</p>
 ```
 
 ---
 
-## 3️⃣ Blok va Inline Elementlar
+## 4️⃣ Matn Formatlash Teglari
 
-HTML elementlari **blok** yoki **inline** tipida bo'ladi. Bu ularning sahifadagi pozitsiyasini bildiradi.
+### <strong> va <b> - Qalin Matn
 
-### Blok Elementlar
+| Tag | Maqsadi | Ishlatish |
+|-----|---------|----------|
+| `<strong>` | **Semantik** qalin (muhim) | **Muhim** matnlar uchun |
+| `<b>` | **Vizual** qalin (ma'nosi yo'q) | Faqat koʻrish uchun |
 
-**Blok element** butun kenglikni egallaydi. Avtomatik yangi qatorda boshlanadi va tugaydi.
-
-<CodeBlock language="html" title="Blok Elementlar">
+<CodeBlock language="html" title="STRONG vs B Teglar">
 ```html
-<div>Bu blok element - butun kenglik egallaydi</div>
-<h1>Sarlavha ham blok element</h1>
-<p>Paragraf ham blok element</p>
-<section>Section ham blok</section>
+<!-- STRONG - Semantik muhim -->
+<p>Bu <strong>juda muhim</strong> matn.</p>
+<!-- Screen reader o'qiydi: "Bu juda muhim-AY-zim matn" -->
+
+<!-- B - Faqat vizual qalin -->
+<p>Bu <b>qalin</b> ko'rish uchun matn.</p>
+<!-- Screen reader o'qiydi: "Bu qalin ko'rish uchun matn" -->
+
+<!-- Aralash -->
+<p>
+    Diqqat! <strong>Bugun:</strong>
+    Barcha tovarlar <b>50% chegirmali</b>!
+</p>
 ```
 </CodeBlock>
 
-**Blok elementlar:** `<div>`, `<h1>-<h6>`, `<p>`, `<section>`, `<header>`, `<footer>`, `<nav>`, `<ul>`, `<ol>`, `<li>`
+**Maslahat:** `<strong>` dan foydalaning - u semantik va accessibility yaxshi.
 
-### Inline Elementlar
+### <em> va <i> - Kursiv Matn
 
-**Inline element** faqat o'z o'lchamini egallaydi. Tekst ichida joy oladi:
+| Tag | Maqsadi | Ishlatish |
+|-----|---------|----------|
+| `<em>` | **Semantik** kursiv (urg'u) | Urg'u, ma'nosiga qarab |
+| `<i>` | **Vizual** kursiv | Faqat koʻrish uchun (tillar, terminlar) |
 
-<CodeBlock language="html" title="Inline Elementlar">
+<CodeBlock language="html" title="EM vs I Teglar">
 ```html
-<p>Bu matn <span>va bu span</span> bir qatorda.</p>
-<p><strong>Qalin</strong> va <em>kursiv</em> inline.</p>
-<p><a href="#">Bu link</a> ham inline.</p>
+<!-- EM - Semantik urg'u -->
+<p>Bu juda <em>muhim</em> masala!</p>
+<!-- Urg'u bilan o'qiladi -->
+
+<!-- I - Faqat kursiv (masalan, tillar) -->
+<p>Ingliz tilida <i>hello</i> = Salom</p>
+<p>Rasomlash: <i>Mona Lisa</i> juda mashhur.</p>
+
+<!-- Qo'shib ishlatish -->
+<p>
+    <strong><em>Diqqat!</em></strong>
+    Shunga etibor bering!
+</p>
 ```
 </CodeBlock>
 
-**Inline elementlar:** `<span>`, `<strong>`, `<em>`, `<b>`, `<i>`, `<a>`, `<button>`
+---
 
-### Farq Ko'rsatish
+## 5️⃣ Boshqa Matn Formati Teglari
+
+### <mark> - Asosiy Belgilash
+
+Matnni **sarı rang** bilan belgilaydi (kimi marker bilan belgilangan kabi).
 
 ```html
-<!-- BLOK - har biri yangi qatorda -->
-<div>Blok 1</div>
-<div>Blok 2</div>
-<div>Blok 3</div>
-
-<!-- INLINE - hammasi bir qatorda -->
-<span>Inline 1</span>
-<span>Inline 2</span>
-<span>Inline 3</span>
+<p>
+    HTML, CSS, va <mark>JavaScript</mark> -
+    frontend dasturlashning asosiy ustunlari.
+</p>
 ```
+
+### <small> - Kichik Matn
+
+Kichik matn (masalan, copyright, shartlar):
+
+```html
+<p>Maksimal narxi: $99.99</p>
+<small>© 2026 Kompaniya. Barcha huquqlar himoyalangan.</small>
+```
+
+### <del> va <ins> - O'chirilgan va Qo'shilgan
+
+`<del>` - o'chirilgan matn, `<ins>` - qo'shilgan matn (masalan, versiya o'zgarishlari):
+
+```html
+<p>
+    Narxi: <del>$99.99</del> <ins>$49.99</ins>
+</p>
+
+<p>
+    HTML versiyasi: <del>4.0</del> <ins>5.0</ins>
+</p>
+```
+
+### <code> - Kod Parchasini Belgilash
+
+Inline kod uchun (so'z ichida kod):
+
+```html
+<p>
+    JavaScript'da birinchi qiymat: <code>let x = 0;</code>
+</p>
+
+<p>
+    Terminal'da <code>npm install</code> buyrug'ini yozing.
+</p>
+```
+
+### <pre> - Formatlangan Matn
+
+`<pre>` teglari ichidagi **bo'shliqlar, tablar va yangi qatorlar saqlanadi**.
+
+<CodeBlock language="html" title="PRE Tegi Misoli">
+```html
+<pre>
+function hello() {
+    console.log("Salom!");
+    return 42;
+}
+</pre>
+
+<!-- ASCII art -->
+<pre>
+    *
+   / \
+  /   \
+ /     \
+---------
+</pre>
+```
+</CodeBlock>
+
+---
+
+## 📋 To'liq Matn Formati Jadvali
+
+| Tag | Foydalanishi | Misol | Natija |
+|-----|--------------|-------|--------|
+| `<strong>` | Muhim matn | `<strong>Diqqat</strong>` | **Diqqat** |
+| `<b>` | Vizual qalin | `<b>Bold</b>` | **Bold** |
+| `<em>` | Urg'u | `<em>Muhim</em>` | *Muhim* |
+| `<i>` | Kursiv | `<i>tillar</i>` | *tillar* |
+| `<mark>` | Belgilash | `<mark>Muhim</mark>` | <mark>Muhim</mark> |
+| `<small>` | Kichik | `<small>copyright</small>` | ^copyright |
+| `<del>` | O'chirilgan | `<del>Old</del>` | ~~Old~~ |
+| `<ins>` | Qo'shilgan | `<ins>New</ins>` | <u>New</u> |
+| `<code>` | Kod | `<code>const x</code>` | `const x` |
+| `<sub>` | Pastga | H<sub>2</sub>O | H₂O |
+| `<sup>` | Yuqorga | x<sup>2</sup> | x² |
 
 ---
 
 ## 🎯 Amaliy Misol
 
-Hammani birlashtirib, to'liq HTML sahifasini yaratamiz:
-
-<CodeBlock language="html" title="To'liq Misol">
+<CodeBlock language="html" title="To'liq Matn Formati Misoli">
 ```html
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <title>Mening Blog</title>
+    <meta charset="UTF-8">
+    <title>Matn Formatlash Misoli</title>
 </head>
 <body>
-    <!-- Sahifa sarlavhasi -->
-    <h1>Mening Blog</h1>
+    <!-- Sarlavha -->
+    <h1>HTML'da Matn Formatlash</h1>
 
     <!-- Bo'lim 1 -->
-    <h2>Birinchi Maqola</h2>
-    <p>Bu <strong>juda muhim</strong> maqola. <em>Iltimos</em> o'qib chiqing!</p>
-    <p>Maqola matni bu yerda davom etadi...</p>
+    <h2>Asosiy Formatlash Teglari</h2>
+    <p>
+        HTML'da siz <strong>qalin</strong> va
+        <em>kursiv</em> matnlarni yaratishingiz mumkin.
+        Bu <mark>juda muhim</mark> ko'nikmadir!
+    </p>
 
     <hr>
 
     <!-- Bo'lim 2 -->
-    <h2>Ikkinchi Maqola</h2>
-    <p>Ikkinchi maqolada biz o'rganamiz:</p>
-    <p>HTML <strong>juda oson</strong> va <em>foydali</em>.</p>
+    <h2>Kimyoviy Formula Misoli</h2>
+    <p>
+        Suv formulasi: H<sub>2</sub>O
+        <br>
+        Pifogor teoremasida: a<sup>2</sup> + b<sup>2</sup> = c<sup>2</sup>
+    </p>
 
     <hr>
 
+    <!-- Bo'lim 3 -->
+    <h2>Versiya Tarixchesi</h2>
+    <p>
+        Narxi: <del>$99.99</del> <ins>$49.99</ins>
+        <br>
+        HTML versiyasi: <del>4.0</del> <ins>5.0</ins>
+    </p>
+
+    <hr>
+
+    <!-- Bo'lim 4 -->
+    <h2>Kod Misoli</h2>
+    <p>
+        JavaScript'da saykl yaratish uchun
+        <code>for</code> operatori ishlatiladi:
+    </p>
+    <pre>
+for (let i = 0; i < 10; i++) {
+    console.log(i);
+}
+    </pre>
+
     <!-- Footer -->
-    <p>© 2026 Mening Blog. Barcha huquqlar himoyalangan.</p>
+    <hr>
+    <small>&copy; 2026 HTML Darslar. Barcha huquqlar himoyalangan.</small>
 </body>
 </html>
 ```
@@ -187,21 +368,126 @@ Hammani birlashtirib, to'liq HTML sahifasini yaratamiz:
 
 ---
 
-## 📝 Xulosa
+## ✅ Best Practices
 
-| Element | Type | Vazifasi |
-|---------|------|---------|
-| `<h1>-<h6>` | Blok | Sarlavhalar |
-| `<p>` | Blok | Paragraf |
-| `<div>` | Blok | Umumiy konteyner |
-| `<span>` | Inline | Umumiy matn konteyner |
-| `<strong>` | Inline | Qalin (muhim) |
-| `<em>` | Inline | Kursiv (urg'u) |
-| `<br>` | - | Yangi qator |
-| `<hr>` | Blok | Gorizontal chiziq |
+### 1. Semantik Taglarni Ishlatish
+
+```html
+<!-- ❌ Yomon - CSS ga tayanib -->
+<div style="font-weight: bold;">Muhim</div>
+<div style="font-style: italic;">Urg'u</div>
+
+<!-- ✅ Yaxshi - Semantik taglar -->
+<strong>Muhim</strong>
+<em>Urg'u</em>
+```
+
+### 2. Nozik Matn Formatlash
+
+```html
+<!-- ❌ Juda ko'p formatlash yomon -->
+<p>
+    <strong><em><mark><u>Juda ko'p</u></mark></em></strong>
+</p>
+
+<!-- ✅ Oddiy va tushunarli -->
+<p><strong>Muhim matn</strong></p>
+```
+
+### 3. Heading'larning Ierarxiyasi
+
+```html
+<!-- ❌ Yomon - skip qilindi -->
+<h1>Sarlavha</h1>
+<h4>Alt sarlavha</h4>
+
+<!-- ✅ Yaxshi - to'g'ri ierarxiya -->
+<h1>Sarlavha</h1>
+<h2>Asosiy bo'lim</h2>
+<h3>Alt bo'lim</h3>
+```
+
+### 4. <br> dan Ko'p Foydalanmang
+
+```html
+<!-- ❌ Yomon - bo'shliqlar uchun <br> -->
+<p>Paragraf 1<br><br><br></p>
+<p>Paragraf 2</p>
+
+<!-- ✅ Yaxshi - paragraflar o'rtasida CSS margin -->
+<p>Paragraf 1</p>
+<p>Paragraf 2</p>
+```
+
+---
+
+## 🎓 Amaliy Mashq
+
+**Mashq 1:** Sizning blog maqolasi
+1. Sarlavha yaratish (`<h1>`)
+2. Uchta bo'lim yaratish (`<h2>`)
+3. Har bir bo'limda 2-3 ta paragraf (`<p>`)
+4. Kamida 3 ta `<strong>`, 2 ta `<em>`, 1 ta `<mark>` ishlatish
+5. `<hr>` bilan bo'limlarni ajratish
+
+**Mashq 2:** Kodli matn formati
+1. `<code>` va `<pre>` ishlatib kod misoli yaratish
+2. Formula misoli (H<sub>2</sub>O, x<sup>2</sup>)
+
+---
+
+## ❌ Keng Uchraydigan Xatoliklar
+
+### 1. Closing Tag'larini Tashlab Qolish
+
+```html
+<!-- ❌ Yomon -->
+<p>Paragraf matn
+<p>Ikkinchi paragraf
+
+<!-- ✅ Yaxshi -->
+<p>Paragraf matn</p>
+<p>Ikkinchi paragraf</p>
+```
+
+### 2. Sarlavha Ierarxiyasini Buzish
+
+```html
+<!-- ❌ Yomon -->
+<h1>Sarlavha</h1>
+<h3>Jumboq bo'lim</h3>  <!-- h2 skip qilindi -->
+
+<!-- ✅ Yaxshi -->
+<h1>Sarlavha</h1>
+<h2>Asosiy bo'lim</h2>
+<h3>Jumboq bo'lim</h3>
+```
+
+### 3. <br> dan Ko'plab Foydalanish
+
+```html
+<!-- ❌ Yomon - CSS bilan hal qiling -->
+<p>Paragraf<br><br><br></p>
+
+<!-- ✅ Yaxshi - o'zaro ta'sir uchun CSS -->
+<p>Paragraf</p>
+<p style="margin-top: 20px;">Ikkinchi paragraf</p>
+```
+
+---
+
+## 🎯 Xulosa
+
+Bu darsda siz o'rgandingiz:
+- ✅ Sarlavha teglari ierarxiyasi (`<h1>-<h6>`)
+- ✅ Paragraflar (`<p>`)
+- ✅ Yangi qatorlar (`<br>`) va bo'limlar (`<hr>`)
+- ✅ Semantik formatlash (`<strong>`, `<em>`)
+- ✅ Boshqa formatlash teglari (`<mark>`, `<small>`, `<del>`, `<ins>`, `<code>`, `<pre>`)
+- ✅ Best practices va keng uchraydigan xatoliklar
 
 ---
 
 ## 🚀 Keyingi Darsda
 
-Ro'yxatlar (`<ul>`, `<ol>`, `<li>`), linklar (`<a>`), rasmlar (`<img>`), va formalar (`<form>`, `<input>`) o'rganamiz!
+**Lesson 3: Ro'yxatlar** - `<ul>`, `<ol>`, `<li>`, `<dl>` va iç içe ro'yxatlarni o'rganamiz!

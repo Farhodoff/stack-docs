@@ -1,250 +1,421 @@
 ---
-title: "Semantik HTML5 va Sahifa Tuzilishi"
-description: "Semantik HTML elementlari, sahifa tuzilishi, va SEO uchun muhimlik"
+title: "Havolalar va Rasmlar"
+description: "A tegi, href, rasmlar, IMG tag, responsive rasmlar, accessibility"
 category: "html-css-js"
 order: 4
 tags:
   - html
-  - semantic
-  - html5
-  - seo
+  - links
+  - images
+  - accessibility
 status: "published"
 ---
 
-# Semantik HTML5 va Sahifa Tuzilishi
+# Havolalar va Rasmlar
 
-## 🎯 Semantik HTML Nima?
-
-**Semantik HTML** - elementlarning ma'nosiga qarab to'g'ri ishlatish.
-
-Masalan:
-- ❌ **Semantik emas:** `<div>Saytning sarlavhasi</div>`
-- ✅ **Semantik:** `<header>Saytning sarlavhasi</header>`
-
-**Nima uchun muhim?**
-1. **SEO (Search Engine Optimization)** - Google saytingizni yaxshi tushinadi
-2. **Accessibility (A11y)** - Screen readers va i-readers uchun
-3. **Kod o'qilishi** - Dasturchilar oson tushunadi
-4. **Maintenance** - Kodni tahrirlash oson
+Havolalar (`<a>`) va rasmlar (`<img>`) veb-sahifalarni **interaktiv va vizual** qiladi. Bu darsda siz havolalarni yaratishni, rasmlarni qo'shishni va best practice'larni o'rganasiz.
 
 ---
 
-## 🏗️ Asosiy Semantik Teglar
+## 1️⃣ Havolalar (<a> Tegi)
 
-### `<header>` - Saytning Sarlavha Qismi
+`<a>` tegi (anchor) **boshqa sahifalarga, fayllariga yoki veb-saytlarga** havola yaratadi.
 
-Saytning yoki qismining yuqori qismida turadi. Logo, navigatsiya, qidiruv bo'lishi mumkin:
+### Asosiy A Tegi
+
+<CodeBlock language="html" title="Oddiy Havola">
+```html
+<!-- Boshqa saytga havola -->
+<a href="https://www.example.com">Example.com'ni tashrif buyuring</a>
+
+<!-- Shu sayti ichidagi sahifaga havola -->
+<a href="/about">Haqida sahifasi</a>
+
+<!-- O'zbekiston Respublikasining rasmiy saytiga -->
+<a href="https://gov.uz">O'zbekiston Hukumati</a>
+```
+</CodeBlock>
+
+### A Tegi Atributlari
+
+#### `href` - Havola Manzili
 
 ```html
-<header>
-    <h1>Mening Blogim</h1>
-    <p>Frontend dasturlash haqida maqolalar</p>
-</header>
+<!-- Dastlabki URL (absolute URL) -->
+<a href="https://google.com">Google</a>
+
+<!-- Nisbiy URL (relative URL) -->
+<a href="/pages/about.html">Haqida</a>
+
+<!-- Bir fayl yoki papka -->
+<a href="../index.html">Bosh sahifaga qaytish</a>
+
+<!-- Email manzili -->
+<a href="mailto:info@example.com">Biz bilan bog'lanish</a>
+
+<!-- Telefon raqami -->
+<a href="tel:+998901234567">+998 90 123 45 67</a>
 ```
 
-### `<nav>` - Navigatsiya
-
-Asosiy havolalar va menyu uchun:
+#### `target` - Havola Qayerda Ochiladi
 
 ```html
-<nav>
-    <a href="/">Bosh sahifa</a>
-    <a href="/maqolalar">Maqolalar</a>
-    <a href="/haqida">Haqida</a>
-    <a href="/bog'lanish">Bog'lanish</a>
-</nav>
+<!-- Hozirgi tabtada ochish (default) -->
+<a href="https://google.com">Google</a>
+
+<!-- Yangi tabtada ochish -->
+<a href="https://google.com" target="_blank">Google (Yangi tab)</a>
+
+<!-- Yangi oynada ochish -->
+<a href="https://google.com" target="_blank">Google (Yangi oyna)</a>
+
+<!-- Parent frameda ochish (nadirdan foydalaniladi) -->
+<a href="https://google.com" target="_parent">Parent</a>
+
+<!-- To'liq brauzerda ochish (nadirdan foydalaniladi) -->
+<a href="https://google.com" target="_top">Top</a>
 ```
 
-### `<main>` - Asosiy Kontent
+#### `title` - Havola Tavsifi
 
-Sahifaning asosiy, o'ziga xos kontenti. **Har bir sahifada faqat bir marta**:
+Foydalanuvchi havolaning ustiga o'tkaonda tooltip ko'rsatiladi:
 
 ```html
-<main>
-    <h1>Xush kelibsiz!</h1>
-    <p>Bu asosiy kontent...</p>
-</main>
+<a href="https://mozilla.org" title="Mozilla Foundation - Open Source">
+    Mozilla
+</a>
+
+<!-- Mobilda title ko'rsatilmaydi -->
+<a href="/about" title="Kompaniya haqida batafsil ma'lumot">
+    Haqida
+</a>
 ```
 
-### `<section>` - Tematik Bo'lim
-
-Muvofiqlashtirilgan tematik guruhlash:
+#### `rel` - Havola Munosabati
 
 ```html
-<section>
-    <h2>So'nggi Maqolalar</h2>
-    <article>...</article>
-    <article>...</article>
-</section>
+<!-- Tashqi saytga nofollow -->
+<a href="https://example.com" rel="nofollow">
+    Boshqa Sayt
+</a>
 
-<section>
-    <h2>Ijtimoiy Tarmoqlar</h2>
-    <p>Bizni kuzating...</p>
-</section>
+<!-- Tashqi saytga rel="external" -->
+<a href="https://example.com" rel="external" target="_blank">
+    Tashqi sayt
+</a>
+
+<!-- Rasm faylini olish -->
+<a href="/files/document.pdf" rel="download">
+    PDF'ni Yuklab Olish
+</a>
+
+<!-- Bir nechta rel atributlari -->
+<a href="https://example.com" rel="nofollow external">
+    Link
+</a>
 ```
 
-### `<article>` - Mustaqil Kontent
-
-Blog post, yangilik, forum post kabi o'z-o'zida to'liq kontent:
+#### `download` - Fayl Yuklab Olish
 
 ```html
-<article>
-    <h2>HTML5 Semantic Tags Haqida</h2>
-    <p>Muallif: Ali</p>
-    <p>Nashr: 2026-03-28</p>
-    <p>HTML5 juda yaxshi...</p>
-</article>
+<!-- Fayl yuklab olish (boshqotirmadan) -->
+<a href="/files/document.pdf" download>
+    PDF'ni Yuklab Olish
+</a>
+
+<!-- Boshqotirma bilan yuklab olish -->
+<a href="/files/document.pdf" download="Mening_Dokumentim">
+    PDF'ni Yuklab Olish
+</a>
+
+<!-- Rasm yuklab olish -->
+<a href="/images/photo.jpg" download="Mening_Fotom">
+    Fotoni Yuklab Olish
+</a>
 ```
 
-### `<aside>` - Yon Panel
+---
 
-Asosiy kontentga qo'shimcha ma'lumot. Sidebar, catchy boxes:
+## 2️⃣ Ichki Navigatsiya (Anchor Links)
 
+Bir sahifa ichidagi har xil bo'lim o'rtasida havolalar yaratishingiz mumkin.
+
+<CodeBlock language="html" title="Anchor Links Misoli">
 ```html
-<aside>
-    <h3>Qiziqarli Havolalar</h3>
-    <ul>
-        <li><a href="#">MDN Docs</a></li>
-        <li><a href="#">W3C Standarti</a></li>
-    </ul>
-</aside>
-```
-
-### `<footer>` - Pastki Qism
-
-Mualliflik huquqi, qo'shimcha havolalar, kontakt ma'lumoti:
-
-```html
-<footer>
-    <p>&copy; 2026 Mening Blogim. Barcha huquqlar himoyalangan.</p>
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <title>Anchor Links</title>
+</head>
+<body>
+    <!-- Navigatsiya Menyu -->
     <nav>
-        <a href="/privacy">Maxfiylik Siyosati</a>
-        <a href="/terms">Foydalanish Shartlari</a>
+        <ul>
+            <li><a href="#section1">Bo'lim 1</a></li>
+            <li><a href="#section2">Bo'lim 2</a></li>
+            <li><a href="#section3">Bo'lim 3</a></li>
+        </ul>
     </nav>
-</footer>
+
+    <!-- Bo'lim 1 -->
+    <section id="section1">
+        <h2>Bo'lim 1</h2>
+        <p>Bu birinchi bo'lim...</p>
+    </section>
+
+    <!-- Bo'lim 2 -->
+    <section id="section2">
+        <h2>Bo'lim 2</h2>
+        <p>Bu ikkinchi bo'lim...</p>
+    </section>
+
+    <!-- Bo'lim 3 -->
+    <section id="section3">
+        <h2>Bo'lim 3</h2>
+        <p>Bu uchinchi bo'lim...</p>
+        <!-- Yuqoriga qaytish -->
+        <a href="#section1">Bosh sahifaga qaytish</a>
+    </section>
+</body>
+</html>
+```
+</CodeBlock>
+
+**Qanday Ishlaydi:**
+1. `id="section1"` - Bo'limni identifikator beradi
+2. `<a href="#section1">` - O'sha bo'limga havola yaratadi
+3. Havola bosilganda, brauzer o'sha bo'limga ko'chadi
+
+---
+
+## 3️⃣ Rasmlar (<img> Tegi)
+
+`<img>` tegi sahifaga rasmlar qo'shadi.
+
+### Asosiy IMG Tegi
+
+<CodeBlock language="html" title="Oddiy Rasm">
+```html
+<!-- Eng sodda rasm -->
+<img src="/images/rasm.jpg">
+
+<!-- Rasm o'lchamlari bilan -->
+<img src="/images/rasm.jpg" width="300" height="200">
+
+<!-- Rasm tavsifi (alt text) -->
+<img src="/images/rasm.jpg" alt="Toshkent shahri yosh yoshlari">
+```
+</CodeBlock>
+
+### IMG Tegi Atributlari
+
+#### `src` - Rasm Faylining Manzili
+
+```html
+<!-- Dastlabki URL -->
+<img src="https://example.com/rasm.jpg">
+
+<!-- Nisbiy URL -->
+<img src="/images/rasm.jpg">
+<img src="../images/rasm.jpg">
+
+<!-- Data URL (Base64 kodlangan rasm) -->
+<img src="data:image/png;base64,iVBORw0KGg...">
+```
+
+#### `alt` - Rasm Tavsifi (Accessibility)
+
+**Juda muhim!** Alt matn:
+- Screen reader'larga o'qiladi
+- Rasm yuklana olmasa ko'rsatiladi
+- SEO uchun muhim
+
+```html
+<!-- ❌ Yomon - alt yo'q -->
+<img src="/rasm.jpg">
+
+<!-- ✅ Yaxshi - batafsil alt tavsifi -->
+<img src="/rasm.jpg" alt="Toshkent shahri Amir Temur xiyoboni">
+
+<!-- Dekorativ rasm - bo'sh alt -->
+<img src="/logo-pattern.png" alt="">
+```
+
+#### `title` - Rasm Ustiga Tooltip
+
+```html
+<img src="/rasm.jpg"
+     alt="Toshkent"
+     title="Bu Toshkent shahri, O'zbekistonning poytaxti">
+```
+
+#### `width` va `height` - O'lcham
+
+```html
+<!-- Pikselda o'lcham -->
+<img src="/rasm.jpg" width="300" height="200">
+
+<!-- Faqat width (height avtomatik) -->
+<img src="/rasm.jpg" width="300">
+
+<!-- Responsivlik uchun percentda -->
+<img src="/rasm.jpg" style="width: 100%; height: auto;">
+```
+
+#### `loading` - Rasm Yuklanish Turi
+
+```html
+<!-- Lazy loading (sahifa scroll qilinganda yuklanadi) -->
+<img src="/rasm.jpg" loading="lazy">
+
+<!-- Shuni bilan yuklanadi (default) -->
+<img src="/rasm.jpg" loading="eager">
 ```
 
 ---
 
-## ❌ Semantik Emas. Faqat Stil Uchun
+## 4️⃣ Responsive Rasmlar
 
-### `<div>` - Umumiy Konteyner
+Turli ekran o'lchamlari uchun turli rasmlarni ko'rsatishingiz mumkin.
 
-Semantik ma'nosi yo'q. CSS/JavaScript uchun guruhlash:
+### Picture Element
 
+<CodeBlock language="html" title="Responsive Rasmlar">
 ```html
-<!-- Semantik emas, faqat stil/JS uchun -->
-<div class="product-card">
-    <h3>Mahsulot</h3>
-    <p>Narxi: $100</p>
-</div>
+<!-- Ekran o'lchamiga qarab turli rasmlar -->
+<picture>
+    <!-- Telefon uchun -->
+    <source srcset="/images/rasm-small.jpg" media="(max-width: 600px)">
+
+    <!-- Planshet uchun -->
+    <source srcset="/images/rasm-medium.jpg" media="(max-width: 1200px)">
+
+    <!-- Desktop uchun -->
+    <img src="/images/rasm-large.jpg" alt="Responsive rasm misoli">
+</picture>
+
+<!-- Turli format'larni qo'llab-quvvatlash -->
+<picture>
+    <!-- Zamonaviy WebP format -->
+    <source srcset="/images/rasm.webp" type="image/webp">
+
+    <!-- Eski format -->
+    <img src="/images/rasm.jpg" alt="Rasm">
+</picture>
 ```
+</CodeBlock>
 
-### `<span>` - Umumiy Inline Konteyner
-
-Inline tekstni guruhlash, CSS/JS uchun:
+### Srcset Atributi
 
 ```html
-<p>Bu <span class="highlight">muhim</span> so'z.</p>
+<!-- Pixeldensity uchun turli rasmlar -->
+<img src="/rasm.jpg"
+     srcset="/rasm-1x.jpg 1x, /rasm-2x.jpg 2x"
+     alt="Retina displey uchun optimizatsiya">
+
+<!-- Ekran o'lchamiga qarab turli rasmlar -->
+<img src="/rasm.jpg"
+     srcset="/rasm-small.jpg 600w,
+             /rasm-medium.jpg 1000w,
+             /rasm-large.jpg 1600w"
+     sizes="(max-width: 600px) 100vw,
+            (max-width: 1000px) 50vw,
+            33vw"
+     alt="Responsive rasm">
 ```
 
 ---
 
-## 📐 To'liq Semantik Sahifa Misoli
+## 🎯 Amaliy Misol
 
-<CodeBlock language="html" title="To'liq HTML5 Sahifasi">
+<CodeBlock language="html" title="To'liq Havolalar va Rasmlar Misoli">
 ```html
 <!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mening Blogim - Frontend Dasturlash</title>
+    <title>Havolalar va Rasmlar Misoli</title>
 </head>
 <body>
-    <!-- Saytning sarlavha qismi -->
-    <header>
-        <h1>🚀 Mening Blogim</h1>
-        <p>Frontend dasturlash, React, va Web Development</p>
-    </header>
+    <h1>Havolalar va Rasmlar</h1>
 
-    <!-- Navigatsiya -->
-    <nav>
-        <ul>
-            <li><a href="/">Bosh sahifa</a></li>
-            <li><a href="/maqolalar">Maqolalar</a></li>
-            <li><a href="/kategoriyalar">Kategoriyalar</a></li>
-            <li><a href="/haqida">Haqida</a></li>
-        </ul>
-    </nav>
+    <hr>
 
-    <!-- Asosiy kontent -->
-    <main>
-        <!-- Bo'lim 1: So'nggi maqolalar -->
-        <section>
-            <h2>📰 So'nggi Maqolalar</h2>
+    <!-- Havolalar Bo'limi -->
+    <h2>Turli Xil Havolalar</h2>
 
-            <article>
-                <h3>HTML5 Semantic Tags Haqida</h3>
-                <p><strong>Muallif:</strong> Ali</p>
-                <p><em>Nashr: 2026-03-28</em></p>
-                <p>
-                    HTML5 semantic tags saytningizni yanada
-                    tushunarli va SEO-friendly qiladi...
-                </p>
-                <a href="/articles/html5-semantic">To'liq O'qish →</a>
-            </article>
+    <!-- Tashqi saytga havola -->
+    <p>
+        <a href="https://www.gov.uz" target="_blank">
+            O'zbekiston Hukumati Saytiga O'tish
+        </a>
+    </p>
 
-            <article>
-                <h3>CSS Flexbox vs Grid</h3>
-                <p><strong>Muallif:</strong> Fatima</p>
-                <p><em>Nashr: 2026-03-25</em></p>
-                <p>
-                    Flexbox va Grid ikkalasi layout uchun,
-                    lekin har birining o'ziga khusiyatlari bor...
-                </p>
-                <a href="/articles/flexbox-grid">To'liq O'qish →</a>
-            </article>
-        </section>
+    <!-- Shu saytning ichidagi sahifaga -->
+    <p>
+        <a href="/about.html">Haqida sahifasi</a>
+    </p>
 
-        <!-- Bo'lim 2: Tavsiyalangan -->
-        <section>
-            <h2>⭐ Tavsiyalangan Maqolalar</h2>
-            <article>
-                <h3>JavaScript Async/Await</h3>
-                <p>Aynchronous dasturlash haqida to'liq qo'llanma...</p>
-                <a href="/articles/async-await">O'qish →</a>
-            </article>
-        </section>
-    </main>
+    <!-- Email havola -->
+    <p>
+        <a href="mailto:info@example.com">
+            Biz bilan bog'lanish: info@example.com
+        </a>
+    </p>
 
-    <!-- Yon panel -->
-    <aside>
-        <h3>📚 Qiziqarli Havolalar</h3>
-        <ul>
-            <li><a href="https://developer.mozilla.org">MDN Docs</a></li>
-            <li><a href="https://www.w3.org">W3C Standarti</a></li>
-            <li><a href="https://caniuse.com">CanIUse</a></li>
-        </ul>
+    <!-- Telefon havola -->
+    <p>
+        <a href="tel:+998901234567">+998 90 123 45 67</a>
+    </p>
 
-        <h3>🏷️ Kategoriyalar</h3>
-        <ul>
-            <li><a href="/cat/html">HTML (5)</a></li>
-            <li><a href="/cat/css">CSS (8)</a></li>
-            <li><a href="/cat/javascript">JavaScript (12)</a></li>
-            <li><a href="/cat/react">React (6)</a></li>
-        </ul>
-    </aside>
+    <hr>
 
-    <!-- Pastki qism -->
-    <footer>
-        <p>&copy; 2026 Mening Blogim. Barcha huquqlar himoyalangan.</p>
-        <nav>
-            <a href="/privacy">Maxfiylik Siyosati</a> |
-            <a href="/terms">Foydalanish Shartlari</a> |
-            <a href="/contact">Bog'lanish</a>
-        </nav>
-    </footer>
+    <!-- Rasmlar Bo'limi -->
+    <h2>Rasmlar</h2>
+
+    <!-- Oddiy rasm -->
+    <p>
+        <img src="/images/sample.jpg"
+             alt="Toshkent shahri"
+             width="300"
+             height="200">
+    </p>
+
+    <!-- Responsive rasm -->
+    <picture>
+        <source srcset="/images/small.jpg" media="(max-width: 600px)">
+        <source srcset="/images/large.jpg" media="(min-width: 601px)">
+        <img src="/images/default.jpg" alt="Responsive rasm">
+    </picture>
+
+    <hr>
+
+    <!-- Anchor Links -->
+    <h2>Sahifa Ichidagi Navigatsiya</h2>
+    <ul>
+        <li><a href="#intro">Kirish</a></li>
+        <li><a href="#content">Asosiy Kontent</a></li>
+        <li><a href="#conclusion">Xulosa</a></li>
+    </ul>
+
+    <!-- Bo'lim 1 -->
+    <section id="intro">
+        <h3>Kirish</h3>
+        <p>HTML'da havolalar va rasmlar juda muhim element...</p>
+    </section>
+
+    <!-- Bo'lim 2 -->
+    <section id="content">
+        <h3>Asosiy Kontent</h3>
+        <p>Rasmlar sahifalarni yanada chiroyli qiladi...</p>
+    </section>
+
+    <!-- Bo'lim 3 -->
+    <section id="conclusion">
+        <h3>Xulosa</h3>
+        <p>Havolalar va rasmlar veb-saytning asosiy qismidir...</p>
+        <a href="#intro">Yuqoriga qaytish</a>
+    </section>
 </body>
 </html>
 ```
@@ -252,92 +423,153 @@ Inline tekstni guruhlash, CSS/JS uchun:
 
 ---
 
-## 🔍 Faydalar
-
-### SEO Uchun
-
-Qidiruv tizimlari semantik tag'larni ko'rib, sahifaning tuzilishini tushunadi:
-
-```html
-<!-- ✅ Yaxshi SEO -->
-<article>
-    <h1>Blog Post Title</h1>
-    <p>Qo'shimcha ma'lumot...</p>
-</article>
-
-<!-- ❌ Yomon SEO -->
-<div>
-    <div>Blog Post Title</div>
-    <div>Qo'shimcha ma'lumot...</div>
-</div>
-```
-
-### Accessibility Uchun
-
-Screen reader'lar sahifaning strukturasini o'qiy oladi:
-
-```html
-<!-- Screen reader: "Header, navigation, main, article, footer" -->
-<body>
-    <header>...</header>
-    <nav>...</nav>
-    <main>...</main>
-    <footer>...</footer>
-</body>
-```
-
-### Kod Kalitesi
-
-Dasturchilar kodni oson tushunadi:
-
-```html
-<!-- Aniq va tushunarli -->
-<header>Logo va menu</header>
-
-<!-- Noma'lum -->
-<div id="header">Logo va menu</div>
-```
-
----
-
-## 📋 Semantik vs Non-Semantik Comparison
-
-| Semantik | Non-Semantik | Vazifasi |
-|----------|--------------|---------|
-| `<header>` | `<div class="header">` | Sayt sarlavhasi |
-| `<nav>` | `<div class="nav">` | Menyu/Navigatsiya |
-| `<main>` | `<div class="main">` | Asosiy kontent |
-| `<section>` | `<div class="section">` | Bo'lim |
-| `<article>` | `<div class="article">` | Mustaqil kontent |
-| `<aside>` | `<div class="sidebar">` | Yon panel |
-| `<footer>` | `<div class="footer">` | Pastki qism |
-
----
-
 ## ✅ Best Practices
 
-1. **`<main>` faqat bir marta** - Har bir sahifada maksimum bir `<main>`
-2. **`<header>` va `<footer>` qayta ishlatilishi mumkin** - Har qismda bo'lishi mumkin
-3. **`<article>` o'z-o'zida to'liq` - O'zida h1-h6, paragraf, shunga o'xshashlar bo'lishi kerak
-4. **`<section>` toplamtalash uchun** - Tegishli kontent'larni guruhlonish
-5. **`<aside>` asosiy kontent'ga bog'liq** - Shuning iq'tisodiy ma'lumat
-6. **Nesting to'g'ri** - `<header><nav></nav></header>` - nesting to'g'ri
+### 1. Alt Atributini Har Doim Ishlatish
+
+```html
+<!-- ❌ Yomon - alt yo'q -->
+<img src="/rasm.jpg">
+
+<!-- ✅ Yaxshi - batafsil alt -->
+<img src="/rasm.jpg" alt="Yoshlar birgalikda dasturlash qilyapti">
+
+<!-- Dekorativ rasm -->
+<img src="/gradient.png" alt="">
+```
+
+### 2. Responsive Rasmlar
+
+```html
+<!-- ❌ Yomon - fixed o'lcham -->
+<img src="/rasm.jpg" width="800" height="600">
+
+<!-- ✅ Yaxshi - responsive -->
+<img src="/rasm.jpg"
+     alt="Responsive rasm"
+     style="max-width: 100%; height: auto;">
+```
+
+### 3. Havola Matnini Mantiqiy Qilish
+
+```html
+<!-- ❌ Yomon -->
+<a href="/about">Bu yerga bosing</a>
+
+<!-- ✅ Yaxshi -->
+<a href="/about">Haqida sahifasi</a>
+```
+
+### 4. Target Atributini Ehtiyot Bilan Ishlatish
+
+```html
+<!-- ❌ Juda ko'p yangi tab ochish -->
+<a href="..." target="_blank">Link 1</a>
+<a href="..." target="_blank">Link 2</a>
+
+<!-- ✅ Tashqi saytlar uchun faqat -->
+<a href="https://example.com" target="_blank">Tashqi sayt</a>
+```
+
+### 5. Rasm Fayl O'lchamini Optimize Qilish
+
+```html
+<!-- ❌ Juda katta fayl (5 MB) -->
+<img src="/rasm-original.jpg">
+
+<!-- ✅ Optimallashtirgan (300 KB) -->
+<img src="/rasm-optimized.jpg" alt="...">
+```
 
 ---
 
-## 🎓 Xulosa
+## ❌ Keng Uchraydigan Xatoliklar
 
-Semantik HTML5:
-- ✅ SEO-friendly
-- ✅ Accessible (hammer uchun)
-- ✅ O'qilishi oson
-- ✅ Maintenance qulayroq
-- ✅ Standards-compliant
+### 1. Alt Tavsifi Yo'q
 
-**Har doim semantik tag'larni ishlatishga harakat qiling!**
+```html
+<!-- ❌ Yomon -->
+<img src="/rasm.jpg">
+
+<!-- ✅ Yaxshi -->
+<img src="/rasm.jpg" alt="Rasm tavsifi">
+```
+
+### 2. Noto'g'ri Href
+
+```html
+<!-- ❌ Yomon -->
+<a href="about.html">Haqida</a>  <!-- Fayl topilmadi -->
+
+<!-- ✅ Yaxshi -->
+<a href="/pages/about.html">Haqida</a>
+```
+
+### 3. Anchor Link Xatosi
+
+```html
+<!-- ❌ Yomon -->
+<a href="#section-1">Go to Section</a>
+<section id="Section-1">  <!-- ID not matching -->
+
+<!-- ✅ Yaxshi -->
+<a href="#section-1">Go to Section</a>
+<section id="section-1">  <!-- Exact match -->
+```
+
+### 4. Buyuk Rasmlar Yuklanish Vaqtiga Sabab Bolish
+
+```html
+<!-- ❌ Yomon - 10 MB rasm -->
+<img src="/huge-image.jpg">
+
+<!-- ✅ Yaxshi - Optimallashtirgan -->
+<img src="/optimized-image.jpg" loading="lazy">
+```
+
+---
+
+## 📊 Rasm Format'larining Taqqoslash
+
+| Format | Afzalliklar | Kamchiliklari |
+|--------|-----------|--------------|
+| JPG | Yo'qotilgan, kichik fayl | Sifat yo'qolishi mumkin |
+| PNG | Shaffof, sifat | Katta fayl |
+| WebP | Zamonaviy, kichik | Eski brauzerlar |
+| SVG | Vector, masshtablanishi | Muraakkab rasmlar uchun emas |
+| GIF | Animatsiya | Katta fayl |
+
+---
+
+## 🎓 Amaliy Mashq
+
+**Mashq 1:** Turli turdagi havolalar yarating
+1. Tashqi saytga havola (Google, GitHub)
+2. Email havola
+3. Telefon havola
+4. Ichki sahifa havolasi
+
+**Mashq 2:** Rasm yuklash
+1. Rasmni shu yerga qo'shing
+2. To'g'ri alt tavsifi yozing
+3. Responsive o'lchashini sozlang
+4. Rasmni responsive qilish
+
+---
+
+## 🎯 Xulosa
+
+Bu darsda siz o'rgandingiz:
+- ✅ Havolalar (`<a>` tegi va atributlari)
+- ✅ Turli xil havolalar (tashqi, ichki, email, telefon)
+- ✅ Anchor links (sahifa ichidagi navigatsiya)
+- ✅ Rasmlar (`<img>` tegi)
+- ✅ Responsive va optimizatsiya qilgan rasmlar
+- ✅ Alt tavsifi va accessibility
+- ✅ Best practices
 
 ---
 
 ## 🚀 Keyingi Darsda
 
-Linklar (`<a>`), rasmlar (`<img>`), va formalar (`<form>`, `<input>`, `<textarea>`, `<button>`) o'rganamiz!
+**Lesson 5: Video va Audio Teglar** - `<video>`, `<audio>`, multimedia o'rganamiz!

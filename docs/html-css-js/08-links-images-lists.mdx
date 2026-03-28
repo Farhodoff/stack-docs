@@ -1,52 +1,532 @@
 ---
-title: "HTML Linklar, Rasmlar va Ro'yxatlar"
-description: "HTML'da linklar, rasmlar, va har xil ro'yxat turlarini ishlash"
+title: "Forma Input Turlari va Validatsiya"
+description: "Barcha input turları, validation atributlari, HTML5 constraint, custom xabarlar"
 category: "html-css-js"
 order: 8
 tags:
   - html
-  - links
-  - images
-  - lists
+  - forms
+  - input
+  - validation
 status: "published"
 ---
 
-# HTML Linklar, Rasmlar va Ro'yxatlar
+# Forma Input Turlari va Validatsiya
 
-Bu darsda HTML'dagi **linklar**, **rasmlar**, va **ro'yxatlar**ni o'rganamiz.
+Bu darsda siz **barcha HTML5 input turlarini** va **form validatsiyasi**ni chuqur o'rganasiz. Validatsiya **xato ma'lumotlarni oldini oladi** va **foydalanuvchi tajribasi** yaxshilaydi.
 
 ---
 
-## 🔗 Linklar (`<a>` Tegi)
+## 1️⃣ Barcha Input Turları
 
-**`<a>` tegi** - havolalar yaratish uchun ishlatiladi.
+### Matn va Parol Inputlari
 
-### Asosiy Link Struktura
-
-<CodeBlock language="html" title="Link Misoli">
+<CodeBlock language="html" title="Matn va Parol">
 ```html
-<a href="https://google.com" target="_blank">Google ga o'tish</a>
+<!-- Oddiy matn -->
+<label for="name">Ismingiz:</label>
+<input type="text" id="name" name="name" placeholder="Ismingizni kiriting">
+
+<!-- Parol (matn yoʻqlangan) -->
+<label for="pass">Parol:</label>
+<input type="password" id="pass" name="pass" placeholder="Parolni kiriting">
+
+<!-- Ko'pqatorli matn -->
+<label for="message">Xabar:</label>
+<textarea id="message" name="message" rows="5"></textarea>
 ```
 </CodeBlock>
 
-### Link Atributlari
-
-| Atribut | Ma'nosi | Misol |
-|---------|---------|-------|
-| `href` | Havolaning manzili (MAJBURIY) | `href="https://example.com"` |
-| `target` | Havolani qayerda ochish | `target="_blank"` |
-| `title` | Ko'rsatiluvchi tekst (tooltip) | `title="Bunga hover qilsangiz..."` |
-| `download` | Faylni yuklab olish | `download="file.pdf"` |
-
-### Link Turları
-
-#### 1️⃣ Tashqi Sayt Linklar
-
-Boshqa saytga o'tish (`target="_blank"` yangi oynada ochadi):
+### Email, URL, Telefon
 
 ```html
-<!-- Shunga oynada -->
-<a href="https://google.com">Google</a>
+<!-- Email - Avtomatik email validatsiyasi -->
+<label for="email">Email:</label>
+<input type="email" id="email" name="email" required>
+
+<!-- URL - URL format validatsiyasi -->
+<label for="website">Veb saytingiz:</label>
+<input type="url" id="website" name="website">
+
+<!-- Telefon raqami -->
+<label for="phone">Telefon:</label>
+<input type="tel" id="phone" name="phone" pattern="[0-9]{10}">
+```
+
+### Raqamlar va Qator
+
+```html
+<!-- Raqam -->
+<label for="age">Yosh:</label>
+<input type="number" id="age" name="age" min="0" max="150">
+
+<!-- Qator (slider) -->
+<label for="volume">Tovush:</label>
+<input type="range" id="volume" name="volume" min="0" max="100">
+```
+
+### Sana va Vaqt
+
+```html
+<!-- Sana -->
+<label for="birthdate">Tug'ilish sanasi:</label>
+<input type="date" id="birthdate" name="birthdate">
+
+<!-- Sana va vaqt -->
+<label for="meeting">Uchrashuvni tanlang:</label>
+<input type="datetime-local" id="meeting" name="meeting">
+
+<!-- Vaqt -->
+<label for="time">Vaqti:</label>
+<input type="time" id="time" name="time">
+
+<!-- Oy -->
+<label for="month">Oy:</label>
+<input type="month" id="month" name="month">
+
+<!-- Hafta -->
+<label for="week">Hafta:</label>
+<input type="week" id="week" name="week">
+```
+
+### Rang va Fayl
+
+```html
+<!-- Rang tanlash -->
+<label for="color">Sevimli rang:</label>
+<input type="color" id="color" name="color" value="#0066ff">
+
+<!-- Fayl yuklash -->
+<label for="document">Fayl yuklang:</label>
+<input type="file" id="document" name="document" accept=".pdf,.doc,.docx">
+
+<!-- Bir nechta fayl -->
+<label for="files">Fayllar:</label>
+<input type="file" id="files" name="files" multiple>
+```
+
+### Checkbox va Radio
+
+<CodeBlock language="html" title="Checkbox va Radio">
+```html
+<!-- Checkboxes - Bir nechta tanlash -->
+<label>Qiziqlantirgan mavzular:</label>
+<input type="checkbox" name="interests" value="web" id="web">
+<label for="web">Web Dasturlash</label>
+
+<input type="checkbox" name="interests" value="mobile" id="mobile">
+<label for="mobile">Mobile Dasturlash</label>
+
+<input type="checkbox" name="interests" value="ai" id="ai">
+<label for="ai">Artificial Intelligence</label>
+
+<!-- Radio Buttons - Birini tanlash -->
+<label>Jins:</label>
+<input type="radio" name="gender" value="male" id="male">
+<label for="male">Erkak</label>
+
+<input type="radio" name="gender" value="female" id="female">
+<label for="female">Ayol</label>
+
+<input type="radio" name="gender" value="other" id="other">
+<label for="other">Boshqa</label>
+```
+</CodeBlock>
+
+### Select va Textarea
+
+```html
+<!-- Select - Tushish menyu -->
+<label for="country">Davlat:</label>
+<select id="country" name="country" required>
+    <option value="">-- Tanlang --</option>
+    <option value="uz">O'zbekiston</option>
+    <option value="kz">Qozog'iston</option>
+    <option value="tj">Tojikiston</option>
+</select>
+
+<!-- Textarea - Ko'pqatorli matn -->
+<label for="bio">Bio:</label>
+<textarea id="bio" name="bio" rows="4" cols="50"></textarea>
+```
+
+---
+
+## 2️⃣ Validatsiya Atributlari
+
+### `required` - Majburiy Maydon
+
+```html
+<!-- Ushbu maydon to'ldirilishi majburiy -->
+<input type="text" name="username" required>
+<input type="email" name="email" required>
+
+<!-- Checkbox majburiy -->
+<input type="checkbox" name="terms" required>
+<label for="terms">Shartlarni qabul qilaman</label>
+```
+
+### `minlength` va `maxlength` - Uzunlik Cheklash
+
+```html
+<!-- Kamida 3 ta belgi -->
+<input type="text" name="username" minlength="3">
+
+<!-- Maksimum 50 ta belgi -->
+<input type="text" name="title" maxlength="50">
+
+<!-- Ikkalasini birlashtirish -->
+<input type="password" name="pass" minlength="8" maxlength="20">
+```
+
+### `min` va `max` - Raqamlarni Cheklash
+
+```html
+<!-- 0 dan 150 gacha -->
+<input type="number" name="age" min="0" max="150">
+
+<!-- Sana cheklash -->
+<input type="date" name="birthdate"
+       min="1950-01-01"
+       max="2010-12-31">
+
+<!-- Vaqt cheklash -->
+<input type="time" name="worktime"
+       min="08:00"
+       max="17:00">
+```
+
+### `step` - Qadamni Belgilash
+
+```html
+<!-- 0.1 qadamda (0, 0.1, 0.2, ...) -->
+<input type="number" name="price" step="0.01">
+
+<!-- Toq raqamlargina (1, 3, 5, 7, ...) -->
+<input type="number" name="odd" step="2">
+
+<!-- Sana - haftalar bo'ylab -->
+<input type="date" name="date" step="7">
+```
+
+### `pattern` - Regular Expression Validatsiyasi
+
+```html
+<!-- Faqat 3 ta harfli kod -->
+<input type="text" name="code" pattern="[A-Z]{3}">
+
+<!-- Telefon raqami format: XXX-XXX-XXXX -->
+<input type="tel" name="phone" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}">
+
+<!-- Lotin harflari va raqamlari -->
+<input type="text" name="username" pattern="[a-zA-Z0-9_]+" title="Faqat harflar, raqamlar va underscore">
+
+<!-- O'zbek telefon raqami: +998901234567 -->
+<input type="tel" name="phone" pattern="\+998[0-9]{9}">
+```
+
+---
+
+## 3️⃣ Keyingi Input va Placeholder
+
+### `placeholder` - Maslahat Matnini
+
+```html
+<!-- Placeholder - input bo'sh bo'lganida ko'rinadi -->
+<input type="email" placeholder="your-email@example.com">
+<textarea placeholder="Xabaringizni yozing..."></textarea>
+
+<!-- Placeholder matn oddiy tavsifdir, label emas! -->
+<label for="email">Email Manzili:</label>
+<input type="email" id="email" placeholder="example@gmail.com">
+```
+
+### `list` va `<datalist>` - Avto-To'ldirish
+
+```html
+<!-- Input bilan avto-to'ldirish -->
+<input type="text" name="country" list="countries" placeholder="Davlatni yozing...">
+
+<datalist id="countries">
+    <option value="O'zbekiston">
+    <option value="Qozog'iston">
+    <option value="Tojikiston">
+    <option value="Turkmaniston">
+    <option value="Qirgiziston">
+</datalist>
+```
+
+---
+
+## 🎯 Amaliy Misol
+
+<CodeBlock language="html" title="To'liq Validatsiya Formasi">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Validatsiya Formasi</title>
+    <style>
+        form { max-width: 600px; margin: 20px auto; }
+        .form-group { margin: 20px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        input:valid { border-color: green; }
+        input:invalid { border-color: red; }
+        .required::after { content: " *"; color: red; }
+    </style>
+</head>
+<body>
+    <h1>Registratsiya Formasi (Validatsiya Bilan)</h1>
+
+    <form action="/register" method="POST">
+        <!-- Username -->
+        <div class="form-group">
+            <label for="username" class="required">Username:</label>
+            <input type="text"
+                   id="username"
+                   name="username"
+                   minlength="3"
+                   maxlength="20"
+                   pattern="[a-zA-Z0-9_]+"
+                   placeholder="3-20 ta belgi"
+                   required>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+            <label for="email" class="required">Email Manzili:</label>
+            <input type="email"
+                   id="email"
+                   name="email"
+                   placeholder="your@email.com"
+                   required>
+        </div>
+
+        <!-- Telefon -->
+        <div class="form-group">
+            <label for="phone">Telefon Raqami:</label>
+            <input type="tel"
+                   id="phone"
+                   name="phone"
+                   pattern="\+998[0-9]{9}"
+                   placeholder="+998901234567">
+        </div>
+
+        <!-- Parol -->
+        <div class="form-group">
+            <label for="password" class="required">Parol:</label>
+            <input type="password"
+                   id="password"
+                   name="password"
+                   minlength="8"
+                   maxlength="20"
+                   placeholder="Kamida 8 ta belgi"
+                   required>
+        </div>
+
+        <!-- Yosh -->
+        <div class="form-group">
+            <label for="age">Yosh:</label>
+            <input type="number"
+                   id="age"
+                   name="age"
+                   min="18"
+                   max="100">
+        </div>
+
+        <!-- Tug'ilish Sanasi -->
+        <div class="form-group">
+            <label for="birthdate" class="required">Tug'ilish Sanasi:</label>
+            <input type="date"
+                   id="birthdate"
+                   name="birthdate"
+                   min="1950-01-01"
+                   max="2010-12-31"
+                   required>
+        </div>
+
+        <!-- Veb Sayt -->
+        <div class="form-group">
+            <label for="website">Veb Saytingiz:</label>
+            <input type="url"
+                   id="website"
+                   name="website"
+                   placeholder="https://example.com">
+        </div>
+
+        <!-- Interesslar -->
+        <div class="form-group">
+            <label>Interesslar:</label>
+            <input type="checkbox" name="interests" value="web" id="web">
+            <label for="web" style="display: inline;">Web</label>
+
+            <input type="checkbox" name="interests" value="mobile" id="mobile">
+            <label for="mobile" style="display: inline;">Mobile</label>
+
+            <input type="checkbox" name="interests" value="data" id="data">
+            <label for="data" style="display: inline;">Data Science</label>
+        </div>
+
+        <!-- Davlat -->
+        <div class="form-group">
+            <label for="country" class="required">Davlat:</label>
+            <select id="country" name="country" required>
+                <option value="">-- Tanlang --</option>
+                <option value="uz">O'zbekiston</option>
+                <option value="kz">Qozog'iston</option>
+                <option value="tj">Tojikiston</option>
+            </select>
+        </div>
+
+        <!-- Bio -->
+        <div class="form-group">
+            <label for="bio">Bio (Maksimum 200 ta belgi):</label>
+            <textarea id="bio" name="bio" rows="4" maxlength="200"></textarea>
+        </div>
+
+        <!-- Fayllar -->
+        <div class="form-group">
+            <label for="files">Fayllar (PDF, DOC):</label>
+            <input type="file" id="files" name="files" accept=".pdf,.doc,.docx" multiple>
+        </div>
+
+        <!-- Shartlar -->
+        <div class="form-group">
+            <input type="checkbox" id="terms" name="terms" required>
+            <label for="terms" style="display: inline;">
+                Foydalanish Shartlarini va Maxfiylik Siyosatini Qabul Qilaman
+            </label>
+        </div>
+
+        <!-- Tugmalar -->
+        <button type="submit">Ro'yxatdan O'tish</button>
+        <button type="reset">Tozalash</button>
+    </form>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## ✅ Best Practices
+
+### 1. Har Doim Validatsiya Qo'shing
+
+```html
+<!-- ❌ Yomon -->
+<input type="email">
+
+<!-- ✅ Yaxshi -->
+<input type="email" required>
+```
+
+### 2. Pattern Bilan Maslahat
+
+```html
+<!-- ✅ Yaxshi - pattern o'zining maslahat beradi -->
+<input type="text" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+       title="Telefon formati: XXX-XXX-XXXX">
+```
+
+### 3. Min/Max Cheklash
+
+```html
+<!-- ✅ Yaxshi -->
+<input type="number" name="age" min="18" max="100">
+<input type="date" name="birthdate" max="2006-12-31">
+```
+
+### 4. Listdan Foydalanish
+
+```html
+<!-- ✅ Yaxshi - avto-to'ldirish -->
+<input type="text" list="countries">
+<datalist id="countries">
+    <option value="O'zbekiston">
+    <option value="Qozog'iston">
+</datalist>
+```
+
+---
+
+## ❌ Keng Uchraydigan Xatoliklar
+
+### 1. Pattern Bilan Foydalanuvchiga Maslahat Bermang
+
+```html
+<!-- ❌ Yomon - nima formatida kerakligini aytilmagan -->
+<input type="text" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}">
+
+<!-- ✅ Yaxshi - maslahat bor -->
+<input type="text" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+       title="Telefon formati: XXX-XXX-XXXX">
+```
+
+### 2. Backend Validatsiyasiz
+
+```html
+<!-- ❌ Yomon - faqat frontend (server validatsiyasi yo'q) -->
+<input type="email" required>
+
+<!-- ✅ Yaxshi - frontend + backend validatsiyasi -->
+<!-- Frontend: HTML5 validatsiya -->
+<!-- Backend: JavaScript/Node.js/Python validatsiyasi -->
+```
+
+---
+
+## 📊 Validatsiya Atributlarini Qisqacha
+
+| Atribut | Maqsadi | Misol |
+|---------|---------|-------|
+| required | Majburiy maydon | `required` |
+| minlength | Minimal uzunlik | `minlength="3"` |
+| maxlength | Maksimal uzunlik | `maxlength="20"` |
+| min | Minimal raqam | `min="0"` |
+| max | Maksimal raqam | `max="100"` |
+| pattern | RegEx validatsiyasi | `pattern="[A-Z]{3}"` |
+| step | Qadamni belgilash | `step="0.01"` |
+| type | Input turi | `type="email"` |
+
+---
+
+## 🎓 Amaliy Mashq
+
+**Mashq 1:** Email validatsiyasi
+1. Email input'ni yarating
+2. `required` va `type="email"` qo'shing
+3. Testlash
+
+**Mashq 2:** Telephone validatsiya
+1. Pattern bilan telefon validatsiyasi
+2. O'zbek formatida (+998...)
+3. CSS bilan valid/invalid ranglar
+
+**Mashq 3:** Murakkab forma
+1. Barcha input turlarini qo'llab-quvvatlovchi forma
+2. Turli validatsiyalar
+3. CSS styling
+
+---
+
+## 🎯 Xulosa
+
+Bu darsda siz o'rgandingiz:
+- ✅ Barcha HTML5 input turlari
+- ✅ Validatsiya atributlari (required, minlength, pattern)
+- ✅ Raqam va sana cheklashi (min, max)
+- ✅ Regular expression pattern'lari
+- ✅ Placeholder va datalist
+- ✅ Best practices va keng uchraydigan xatoliklar
+
+---
+
+## 🚀 Keyingi Darsda
+
+**Lesson 9: Semantik HTML va Accessibility** - Semantik taglar, ARIA, screen readers o'rganamiz!
 
 <!-- Yangi oynada -->
 <a href="https://youtube.com" target="_blank">YouTube (Yangi oynada)</a>

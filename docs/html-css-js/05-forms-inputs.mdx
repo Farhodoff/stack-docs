@@ -1,432 +1,324 @@
 ---
-title: "HTML Formalar va Inputlar"
-description: "HTML formalar, input turları, validation, va foydalanuvchidan ma'lumot olish"
+title: "Video va Audio Teglar"
+description: "Video tegi, audio tegi, media format'lari, controls, autoplay, poster"
 category: "html-css-js"
 order: 5
 tags:
   - html
-  - forms
-  - input
-  - validation
+  - video
+  - audio
+  - multimedia
 status: "published"
 ---
 
-# HTML Formalar va Inputlar
+# Video va Audio Teglar
 
-## 📋 Formalar Nima?
-
-**Formalar** – foydalanuvchidan ma'lumot olish va backendga yuborish uchun ishlatiladi.
-
-Misol:
-- Login formasi (foydalanuvchi nomi, parol)
-- Registratsiya formasi
-- Kontakt formasi
-- Blog post yaratish formasi
+HTML5 `<video>` va `<audio>` teglar multimedia kontent qo'shishni oson qildi. Bu darsda siz video va audio fayllarini HTML'ga qanday qo'shishni va ularni boshqarishni o'rganasiz.
 
 ---
 
-## 🏗️ Form Strukturasi
+## 1️⃣ Video Tegi
 
-<CodeBlock language="html" title="Asosiy Form Struktura">
+`<video>` tegi sahifaga video qo'shadi. Brauzer avtomatik video pleyer bilan ko'rsatadi.
+
+### Asosiy Video Tegi
+
+<CodeBlock language="html" title="Sodda Video">
 ```html
-<form action="/submit" method="POST">
-    <!-- Form elementlari shu yerda -->
-    <label for="ism">Ismingiz:</label>
-    <input type="text" id="ism" name="ism">
+<!-- Eng asosiy vidyo -->
+<video src="/videos/sample.mp4"></video>
 
-    <button type="submit">Yuborish</button>
-</form>
+<!-- Video kontrollari bilan -->
+<video src="/videos/sample.mp4" controls></video>
+
+<!-- Video o'lchamlari bilan -->
+<video src="/videos/sample.mp4"
+       width="640"
+       height="480"
+       controls></video>
+
+<!-- Video plakati (ko'rinish) bilan -->
+<video src="/videos/sample.mp4"
+       poster="/images/poster.jpg"
+       controls></video>
 ```
 </CodeBlock>
 
-### Form Atributlari
+### Video Tegi Atributlari
 
-| Atribut | Ma'nosi | Misol |
-|---------|---------|-------|
-| `action` | Ma'lumot nerega yuboriladi | `/submit`, `/api/register` |
-| `method` | HTTP metodi | `GET`, `POST` |
-| `enctype` | Ma'lumot kodlanish turi | `application/x-www-form-urlencoded`, `multipart/form-data` |
-
----
-
-## ⌨️ Input Turları
-
-### 1️⃣ Matn Kiritish
+#### `controls` - Pleyer Kontrollari
 
 ```html
-<label for="ism">Ismingiz:</label>
-<input type="text"
-       id="ism"
-       name="ism"
-       placeholder="Ismingizni kiriting"
-       required>
+<!-- ❌ Kontrollari yo'q - foydalanuvchi video boshqa tilishtirolmaydi -->
+<video src="/video.mp4"></video>
+
+<!-- ✅ Kontrollari bor - play/pause/volume/progress bar -->
+<video src="/video.mp4" controls></video>
 ```
 
-### 2️⃣ Email
-
-Avtomatik email validation:
+#### `autoplay` - Sahifa Yuklanganda Avtomatik Tasvish
 
 ```html
-<label for="email">Email:</label>
-<input type="email"
-       id="email"
-       name="email"
-       required>
+<!-- Video sahifa yuklanganda avtomatik boshlanadi -->
+<video src="/video.mp4" autoplay></video>
+
+<!-- Ko'p brauzerlar autoplay dan ijozat olmaydi -->
+<!-- Mute bilan autoplay ishlaydi -->
+<video src="/video.mp4" autoplay muted></video>
 ```
 
-### 3️⃣ Parol
-
-Matn yoʻqolib qo'llinadi:
+#### `muted` - Yaglangan
 
 ```html
-<label for="password">Parol:</label>
-<input type="password"
-       id="password"
-       name="password"
-       minlength="8">
+<!-- Video yaglangan (tovush yo'q) -->
+<video src="/video.mp4" muted></video>
+
+<!-- Autoplay + Muted (brauzerda ishlaydi) -->
+<video src="/video.mp4" autoplay muted></video>
 ```
 
-### 4️⃣ Raqam
-
-Faqat raqamlarni qabul qiladi:
+#### `loop` - Qayta Tasvish
 
 ```html
-<label for="yosh">Yoshingiz:</label>
-<input type="number"
-       id="yosh"
-       name="yosh"
-       min="1"
-       max="120">
+<!-- Video tugasa, yana boshlanadi -->
+<video src="/video.mp4" controls loop></video>
 ```
 
-### 5️⃣ Sana
-
-Sana tanlash:
+#### `preload` - Oldindan Yuklanish
 
 ```html
-<label for="tug'ilish">Tug'ilish sanasi:</label>
-<input type="date"
-       id="tug'ilish"
-       name="tug'ilish">
+<!-- Hech narsani oldindan yuklama (default) -->
+<video src="/video.mp4" preload="none"></video>
+
+<!-- Metadata oldindan yukla (kadr soni, davomiyligi) -->
+<video src="/video.mp4" preload="metadata"></video>
+
+<!-- Butun videoni oldindan yukla -->
+<video src="/video.mp4" preload="auto"></video>
 ```
 
-### 6️⃣ Vaqt
+#### `poster` - Videoning Qoplan Rasmi
 
-Vaqt tanlash:
+Video yuklanmaganda bu rasm ko'rsatiladi:
 
 ```html
-<label for="vaqt">Vaqt:</label>
-<input type="time"
-       id="vaqt"
-       name="vaqt">
+<video src="/video.mp4"
+       poster="/images/thumbnail.jpg"
+       controls>
+</video>
 ```
 
-### 7️⃣ Rang
-
-Rang tanlash:
+#### `width` va `height` - O'lcham
 
 ```html
-<label for="rang">Sevimli rang:</label>
-<input type="color"
-       id="rang"
-       name="rang"
-       value="#ff0000">
-```
+<!-- Pikselda o'lcham -->
+<video src="/video.mp4" width="640" height="480" controls></video>
 
-### 8️⃣ Fayl Yuklash
-
-Fayl tanlash uchun:
-
-```html
-<label for="fayl">Fayl yuklang:</label>
-<input type="file"
-       id="fayl"
-       name="fayl"
-       accept=".pdf,.doc,.docx">
+<!-- Responsive o'lcham (CSS bilan) -->
+<video src="/video.mp4" style="width: 100%; height: auto;" controls></video>
 ```
 
 ---
 
-## 🔘 Radio Button (Birini Tanlash)
+## 2️⃣ Multiple Video Format'lari
 
-Bir nechta variantdan faqat **bitta** tanlanadi:
+Turli brauzerlar turli format'larni qo'llab-quvvatlaydi. Shuning uchun bir nechta format taqdim etishlari kerak.
 
-<CodeBlock language="html" title="Radio Buttons">
+<CodeBlock language="html" title="Bir Nechta Format'li Video">
 ```html
-<p>Jinsingiz:</p>
+<video width="640" height="480" controls poster="/poster.jpg">
+    <!-- MP4 format - Ko'p brauzerlar qo'llab-quvvatlaydi -->
+    <source src="/videos/video.mp4" type="video/mp4">
 
-<input type="radio" id="erkak" name="jins" value="erkak">
-<label for="erkak">Erkak</label>
+    <!-- WebM format - Firefox, Chrome -->
+    <source src="/videos/video.webm" type="video/webm">
 
-<input type="radio" id="ayol" name="jins" value="ayol">
-<label for="ayol">Ayol</label>
+    <!-- OGG format - Firefox, Chrome (eski) -->
+    <source src="/videos/video.ogv" type="video/ogg">
 
-<input type="radio" id="boshqa" name="jins" value="boshqa">
-<label for="boshqa">Boshqa</label>
+    <!-- Brauzer hech qaysi formatni qo'llab-quvvatlasa -->
+    Afsuski, brauzeringiz video qo'llab-quvvallamaydi.
+    <a href="/videos/video.mp4">Videoni yuklab oling</a>
+</video>
 ```
 </CodeBlock>
 
-**Muhim:** Barcha variantlar **bir xil `name`** atributiga ega bo'lishi kerak!
+### Video Format'larining Taqqoslash
+
+| Format | MIME Type | Brauzerlar | Afzalliklar |
+|--------|-----------|-----------|-----------|
+| MP4 | video/mp4 | Barchasi | Keng talab qilish |
+| WebM | video/webm | Chrome, Firefox, Edge | Yaxshi sifat, kichik fayl |
+| OGG | video/ogg | Firefox, Chrome (eski) | Open source |
+
+**Maslahat:** MP4 + WebM kombinatsiyasi keng talab qiluvchi.
 
 ---
 
-## ☑️ Checkbox (Bir Nechta Tanlash)
+## 3️⃣ Audio Tegi
 
-**Ko'p varintlardan bir nechtalarnini** tanlash mumkin:
+`<audio>` tegi sahifaga audio fayllarini qo'shadi.
 
-<CodeBlock language="html" title="Checkboxes">
+<CodeBlock language="html" title="Audio Misollari">
 ```html
-<p>Qaysi tillarni bilasiz?</p>
+<!-- Sodda audio -->
+<audio src="/audio/music.mp3" controls></audio>
 
-<input type="checkbox" id="html" name="tillар" value="html">
-<label for="html">HTML</label>
+<!-- Audio o'lchamlari bilan -->
+<audio src="/audio/music.mp3"
+       width="300"
+       controls></audio>
 
-<input type="checkbox" id="css" name="tillар" value="css">
-<label for="css">CSS</label>
+<!-- Audio Autoplay + Muted -->
+<audio src="/audio/background.mp3"
+       autoplay
+       muted
+       loop></audio>
 
-<input type="checkbox" id="js" name="tillар" value="javascript">
-<label for="js">JavaScript</label>
+<!-- Bir nechta format'li audio -->
+<audio controls>
+    <source src="/audio/music.mp3" type="audio/mpeg">
+    <source src="/audio/music.ogg" type="audio/ogg">
+    <source src="/audio/music.wav" type="audio/wav">
+    Brauzeringiz audio qo'llab-quvvallamaydi.
+</audio>
+
+<!-- Preload bilan -->
+<audio src="/audio/music.mp3"
+       preload="metadata"
+       controls></audio>
 ```
 </CodeBlock>
 
----
+### Audio Format'lari
 
-## 📌 Select (Tanlov Ro'yxati)
-
-Tushish menyu:
-
-<CodeBlock language="html" title="Select Menu">
-```html
-<label for="shahar">Shahar:</label>
-<select id="shahar" name="shahar" required>
-    <option value="">-- Shaharni tanlang --</option>
-    <option value="toshkent">Toshkent</option>
-    <option value="samarqand">Samarqand</option>
-    <option value="buxoro">Buxoro</option>
-    <option value="xiva">Xiva</option>
-</select>
-```
-</CodeBlock>
-
-### Select'da Guruhlash
-
-```html
-<select name="davlat">
-    <optgroup label="Markaziy Osiyo">
-        <option value="uz">Oʻzbekiston</option>
-        <option value="tj">Tojikiston</option>
-    </optgroup>
-    <optgroup label="Kavkaz">
-        <option value="az">Ozarbayjan</option>
-        <option value="ge">Gruziya</option>
-    </optgroup>
-</select>
-```
+| Format | MIME Type | Brauzerlar | Afzalliklar |
+|--------|-----------|-----------|-----------|
+| MP3 | audio/mpeg | Barchasi | Keng talab qilish |
+| OGG | audio/ogg | Firefox, Chrome | Open source |
+| WAV | audio/wav | Barchasi | Yaxshi sifat |
+| AAC | audio/aac | Safari, Chrome | Faqat |
 
 ---
 
-## 📝 Textarea (Katta Matn)
+## 4️⃣ YouTube va Boshqa Tashqi Video'lar
 
-Ko'p qatorli matn uchun:
+YouTube va boshqa platformalardan embed qilsangiz, `<iframe>` ishlatiladi:
 
+<CodeBlock language="html" title="YouTube Video Embed">
 ```html
-<label for="xabar">Xabaringizni yozing:</label>
-<textarea id="xabar"
-          name="xabar"
-          rows="5"
-          cols="40"
-          placeholder="Bu yerga xabaringizni kiriting..."
-          required></textarea>
-```
+<!-- YouTube videoni embed qilish -->
+<iframe width="560"
+        height="315"
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen>
+</iframe>
 
-### Atributlari:
-- `rows` - Qator soni
-- `cols` - Ustun soni
-- `placeholder` - Ichidagi yozuv
-
----
-
-## 🔘 Buttons
-
-### Submit Tugmasi
-
-Formani yuboradi:
-
-```html
-<button type="submit">Yuborish</button>
-```
-
-### Reset Tugmasi
-
-Formani tozalaydi:
-
-```html
-<button type="reset">Tozalash</button>
-```
-
-### Oddiy Tugma
-
-Hech narse qilmaydi (JavaScript uchun):
-
-```html
-<button type="button">Yanada Bilish</button>
-```
-
----
-
-## ✔️ Validation (Tekshirish)
-
-### HTML5 Validation
-
-Browser avtomatik tekshiradi:
-
-<CodeBlock language="html" title="Validation Atributlari">
-```html
-<!-- To'ldirish majburiy -->
-<input type="text" required>
-
-<!-- Minimum uzunlik -->
-<input type="password" minlength="8">
-
-<!-- Maksimum uzunlik -->
-<input type="text" maxlength="20">
-
-<!-- Min va max raqamlar uchun -->
-<input type="number" min="18" max="100">
-
-<!-- Pattern (regex) -->
-<input type="text" pattern="[A-Z]{2}[0-9]{4}"
-       placeholder="AB1234">
-
-<!-- Email format -->
-<input type="email" required>
-
-<!-- URL format -->
-<input type="url" required>
+<!-- Responsive YouTube video -->
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+    <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen>
+    </iframe>
+</div>
 ```
 </CodeBlock>
 
 ---
 
-## 📋 To'liq Form Misoli
+## 🎯 Amaliy Misol
 
-<CodeBlock language="html" title="Registratsiya Formasi">
+<CodeBlock language="html" title="To'liq Video va Audio Misoli">
 ```html
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <title>Registratsiya Formasi</title>
+    <meta charset="UTF-8">
+    <title>Video va Audio Misoli</title>
     <style>
-        form { max-width: 500px; margin: 0 auto; }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            padding: 10px 20px;
-            margin-right: 10px;
-            cursor: pointer;
-        }
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; }
+        section { margin: 30px 0; padding: 20px; border: 1px solid #ddd; }
+        video, audio { width: 100%; max-width: 600px; }
     </style>
 </head>
 <body>
-    <h1>Registratsiya Formasi</h1>
+    <h1>Multimedia Misollari</h1>
 
-    <form action="/api/register" method="POST">
-        <!-- Ism -->
-        <label for="ism">To'liq ismingiz:</label>
-        <input type="text"
-               id="ism"
-               name="ism"
-               placeholder="Ismingizni kiriting"
-               required>
+    <!-- VIDEO BO'LIMI -->
+    <section>
+        <h2>1. Oddiy Video</h2>
+        <video width="640"
+               height="480"
+               controls
+               poster="/images/video-poster.jpg">
+            <source src="/videos/sample.mp4" type="video/mp4">
+            <source src="/videos/sample.webm" type="video/webm">
+            Brauzeringiz video qo'llab-quvvallamaydi.
+        </video>
+    </section>
 
-        <!-- Email -->
-        <label for="email">Email manzili:</label>
-        <input type="email"
-               id="email"
-               name="email"
-               placeholder="email@example.com"
-               required>
+    <!-- AUTOPLAY VIDEO -->
+    <section>
+        <h2>2. Autoplay (Muted) Video</h2>
+        <p>Bu video sahifa yuklanganda avtomatik boshlanadi (yaglangan):</p>
+        <video width="640"
+               height="480"
+               autoplay
+               muted
+               loop
+               controls>
+            <source src="/videos/background.mp4" type="video/mp4">
+        </video>
+    </section>
 
-        <!-- Parol -->
-        <label for="parol">Parol:</label>
-        <input type="password"
-               id="parol"
-               name="parol"
-               minlength="8"
-               placeholder="Kamida 8 ta belgini kiriting"
-               required>
+    <!-- AUDIO BO'LIMI -->
+    <section>
+        <h2>3. Audio Pleyer</h2>
+        <audio controls style="width: 100%; max-width: 600px;">
+            <source src="/audio/music.mp3" type="audio/mpeg">
+            <source src="/audio/music.ogg" type="audio/ogg">
+            Brauzeringiz audio qo'llab-quvvallamaydi.
+        </audio>
+    </section>
 
-        <!-- Parol tasdiq -->
-        <label for="parol2">Parolni tasdiqlang:</label>
-        <input type="password"
-               id="parol2"
-               name="parol2"
-               minlength="8"
-               required>
+    <!-- YOUTUBE VIDEO -->
+    <section>
+        <h2>4. YouTube Video (Embed)</h2>
+        <iframe width="560"
+                height="315"
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                title="YouTube video player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+        </iframe>
+    </section>
 
-        <!-- Yosh -->
-        <label for="yosh">Yoshingiz:</label>
-        <input type="number"
-               id="yosh"
-               name="yosh"
-               min="18"
-               max="120">
+    <!-- RESPONSIVE VIDEO -->
+    <section>
+        <h2>5. Responsive Video</h2>
+        <video width="640"
+               height="480"
+               controls
+               style="width: 100%; height: auto;">
+            <source src="/videos/responsive.mp4" type="video/mp4">
+        </video>
+    </section>
 
-        <!-- Jins -->
-        <label>Jinsingiz:</label>
-        <input type="radio" id="erkak" name="jins" value="erkak">
-        <label for="erkak" style="display: inline;">Erkak</label>
-
-        <input type="radio" id="ayol" name="jins" value="ayol">
-        <label for="ayol" style="display: inline;">Ayol</label>
-
-        <!-- Qiziqlantiruvchi mavzular -->
-        <label>Qiziqlantiruvchi mavzular:</label>
-        <input type="checkbox" id="web" name="mavzular" value="web">
-        <label for="web" style="display: inline;">Web dasturlash</label>
-
-        <input type="checkbox" id="mobile" name="mavzular" value="mobile">
-        <label for="mobile" style="display: inline;">Mobile dasturlash</label>
-
-        <input type="checkbox" id="data" name="mavzular" value="data">
-        <label for="data" style="display: inline;">Data Science</label>
-
-        <!-- Shahar -->
-        <label for="shahar">Qaysi shahardan siz:</label>
-        <select id="shahar" name="shahar" required>
-            <option value="">-- Shaharni tanlang --</option>
-            <option value="toshkent">Toshkent</option>
-            <option value="samarqand">Samarqand</option>
-            <option value="buxoro">Buxoro</option>
-            <option value="urgench">Urgench</option>
-        </select>
-
-        <!-- Bio -->
-        <label for="bio">Sizning bio:</label>
-        <textarea id="bio"
-                  name="bio"
-                  rows="4"
-                  placeholder="O'zingiz haqida ayting..."
-                  maxlength="200"></textarea>
-
-        <!-- Shartlarni qabul qilish -->
-        <input type="checkbox" id="terms" name="terms" required>
-        <label for="terms" style="display: inline;">
-            Foydalanish shartlarini qabul qilaman
-        </label>
-
-        <!-- Tugmalar -->
-        <div style="margin-top: 20px;">
-            <button type="submit">Ro'yxatdan o'tish</button>
-            <button type="reset">Tozalash</button>
-        </div>
-    </form>
+    <!-- BACKGROUND AUDIO -->
+    <section>
+        <h2>6. Background Audio (Ko'rinmaydi, lekin eshitiladi)</h2>
+        <p>Bu sahifada fon musiqa o'ynaydi:</p>
+        <audio autoplay muted loop>
+            <source src="/audio/background-music.mp3" type="audio/mpeg">
+        </audio>
+        <p>Fon musiqa o'ynyapti (yaglangan va auto-loop)</p>
+    </section>
 </body>
 </html>
 ```
@@ -434,45 +326,157 @@ Browser avtomatik tekshiradi:
 
 ---
 
-## 📊 Input Turlarining Jadvali
-
-| Turi | Input Type | Ma'nosi |
-|------|-----------|---------|
-| Matn | `text` | Oddiy matn |
-| Email | `email` | Email manzili |
-| Parol | `password` | Yoʻqlagan matn |
-| Raqam | `number` | Faqat raqamlar |
-| Sana | `date` | Sana tanlash |
-| Vaqt | `time` | Vaqt tanlash |
-| Rang | `color` | Rang tanlash |
-| Fayl | `file` | Fayl yuklash |
-| Radio | `radio` | Birini tanlash |
-| Checkbox | `checkbox` | Ko'p tanlash |
-
----
-
 ## ✅ Best Practices
 
-1. **Har doim `<label>` ishlatish** - Accessibility uchun
-2. **`name` atribut bo'lmalı** - Backend'ga ma'lumot yuborish uchun
-3. **`required` atributini ishlatish** - Majburiy maydonlar
-4. **Placeholder'dan juda ko'p tayanmang** - Label'ni o'rnini almashtirolmaydi
-5. **Forma validatsiyasi** - Frontend + Backend validatsiya
-6. **Semantik `<fieldset>` va `<legend>` ishlatish** - Formani guruhlash
+### 1. Ko'p Format'lar Taqdim Etish
+
+```html
+<!-- ❌ Yomon - bitta format (ba'zi brauzerlar ko'rib olmaydi) -->
+<video src="/video.mp4" controls></video>
+
+<!-- ✅ Yaxshi - MP4 + WebM -->
+<video controls>
+    <source src="/video.mp4" type="video/mp4">
+    <source src="/video.webm" type="video/webm">
+</video>
+```
+
+### 2. Poster Rasmini Ishlatish
+
+```html
+<!-- ❌ Yomon - placeholder yo'q -->
+<video src="/video.mp4" controls></video>
+
+<!-- ✅ Yaxshi - Qoplan rasmi bor -->
+<video src="/video.mp4" poster="/poster.jpg" controls></video>
+```
+
+### 3. Autoplay + Muted
+
+```html
+<!-- ❌ Yomon - autoplay bir o'zi (ko'p brauzerda ishlama)  -->
+<video src="/video.mp4" autoplay></video>
+
+<!-- ✅ Yaxshi - autoplay + muted (ishlaydi) -->
+<video src="/video.mp4" autoplay muted></video>
+```
+
+### 4. Responsive Multimedia
+
+```html
+<!-- ❌ Yomon - fixed o'lcham -->
+<video src="/video.mp4" width="800" height="600" controls></video>
+
+<!-- ✅ Yaxshi - responsive -->
+<video src="/video.mp4"
+       controls
+       style="width: 100%; max-width: 800px; height: auto;">
+</video>
+```
+
+### 5. Fallback Content
+
+```html
+<!-- ✅ Yaxshi - brauzer qo'llab-quvvallamasa download link -->
+<video controls>
+    <source src="/video.mp4" type="video/mp4">
+    <source src="/video.webm" type="video/webm">
+    <p>Brauzeringiz video qo'llab-quvvallamaydi.
+       <a href="/video.mp4">Videoni yuklab oling</a>
+    </p>
+</video>
+```
 
 ---
 
-## 🎓 Xulosa
+## ❌ Keng Uchraydigan Xatoliklar
 
-HTML Formalar:
-- ✅ Foydalanuvchidan ma'lumot olish
-- ✅ Validation qo'llab-quvvatlash
-- ✅ Accessibility support
-- ✅ Ko'p turli input turları
-- ✅ Semantik va o'qilishi oson
+### 1. Bitta Format'
+
+```html
+<!-- ❌ Yomon -->
+<video src="/video.mp4" controls></video>
+
+<!-- ✅ Yaxshi -->
+<video controls>
+    <source src="/video.mp4" type="video/mp4">
+    <source src="/video.webm" type="video/webm">
+</video>
+```
+
+### 2. Autoplay Masalasi
+
+```html
+<!-- ❌ Ko'p brauzerda ishlama -->
+<video src="/video.mp4" autoplay></video>
+
+<!-- ✅ Ishlaydi -->
+<video src="/video.mp4" autoplay muted></video>
+```
+
+### 3. Brauzer Qo'llab-Quvvallamasa Ogohlantirish Yo'q
+
+```html
+<!-- ❌ Yomon - hech narsadan xabar yo'q -->
+<video src="/video.mp4" controls></video>
+
+<!-- ✅ Yaxshi - fallback teksti -->
+<video controls>
+    <source src="/video.mp4" type="video/mp4">
+    Videoni o'ynata olmadim. <a href="/video.mp4">Yuklab oling</a>
+</video>
+```
+
+---
+
+## 📊 Media Atributlarining Jadvali
+
+| Atribut | Vazifasi | Misol |
+|---------|---------|-------|
+| `src` | Media fayl manzili | `src="/video.mp4"` |
+| `controls` | Play/pause/volume tugmalari | `<video controls>` |
+| `autoplay` | Avtomatik tasvish | `<video autoplay>` |
+| `muted` | Yaglangan | `<video muted>` |
+| `loop` | Qayta tasvish | `<video loop>` |
+| `preload` | Oldindan yuklanish | `preload="metadata"` |
+| `poster` | Video plakati | `poster="/img.jpg"` |
+| `width/height` | O'lcham | `width="640"` |
+
+---
+
+## 🎓 Amaliy Mashq
+
+**Mashq 1:** Video qo'shish
+1. MP4 video faylini tayyorlang
+2. Poster rasmi yarating
+3. HTML'ga embed qiling
+4. Controls, autoplay, muted sinab ko'ring
+
+**Mashq 2:** Audio pleyer
+1. MP3 audio faylini tayyorlang
+2. Audio kontrollerini sinab ko'ring
+3. Bir nechta format'lar qo'shing
+
+**Mashq 3:** YouTube embed
+1. YouTube videoni topingWebP
+2. Embed kodini olib saqlang
+3. HTML'ga joylang
+
+---
+
+## 🎯 Xulosa
+
+Bu darsda siz o'rgandingiz:
+- ✅ Video tegi (`<video>` va atributlari)
+- ✅ Audio tegi (`<audio>` va atributlari)
+- ✅ Media format'lari (MP4, WebM, OGG)
+- ✅ Mehriy kontrollari (autoplay, muted, loop, controls)
+- ✅ Responsive multimedia
+- ✅ YouTube va tashqi videolar
+- ✅ Best practices va keng uchraydigan xatoliklar
 
 ---
 
 ## 🚀 Keyingi Darsda
 
-JavaScript bilan formalarni boshqarish, validation, va ma'lumotlarni serverga yuborish o'rganamiz!
+**Lesson 6: Jadvallar** - `<table>`, `<tr>`, `<td>`, `<th>`, colspan, rowspan o'rganamiz!

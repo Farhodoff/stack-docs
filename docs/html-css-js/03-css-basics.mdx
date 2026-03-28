@@ -1,78 +1,511 @@
 ---
-title: "CSS Asoslari"
-description: "CSS bilan veb-sahifalarni stilizatsiya qilish"
+title: "Ro'yxatlar (Lists)"
+description: "Tartiblangan va tartibi-tarqibsiz ro'yxatlar, tavsif ro'yxatlari, iç içe ro'yxatlar"
 category: "html-css-js"
 order: 3
 tags:
-  - css
-  - styling
-  - basics
+  - html
+  - lists
+  - ul
+  - ol
+  - dl
 status: "published"
 ---
 
-# CSS Asoslari
+# Ro'yxatlar (Lists)
 
-**CSS (Cascading Style Sheets)** - veb-sahifalarning rangini, o'lchamini va pozitsiyasini o'zgartirish tili.
+HTML'da **ro'yxatlar** ma'lumotlarni uyratilgan formatda taqdim etishning eng yaxshi usuli. Bu darsda siz uchta ro'yxat turini - tartiblangan, tartibi-tarqibsiz va tavsif ro'yxatlarini o'rganasiz.
 
-## CSS Qoidalari
+---
 
-CSS qoidasi 3 ta asosiy qismdan iborat:
+## 1️⃣ Tartibi-Tarqibsiz Ro'yxatlar (Unordered Lists)
 
-```css
-selector {
-  property: value;
-}
+`<ul>` tegi (Unordered List) **tartibi muhim bo'lmagan** mavzularni ro'yxatlab beradi. Brauzer qolipga ko'ra **nuqta** (`•`) bilan ko'rsatadi.
+
+<CodeBlock language="html" title="Oddiy Tartibi-Tarqibsiz Ro'yxat">
+```html
+<h2>Severgan Meyvalar</h2>
+<ul>
+    <li>Olma</li>
+    <li>Nok</li>
+    <li>Apelsin</li>
+    <li>Banan</li>
+</ul>
 ```
+</CodeBlock>
 
-- **Selector** - Qaysi HTML element'ni tanlaymiz?
-- **Property** - Nima o'zgartirmoqchi ekanligimiz?
-- **Value** - Qanday qilib o'zgartirmoqchi ekanligimiz?
+### Nima Uchun <li> Tegida Bo'ladi?
 
-## Selector Turlari
+- `<ul>` - Ro'yxatning konteyner
+- `<li>` (List Item) - Har bir ro'yxat elementi
 
-- **Element selector**: `p { ... }` - Barcha `<p>` elementlari
-- **Class selector**: `.myclass { ... }` - Class bilan elementlar
-- **ID selector**: `#myid { ... }` - ID bilan element
-- **Universal selector**: `* { ... }` - Barcha elementlar
-
-## Asosiy CSS Properties
-
-- **color** - Matn rangi
-- **background-color** - Fon rangi
-- **font-size** - Matn o'lchami
-- **margin** - Tashqari bo'sh joy
-- **padding** - Ichki bo'sh joy
-- **width** - Kenglik
-- **height** - Balandlik
-
-## Misol
-
-```css
-body {
-  background-color: #f0f0f0;
-  font-family: Arial, sans-serif;
-  color: #333;
-}
-
-h1 {
-  color: #2563eb;
-  font-size: 32px;
-  margin-bottom: 20px;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-#header {
-  background-color: #2563eb;
-  color: white;
-  padding: 40px;
-}
+**To'g'ri struktura:**
+```html
+<ul>          <!-- Ro'yxatni boshlash -->
+    <li>...</li>   <!-- Element 1 -->
+    <li>...</li>   <!-- Element 2 -->
+</ul>          <!-- Ro'yxatni tugatish -->
 ```
 
 ---
 
-Keyingi darsda CSS Flexbox va Grid'ni o'rganamiz!
+## 2️⃣ Tartiblangan Ro'yxatlar (Ordered Lists)
+
+`<ol>` tegi (Ordered List) **tartibi muhim bo'lgan** mavzularni raqamlar bilan ko'rsatadi.
+
+<CodeBlock language="html" title="Tartiblangan Ro'yxat">
+```html
+<h2>HTML'ni O'rganish Bosqichlari</h2>
+<ol>
+    <li>Asosiy taglarni o'rganish</li>
+    <li>CSS'ni o'rganish</li>
+    <li>JavaScript'ni o'rganish</li>
+    <li>Proyektlar yaratish</li>
+    <li>Portfolio'ni tayyorlash</li>
+</ol>
+```
+</CodeBlock>
+
+### OL Atributlari
+
+#### `start` - Raqamni Boshqa Joydan Boshlash
+
+```html
+<!-- Oddiy (1 dan boshlaydi) -->
+<ol>
+    <li>Birinchi</li>
+    <li>Ikkinchi</li>
+</ol>
+
+<!-- 5 dan boshlash -->
+<ol start="5">
+    <li>Beshinchi</li>
+    <li>Oltinchi</li>
+</ol>
+
+<!-- -2 dan boshlash -->
+<ol start="-2">
+    <li>Minus ikki</li>
+    <li>Minus bir</li>
+    <li>Nol</li>
+</ol>
+```
+
+#### `type` - Raqamlash Turi
+
+```html
+<!-- Default (1, 2, 3...) -->
+<ol type="1">
+    <li>Birinchi</li>
+    <li>Ikkinchi</li>
+</ol>
+
+<!-- Lotin harflari (a, b, c...) -->
+<ol type="a">
+    <li>A varianti</li>
+    <li>B varianti</li>
+</ol>
+
+<!-- Lotin Katta Harflari (A, B, C...) -->
+<ol type="A">
+    <li>Birinchi</li>
+    <li>Ikkinchi</li>
+</ol>
+
+<!-- Rim Raqamlari (I, II, III...) -->
+<ol type="I">
+    <li>Birinchi</li>
+    <li>Ikkinchi</li>
+</ol>
+
+<!-- Rim Raqamlari Kichik (i, ii, iii...) -->
+<ol type="i">
+    <li>Birinchi</li>
+    <li>Ikkinchi</li>
+</ol>
+```
+
+#### `reversed` - Teskari Tartib
+
+```html
+<!-- Teskari tartibda (3, 2, 1) -->
+<ol reversed>
+    <li>Eng Oxirgi</li>
+    <li>O'rtada</li>
+    <li>Birinchi</li>
+</ol>
+```
+
+---
+
+## 3️⃣ Tavsif Ro'yxatlari (Description Lists)
+
+`<dl>` tegi **atama va ularning tavsiflarini** juftlashtiradigan ro'yxat:
+
+- `<dt>` - Atama (Definition Term)
+- `<dd>` - Tavsif (Definition Description)
+
+<CodeBlock language="html" title="Tavsif Ro'yxati">
+```html
+<h2>Frontend Dasturlash Shunga Oid</h2>
+<dl>
+    <dt>HTML</dt>
+    <dd>HyperText Markup Language - tuzilma va matn uchun</dd>
+
+    <dt>CSS</dt>
+    <dd>Cascading Style Sheets - stillar va dizayn uchun</dd>
+
+    <dt>JavaScript</dt>
+    <dd>Interaktivlik va dinamik o'zgaruvchanlik uchun</dd>
+
+    <dt>DOM</dt>
+    <dd>Document Object Model - JavaScript HTML bilan o'zaro ta'sir qilish uchun</dd>
+</dl>
+```
+</CodeBlock>
+
+### Boshqa DL Misollari
+
+```html
+<!-- Glossariy (Lug'at) -->
+<dl>
+    <dt>API</dt>
+    <dd>Application Programming Interface - ilovalar o'zaro bog'lanish uchun</dd>
+
+    <dt>HTTP</dt>
+    <dd>HyperText Transfer Protocol - veb asosiy protokoli</dd>
+</dl>
+
+<!-- Mahsulot xususiyatlari -->
+<dl>
+    <dt>Vaqt:</dt>
+    <dd>40 soat</dd>
+
+    <dt>Daraja:</dt>
+    <dd>Boshlang'ich</dd>
+
+    <dt>Narxi:</dt>
+    <dd>$99.99</dd>
+</dl>
+```
+
+---
+
+## 4️⃣ Iç içe Ro'yxatlar (Nested Lists)
+
+Ro'yxatlar ichida ro'yxat yaratishingiz mumkin. Bu **subkategoriyalar** va **alt mavzular** uchun yaxshi.
+
+<CodeBlock language="html" title="Iç içe Ro'yxatlar">
+```html
+<h2>Frontend Dasturlash Yo'nalishi</h2>
+<ol>
+    <li>HTML Asoslari
+        <ul>
+            <li>Taglar va Elementlar</li>
+            <li>Formalar</li>
+            <li>Multimedia</li>
+        </ul>
+    </li>
+
+    <li>CSS Dizayni
+        <ul>
+            <li>Selektorlar</li>
+            <li>Layout (Flexbox, Grid)</li>
+            <li>Responsive Design</li>
+        </ul>
+    </li>
+
+    <li>JavaScript Programmalash
+        <ul>
+            <li>Asosiy Tilni Sintaksisi</li>
+            <li>DOM Manipulyatsiyasi</li>
+            <li>Asinxron dasturlash</li>
+        </ul>
+    </li>
+</ol>
+```
+</CodeBlock>
+
+### Ko'p Darajali Iç içe Ro'yxatlar
+
+```html
+<ul>
+    <li>Asiya
+        <ul>
+            <li>Markaziy Asiya
+                <ul>
+                    <li>Oʻzbekiston</li>
+                    <li>Tojikiston</li>
+                </ul>
+            </li>
+            <li>Sharq Asiyasi
+                <ul>
+                    <li>Xitoy</li>
+                    <li>Yapon</li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+    <li>Yevropa</li>
+    <li>Afrika</li>
+</ul>
+```
+
+---
+
+## 🎯 Amaliy Misol
+
+<CodeBlock language="html" title="To'liq Ro'yxat Misoli">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Ro'yxatlar Misoli</title>
+</head>
+<body>
+    <h1>Veb Kursi Ro'yxatlari</h1>
+
+    <!-- Tartibi-Tarqibsiz Ro'yxat -->
+    <h2>Kursni Topshirish Uchun Kerakli Narsalar:</h2>
+    <ul>
+        <li>Kompyuter yoki Noutbuk</li>
+        <li>Internet ulanishi</li>
+        <li>Matn Muharriri (VS Code)</li>
+        <li>Veb Brauzer (Chrome/Firefox)</li>
+    </ul>
+
+    <hr>
+
+    <!-- Tartiblangan Ro'yxat -->
+    <h2>Kursi Bilan Boʻlish Uchun Qadamlar:</h2>
+    <ol>
+        <li>Ro'yxatdan o'tish</li>
+        <li>Darslarni ko'rish</li>
+        <li>Mashqlarni bajarish</li>
+        <li>Proyektni yaratish</li>
+        <li>Sertifikat olish</li>
+    </ol>
+
+    <hr>
+
+    <!-- Iç içe Ro'yxatlar -->
+    <h2>Kurs Mazmuni</h2>
+    <ol>
+        <li>HTML
+            <ul>
+                <li>Asosiy Taglar</li>
+                <li>Formalar</li>
+                <li>Semantik HTML</li>
+            </ul>
+        </li>
+        <li>CSS
+            <ul>
+                <li>Selektorlar</li>
+                <li>Flexbox</li>
+                <li>Grid</li>
+            </ul>
+        </li>
+        <li>JavaScript
+            <ul>
+                <li>Asosiy Sintaksis</li>
+                <li>DOM</li>
+                <li>Event'lar</li>
+            </ul>
+        </li>
+    </ol>
+
+    <hr>
+
+    <!-- Tavsif Ro'yxati -->
+    <h2>Muhim Atamalar</h2>
+    <dl>
+        <dt>Frontend</dt>
+        <dd>Foydalanuvchi koʻradigan qismi (HTML, CSS, JavaScript)</dd>
+
+        <dt>Backend</dt>
+        <dd>Server tomonidagi logika va ma'lumotlar bazasi</dd>
+
+        <dt>Fullstack</dt>
+        <dd>Frontend va Backend ikkalasini yaratish</dd>
+
+        <dt>Responsive</dt>
+        <dd>Turli ekran oʻlchamlari uchun mos keladigan dizayn</dd>
+    </dl>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## 📋 Ro'yxat Turlarining Jadvali
+
+| Turi | Tag | Foydalanishi | Misol |
+|------|-----|-------------|-------|
+| Tartibi-Tarqibsiz | `<ul>` | Tartibi muhim emas | To'g'ri-to'g'ri bo'sma soʻzlar |
+| Tartiblangan | `<ol>` | Tartibi muhim | Qadam-bosqich yo'nalishlar |
+| Tavsif | `<dl>` | Atama-Tavsif juftligi | Lug'atlar, glossariylar |
+| Iç içe | `<ul>` / `<ol>` | Subkategoriyalar | Menyular, tuzilma |
+
+---
+
+## ✅ Best Practices
+
+### 1. To'g'ri Taglarni Ishlatish
+
+```html
+<!-- ❌ Yomon - div bilan -->
+<div>
+    <div>Element 1</div>
+    <div>Element 2</div>
+</div>
+
+<!-- ✅ Yaxshi - semantik taglar -->
+<ul>
+    <li>Element 1</li>
+    <li>Element 2</li>
+</ul>
+```
+
+### 2. Ro'yxat Ichida Ro'yxat
+
+```html
+<!-- ❌ Yomon - ul ichida <ul> (to'g'ri emas) -->
+<ul>
+    <li>Element</li>
+    <ul>
+        <li>Iç içe</li>
+    </ul>
+</ul>
+
+<!-- ✅ Yaxshi - li ichida <ul> -->
+<ul>
+    <li>Element
+        <ul>
+            <li>Iç içe</li>
+        </ul>
+    </li>
+</ul>
+```
+
+### 3. Tartibi Muhim Bo'lgan Joyda OL Ishlatish
+
+```html
+<!-- ❌ Yomon - ul uchun tartibi muhim -->
+<ul>
+    <li>Birinchi bosqich</li>
+    <li>Ikkinchi bosqich</li>
+</ul>
+
+<!-- ✅ Yaxshi - ol tartibi uchun -->
+<ol>
+    <li>Birinchi bosqich</li>
+    <li>Ikkinchi bosqich</li>
+</ol>
+```
+
+### 4. DL Uchun Pairing
+
+```html
+<!-- ❌ Yomon - bitta dt, bir nechta dd -->
+<dl>
+    <dt>API</dt>
+    <dd>Definition 1</dd>
+    <dd>Definition 2</dd>
+</dl>
+
+<!-- ✅ Yaxshi - bosh dt, bir yoki bir nechta dd -->
+<dl>
+    <dt>API</dt>
+    <dd>Application Programming Interface</dd>
+    <dd>Veb servislar uchun standart</dd>
+</dl>
+```
+
+---
+
+## ❌ Keng Uchraydigan Xatoliklar
+
+### 1. Closing Taglarni Tashlab Qolish
+
+```html
+<!-- ❌ Yomon -->
+<ul>
+    <li>Element 1
+    <li>Element 2
+</ul>
+
+<!-- ✅ Yaxshi -->
+<ul>
+    <li>Element 1</li>
+    <li>Element 2</li>
+</ul>
+```
+
+### 2. Li Ichida Boshqa Li
+
+```html
+<!-- ❌ Yomon -->
+<ul>
+    <li>Element 1
+        <li>Iç içe element</li>
+    </li>
+</ul>
+
+<!-- ✅ Yaxshi -->
+<ul>
+    <li>Element 1
+        <ul>
+            <li>Iç içe element</li>
+        </ul>
+    </li>
+</ul>
+```
+
+### 3. DL Bilan UL Aralash
+
+```html
+<!-- ❌ Yomon -->
+<dl>
+    <li>Atama 1</li>
+    <li>Tavsif 1</li>
+</dl>
+
+<!-- ✅ Yaxshi -->
+<dl>
+    <dt>Atama 1</dt>
+    <dd>Tavsif 1</dd>
+</dl>
+```
+
+---
+
+## 🎓 Amaliy Mashq
+
+**Mashq 1:** Uch xil ro'yxat yarating
+1. `<ul>` - Sevimli oʻyin-kulgunga
+2. `<ol>` - Bosh kitoblarni oʻrganish jarayoni
+3. `<dl>` - Dasturlash atamalarini aniqlag
+
+**Mashq 2:** Iç içe ro'yxat
+- O'zbekiston universitetlarining ro'yxatini yarating
+- Har bir universitetda fakultetlarni ro'yxatlab bering
+- Har bir fakultetda mutaxassisliklarni qo'shing
+
+---
+
+## 🎯 Xulosa
+
+Bu darsda siz o'rgandingiz:
+- ✅ Tartibi-Tarqibsiz Ro'yxatlar (`<ul>`, `<li>`)
+- ✅ Tartiblangan Ro'yxatlar (`<ol>`, atributlar)
+- ✅ Tavsif Ro'yxatlari (`<dl>`, `<dt>`, `<dd>`)
+- ✅ Iç içe Ro'yxatlar
+- ✅ Best practices va keng uchraydigan xatoliklar
+
+---
+
+## 🚀 Keyingi Darsda
+
+**Lesson 4: Havolalar va Rasmlar** - `<a>`, `<img>`, responsive rasmlar va accessibility'ni o'rganamiz!

@@ -1,53 +1,465 @@
 ---
-title: "HTML Jadvallar (Tables)"
-description: "HTML'da jadvallar, satrlar, ustunlar, colspan va rowspan"
+title: "Semantik HTML va Accessibility"
+description: "Semantik taglar, ARIA atributlari, screen readers, accessibility best practices"
 category: "html-css-js"
 order: 9
 tags:
   - html
-  - tables
-  - data
+  - semantic
+  - accessibility
+  - a11y
 status: "published"
 ---
 
-# HTML Jadvallar (Tables)
+# Semantik HTML va Accessibility
 
-## 📊 Jadvallar Nima?
-
-**Jadvallar** – ma'lumotlarni satr va ustunlar ko'rinishida (grid formato'da) ko'rsatish uchun ishlatiladi.
-
-Masalan:
-- Talabalar ro'yxati
-- Narx quymasi
-- Grafik yoki holatlar
-- Qo'shilgan ma'lumotlar
+**Accessibility (A11y)** - web-sahifalarni **barcha foydalanuvchilar** uchun, shu jumladan **o'ziga xos ehtiyojlari bo'lgan** odamlar uchun ishlashi. Bu darsda siz semantik HTML va accessibility'ni o'rganasiz.
 
 ---
 
-## 🏗️ Jadvalni Tuzilishi
+## 1️⃣ Semantik HTML Nima?
 
-<CodeBlock language="html" title="Asosiy Jadval Struktura">
+**Semantik HTML** - elementlarning **ma'nosiga qarab** to'g'ri ishlatish.
+
+### Semantik vs Non-Semantik
+
 ```html
-<table border="1">
-    <thead>
-        <tr>
-            <th>Sarlavha 1</th>
-            <th>Sarlavha 2</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Ma'lumot 1</td>
-            <td>Ma'lumot 2</td>
-        </tr>
-    </tbody>
-    <tfoot>
-        <tr>
-            <td>Juga</td>
-            <td>Summа</td>
-        </tr>
-    </tfoot>
-</table>
+<!-- ❌ Non-Semantik - ma'nosi yo'q -->
+<div class="header">Sayt Nomi</div>
+<div class="nav">Menu</div>
+<div class="main">Kontent</div>
+<div class="footer">Copyright</div>
+
+<!-- ✅ Semantik - ma'nosi bor -->
+<header>Sayt Nomi</header>
+<nav>Menu</nav>
+<main>Kontent</main>
+<footer>Copyright</footer>
+```
+
+### Nima Uchun Semantik HTML?
+
+| Faida | Misol |
+|--------|-------|
+| **SEO** | Google sahifaning strukturasini to'g'ri tushunadi |
+| **Accessibility** | Screen reader'lar navigatsiyani biladi |
+| **Kod Kalitesi** | Dasturchilar oson tushunadi |
+| **Mobile** | O'zbekcha brauzerlar to'g'ri render qiladi |
+
+---
+
+## 2️⃣ Asosiy Semantik Teglar
+
+<CodeBlock language="html" title="Semantik Sahifaning Tuzilishi">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <title>Sayt Nomi</title>
+</head>
+<body>
+    <!-- HEADER - Saytning bosh qismi (logo, menu) -->
+    <header>
+        <h1>Sayt Nomi</h1>
+        <nav>
+            <a href="/">Bosh</a>
+            <a href="/about">Haqida</a>
+            <a href="/contact">Bog'lanish</a>
+        </nav>
+    </header>
+
+    <!-- MAIN - Asosiy kontent (faqat bir marta) -->
+    <main>
+        <!-- SECTION - Tematik bo'lim -->
+        <section>
+            <h2>Bo'lim 1</h2>
+            <p>Kontent...</p>
+        </section>
+
+        <!-- ARTICLE - Mustaqil kontent (blog post, yangilik) -->
+        <article>
+            <h2>Blog Post Sarlavhasi</h2>
+            <time datetime="2026-03-28">28-mart, 2026</time>
+            <p>Blog matn...</p>
+        </article>
+    </main>
+
+    <!-- ASIDE - Yon panel (related content, sidebar) -->
+    <aside>
+        <h3>Tavsiyalangan</h3>
+        <ul>
+            <li><a href="#">Havola 1</a></li>
+            <li><a href="#">Havola 2</a></li>
+        </ul>
+    </aside>
+
+    <!-- FOOTER - Pastki qism (copyright, linklar) -->
+    <footer>
+        <p>&copy; 2026 Sayt Nomi. Barcha huquqlar himoyalangan.</p>
+        <nav>
+            <a href="/privacy">Maxfiylik</a>
+            <a href="/terms">Shartlar</a>
+        </nav>
+    </footer>
+</body>
+</html>
+```
+</CodeBlock>
+
+### Semantik Teglarni Tafsir
+
+| Tag | Maqsadi | Misol |
+|-----|---------|-------|
+| `<header>` | Sayt/qism boshi | Logo, navigation |
+| `<nav>` | Navigatsiya menyusu | Asosiy linklar |
+| `<main>` | Asosiy kontent | Sahifaning bosh mazmuni |
+| `<section>` | Tematik bo'lim | Muvofiqlashtirilgan kontent guruhi |
+| `<article>` | Mustaqil kontent | Blog post, yangilik, forum post |
+| `<aside>` | Yon panel | Sidebar, related content |
+| `<figure>` | Rasm + tavsif | Fotosuratlar, diagrammalar |
+| `<figcaption>` | Figure'ning tavsifi | Rasm tavsifi |
+| `<time>` | Vaqt/sana | `<time datetime="2026-03-28">` |
+| `<footer>` | Pastki qism | Copyright, linklar |
+
+---
+
+## 3️⃣ Figure va Figcaption
+
+Rasmlar va ularning tavsiflarini semantik qilish:
+
+```html
+<!-- Oddiy rasm (semantik emas) -->
+<img src="/photo.jpg" alt="Rasm tavsifi">
+
+<!-- Semantik rasm (figcaption bilan) -->
+<figure>
+    <img src="/photo.jpg" alt="Toshkent shahri ko'li">
+    <figcaption>Toshkent shahri, 2026</figcaption>
+</figure>
+
+<!-- Murakkab misol -->
+<figure>
+    <img src="/chart.png" alt="Sotuvlarning grafigi">
+    <figcaption>
+        <strong>Rasm 1:</strong> 2026-yil Sotuvlarining O'sishi
+    </figcaption>
+</figure>
+```
+
+---
+
+## 4️⃣ Details va Summary - Collapsible Content
+
+```html
+<!-- Yig'iluvchi kontent -->
+<details>
+    <summary>Bu yerga bosing - batafsil ma'lumot</summary>
+    <p>Yashirun matn shu yerda bo'ladi. Foydalanuvchi summary'ga bosganda ko'rinadi.</p>
+</details>
+
+<!-- Ko'plik -->
+<details>
+    <summary>HTML nima?</summary>
+    <p>HTML HyperText Markup Language'dir...</p>
+</details>
+
+<details>
+    <summary>CSS nima?</summary>
+    <p>CSS Cascading Style Sheets'dir...</p>
+</details>
+
+<details open>  <!-- Ko'rsatilgan (ochiq) -->
+    <summary>JavaScript nima?</summary>
+    <p>JavaScript dasturlash tilidir...</p>
+</details>
+```
+
+---
+
+## 5️⃣ ARIA Atributlari
+
+**ARIA (Accessible Rich Internet Applications)** - screen reader'lar uchun qo'shimcha ma'lumot beradigan atributlar.
+
+### aria-label - Element Nomi
+
+```html
+<!-- Screen reader: "Qidirish tugmasi" deb o'qiydi -->
+<button aria-label="Qidirish">🔍</button>
+
+<!-- Screen reader: "Menu ochish tugmasi" -->
+<button aria-label="Menu ochish">☰</button>
+```
+
+### aria-describedby - Batafsil Tavsif
+
+```html
+<input type="password" id="pwd" aria-describedby="pwd-hint">
+<p id="pwd-hint">Parol kamida 8 ta belgi bo'lishi kerak</p>
+
+<!-- Screen reader: input tavsifi va hint'ni o'qiydi -->
+```
+
+### aria-live - Real-time Yangilanishlar
+
+```html
+<!-- Real-time bildirishnomalar (chat, alerts) -->
+<div aria-live="polite" role="status">
+    Ali: Salom! Bu yerga yangi xabar
+</div>
+
+<!-- aria-live="assertive" - juda muhimni darhol o'qiydi -->
+<div aria-live="assertive" role="alert">
+    XATO: Forma yuborilmadi!
+</div>
+```
+
+### aria-hidden - Screen Reader'dan Yashiring
+
+```html
+<!-- Dekorativ elementlar - accessibility uchun yashiring -->
+<span aria-hidden="true">✨</span> Mazali Kontent
+
+<!-- Yashirun matn (CSS: display: none) -->
+<div aria-hidden="true">This is hidden</div>
+```
+
+---
+
+## 🎯 Amaliy Misol
+
+<CodeBlock language="html" title="To'liq Semantik Sahifa">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Sahifasi - Semantik HTML</title>
+</head>
+<body>
+    <!-- HEADER -->
+    <header role="banner">
+        <h1>Mening Texno-Blogi</h1>
+        <p>HTML, CSS, JavaScript va Frontend Dasturlash</p>
+    </header>
+
+    <!-- NAV -->
+    <nav role="navigation" aria-label="Asosiy Navigatsiya">
+        <ul>
+            <li><a href="/">Bosh Sahifa</a></li>
+            <li><a href="/posts">Barcha Maqolalar</a></li>
+            <li><a href="/categories">Kategoriyalar</a></li>
+            <li><a href="/about">Haqida</a></li>
+        </ul>
+    </nav>
+
+    <!-- MAIN -->
+    <main role="main">
+        <!-- SECTION 1 - So'nggi Maqolalar -->
+        <section>
+            <h2>📰 So'nggi Maqolalar</h2>
+
+            <article>
+                <h3>HTML5 Semantic Tags</h3>
+                <time datetime="2026-03-28">28-mart, 2026</time>
+
+                <figure>
+                    <img src="/html5.jpg"
+                         alt="HTML5 logosu">
+                    <figcaption>HTML5 - Semantik Web Standardi</figcaption>
+                </figure>
+
+                <p>Maqola matnlari shu yerda...</p>
+                <a href="/article/html5">To'liq O'qish →</a>
+            </article>
+
+            <article>
+                <h3>CSS Flexbox Mastery</h3>
+                <time datetime="2026-03-25">25-mart, 2026</time>
+                <p>Flexbox orqali layout yaratish...</p>
+                <a href="/article/flexbox">To'liq O'qish →</a>
+            </article>
+        </section>
+
+        <!-- SECTION 2 - FAQ -->
+        <section>
+            <h2>❓ Tez-tez Soʻraluvchi Savollar</h2>
+
+            <details>
+                <summary>HTML nima?</summary>
+                <p>HTML HyperText Markup Language - veb sahifalarini yaratish tili.</p>
+            </details>
+
+            <details>
+                <summary>CSS va HTML farqi nima?</summary>
+                <p>HTML tuzilma, CSS ko'rinish va stillar.</p>
+            </details>
+
+            <details>
+                <summary>JavaScript nima uchun kerak?</summary>
+                <p>JavaScript interaktivlik va dinamik tahar beradi.</p>
+            </details>
+        </section>
+    </main>
+
+    <!-- ASIDE -->
+    <aside role="complementary" aria-label="Yon Panel">
+        <section>
+            <h3>🏆 Mashhur Maqolalar</h3>
+            <ul>
+                <li><a href="#">Top 10 CSS Tips</a></li>
+                <li><a href="#">JavaScript Async</a></li>
+                <li><a href="#">Responsive Design</a></li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>🏷️ Teglar</h3>
+            <ul>
+                <li><a href="#html">HTML (12)</a></li>
+                <li><a href="#css">CSS (8)</a></li>
+                <li><a href="#js">JavaScript (15)</a></li>
+            </ul>
+        </section>
+    </aside>
+
+    <!-- FOOTER -->
+    <footer role="contentinfo">
+        <p>&copy; 2026 Mening Texno-Blogi. Barcha huquqlar himoyalangan.</p>
+        <nav aria-label="Pastki Navigatsiya">
+            <a href="/privacy">Maxfiylik Siyosati</a> |
+            <a href="/terms">Foydalanish Shartlari</a> |
+            <a href="/contact">Bog'lanish</a>
+        </nav>
+    </footer>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## ✅ Accessibility Best Practices
+
+### 1. Alt Tavsifini Har Doim Beya
+
+```html
+<!-- ❌ Yomon -->
+<img src="/photo.jpg">
+
+<!-- ✅ Yaxshi -->
+<img src="/photo.jpg" alt="Toshkent shahri ko'li">
+```
+
+### 2. Semantik Taglarni Ishlatish
+
+```html
+<!-- ❌ Yomon -->
+<div class="header">...</div>
+<div class="nav">...</div>
+
+<!-- ✅ Yaxshi -->
+<header>...</header>
+<nav>...</nav>
+```
+
+### 3. Color Ga Ta'yanmang
+
+```html
+<!-- ❌ Yomon - faqat rang (rang ko'rishing muammosi) -->
+<p style="color: red;">XATO</p>
+
+<!-- ✅ Yaxshi - rang + tekst -->
+<p style="color: red;"><strong>❌ XATO:</strong> ...</p>
+```
+
+### 4. Label Bilan Forma Inputlari
+
+```html
+<!-- ❌ Yomon -->
+<input type="text">
+
+<!-- ✅ Yaxshi -->
+<label for="username">Username:</label>
+<input type="text" id="username">
+```
+
+### 5. Keyboard Navigatsiyasi
+
+```html
+<!-- ❌ Yomon - faqat sichqoncha -->
+<div onclick="doSomething()">Bosing</div>
+
+<!-- ✅ Yaxshi - keyboard ham -->
+<button onclick="doSomething()">Bosing</button>
+```
+
+---
+
+## 🎓 ARIA Atributlarini Qisqacha
+
+| Atribut | Maqsadi | Misol |
+|---------|---------|-------|
+| `aria-label` | Element nomi | `aria-label="Qidirish"` |
+| `aria-describedby` | Element tavsifi | `aria-describedby="hint"` |
+| `aria-live` | Real-time yangilanish | `aria-live="polite"` |
+| `aria-hidden` | Yashiring | `aria-hidden="true"` |
+| `role` | Element roli | `role="button"` |
+
+---
+
+## ❌ Keng Uchraydigan Xatoliklar
+
+### 1. Non-Semantik Layout
+
+```html
+<!-- ❌ Yomon -->
+<div id="header">...</div>
+<div id="nav">...</div>
+
+<!-- ✅ Yaxshi -->
+<header>...</header>
+<nav>...</nav>
+```
+
+### 2. Alt Tavsifi Yo'q
+
+```html
+<!-- ❌ Yomon -->
+<img src="/logo.png">
+
+<!-- ✅ Yaxshi -->
+<img src="/logo.png" alt="Kompaniya logosi">
+```
+
+### 3. Color Birinchiligi
+
+```html
+<!-- ❌ Yomon -->
+<span style="color: green;">Muaffaqiyat</span>
+
+<!-- ✅ Yaxshi -->
+<span style="color: green;"><strong>✓ Muaffaqiyat</strong></span>
+```
+
+---
+
+## 🎯 Xulosa
+
+Bu darsda siz o'rgandingiz:
+- ✅ Semantik HTML taglar
+- ✅ Header, Nav, Main, Section, Article, Aside, Footer
+- ✅ Figure va Figcaption
+- ✅ Details va Summary
+- ✅ ARIA atributlari
+- ✅ Accessibility best practices
+- ✅ Screen reader'lar
+
+---
+
+## 🚀 Keyingi Darsda
+
+**Lesson 10: HTML Proyekti - Multi-page Website** - 3-sahifali veb-sayt yaratamiz!
 ```
 </CodeBlock>
 

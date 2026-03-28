@@ -1,52 +1,425 @@
 ---
-title: "DOM Manipulation va Events"
-description: "JavaScript bilan HTML elementlarini o'zgartirish"
+title: "Formalar - Asoslar"
+description: "Form tegi, input turları, label, button, GET/POST metodlar"
 category: "html-css-js"
 order: 7
 tags:
-  - javascript
-  - dom
-  - events
+  - html
+  - forms
+  - input
+  - basics
 status: "published"
 ---
 
-# DOM Manipulation va Events
+# Formalar - Asoslar
 
-## DOM Nima?
+Formalar **foydalanuvchidan ma'lumot olish** uchun HTML'dagi eng muhim elementlardir. Bu darsda siz form strukturasini, input turlarini va ma'lumot yuborishni o'rganasiz.
 
-**DOM (Document Object Model)** - JavaScript'dan HTML elementlarini o'zgartirish uchun ishlatiladigan API.
+---
 
-HTML sahifasini tree struktura sifatida ko'radi:
+## 1️⃣ Form Tegi
 
+`<form>` tegi ma'lumot olish va yuborish uchun ishlatiladi.
+
+### Asosiy Form Struktura
+
+<CodeBlock language="html" title="Oddiy Form">
+```html
+<form action="/submit" method="POST">
+    <!-- Form elementlari shu yerda -->
+    <label for="ism">Ismingiz:</label>
+    <input type="text" id="ism" name="ism">
+
+    <button type="submit">Yuborish</button>
+</form>
 ```
-Document
-  └── html
-      ├── head
-      │   └── title
-      └── body
-          ├── h1
-          ├── p
-          └── div
+</CodeBlock>
+
+### Form Atributlari
+
+#### `action` - Ma'lumot Qayerga Yuboriladi
+
+```html
+<!-- Server adresiga yuborish -->
+<form action="/api/register" method="POST">
+    <!-- Forma elementlari -->
+</form>
+
+<!-- Email yuborish (masalan, newsletter) -->
+<form action="mailto:info@example.com" method="POST" enctype="text/plain">
+    <!-- Forma elementlari -->
+</form>
 ```
 
-## Elementlarni Topish
+#### `method` - HTTP Metodi
 
-```javascript
-// ID bilan topish
-const element = document.getElementById("myId");
+| Metodi | Foydalanishi | Ma'lumotlar |
+|--------|-----------|-----------|
+| `GET` | Qidiruv, filtr | URL ichida ko'rinadi (xavfli emas) |
+| `POST` | Registratsiya, login | Body ichida (xavfsizroq) |
 
-// Class bilan topish
-const elements = document.getElementsByClassName("myClass");
+```html
+<!-- GET metodi - URL ichida ko'rinadi -->
+<form action="/search" method="GET">
+    <input type="text" name="q">
+    <button>Qidirish</button>
+</form>
+<!-- URL: /search?q=html&type=html -->
 
-// Tag nomi bilan topish
-const paragraphs = document.getElementsByTagName("p");
-
-// CSS selector bilan topish (tafsiylandi)
-const element = document.querySelector(".myClass");
-const elements = document.querySelectorAll(".myClass");
+<!-- POST metodi - Body ichida (yashirun) -->
+<form action="/register" method="POST">
+    <input type="text" name="username">
+    <button>Ro'yxatdan o'tish</button>
+</form>
 ```
 
-## Elementlarni O'zgartirish
+#### `enctype` - Ma'lumot Kodlanish Turi
+
+```html
+<!-- Default - Matn ma'lumotlari -->
+<form action="/submit" method="POST" enctype="application/x-www-form-urlencoded">
+
+<!-- Fayl yuklash uchun -->
+<form action="/upload" method="POST" enctype="multipart/form-data">
+    <input type="file" name="file">
+</form>
+```
+
+---
+
+## 2️⃣ Label va Input
+
+`<label>` va `<input>` formaning asosiy qismidir.
+
+### <label> Tegi
+
+`<label>` input'ning nomlari belgilaydi va accessibility'ni yaxshilaydi:
+
+```html
+<!-- ❌ Yomon - label yo'q -->
+<input type="text">
+
+<!-- ✅ Yaxshi - label bor -->
+<label for="email">Email manzili:</label>
+<input type="email" id="email" name="email">
+```
+
+### <input> Tegi
+
+```html
+<!-- Matn kiritish -->
+<input type="text" name="username">
+
+<!-- Email -->
+<input type="email" name="email">
+
+<!-- Parol -->
+<input type="password" name="password">
+
+<!-- Raqam -->
+<input type="number" name="age" min="1" max="120">
+
+<!-- Sana -->
+<input type="date" name="birthdate">
+
+<!-- Checkbox -->
+<input type="checkbox" name="agree" id="agree">
+<label for="agree">Shartlarni qabul qilaman</label>
+
+<!-- Radio button -->
+<input type="radio" name="gender" value="male" id="male">
+<label for="male">Erkak</label>
+
+<!-- Fayl yuklash -->
+<input type="file" name="document">
+
+<!-- Submit tugma -->
+<button type="submit">Yuborish</button>
+```
+
+---
+
+## 3️⃣ Input Atributlari
+
+### `name` - Forma Ma'lumoti Uchun Identifikator
+
+```html
+<!-- name mavjud bo'lsa, server ma'lumot oladi -->
+<input type="text" name="username">
+
+<!-- name yo'q bo'lsa, server ma'lumot olmaydi -->
+<input type="text">
+```
+
+### `placeholder` - Maslahat Matnini
+
+```html
+<input type="email" placeholder="your-email@example.com">
+<textarea placeholder="Xabaringizni yozing..."></textarea>
+```
+
+### `required` - Majburiy Maydon
+
+```html
+<!-- Ushbu maydon to'ldirilishi majburiy -->
+<input type="text" name="username" required>
+
+<!-- Shunga oyna yoq bo'lsa, forma yuborilmaydi -->
+<form onsubmit="return checkForm()">
+    <input type="email" name="email" required>
+    <button type="submit">Yuborish</button>
+</form>
+```
+
+### `disabled` va `readonly`
+
+```html
+<!-- disabled - o'zgartirilmaydi va yuborilmaydi -->
+<input type="text" value="O'zgartirib bo'lmaydi" disabled>
+
+<!-- readonly - o'zgartirilmaydi, lekin yuboriladi -->
+<input type="text" value="Ko'rish uchun faqat" readonly>
+```
+
+### `value` - Qolip Qiymat
+
+```html
+<input type="text" name="city" value="Toshkent">
+<textarea name="bio">Mening bio matnlari</textarea>
+```
+
+---
+
+## 🎯 Amaliy Misol
+
+<CodeBlock language="html" title="To'liq Form Misoli">
+```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Ro'yxatdan O'tish</title>
+    <style>
+        form { max-width: 500px; margin: 20px auto; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input, textarea, select {
+            width: 100%; padding: 8px; margin: 5px 0 10px;
+            border: 1px solid #ccc; border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button { padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Ro'yxatdan O'tish</h1>
+
+    <form action="/api/register" method="POST">
+        <!-- Ism -->
+        <label for="fullname">To'liq Ismingiz:</label>
+        <input type="text"
+               id="fullname"
+               name="fullname"
+               placeholder="Ism va Familiya"
+               required>
+
+        <!-- Email -->
+        <label for="email">Email Manzili:</label>
+        <input type="email"
+               id="email"
+               name="email"
+               placeholder="your@email.com"
+               required>
+
+        <!-- Parol -->
+        <label for="password">Parol:</label>
+        <input type="password"
+               id="password"
+               name="password"
+               minlength="8"
+               placeholder="Kamida 8 ta belgini kiriting"
+               required>
+
+        <!-- Parol Tasdiq -->
+        <label for="confirm">Parolni Tasdiqlang:</label>
+        <input type="password"
+               id="confirm"
+               name="confirm"
+               minlength="8"
+               required>
+
+        <!-- Yosh -->
+        <label for="age">Yoshingiz:</label>
+        <input type="number"
+               id="age"
+               name="age"
+               min="18"
+               max="120"
+               required>
+
+        <!-- Shahar -->
+        <label for="city">Shahar:</label>
+        <select id="city" name="city" required>
+            <option value="">-- Shaharni Tanlang --</option>
+            <option value="tashkent">Toshkent</option>
+            <option value="samarkand">Samarqand</option>
+            <option value="bukhara">Buxoro</option>
+        </select>
+
+        <!-- Bio -->
+        <label for="bio">Sizning Bio:</label>
+        <textarea id="bio"
+                  name="bio"
+                  rows="4"
+                  placeholder="O'zingiz haqida ayting..."
+                  maxlength="200"></textarea>
+
+        <!-- Shartlarni Qabul Qilish -->
+        <label for="terms">
+            <input type="checkbox" id="terms" name="terms" required>
+            Shartlarni va Maxfiylik Siyosatini Qabul Qilaman
+        </label>
+
+        <!-- Tugmalar -->
+        <button type="submit">Ro'yxatdan O'tish</button>
+        <button type="reset">Tozalash</button>
+    </form>
+</body>
+</html>
+```
+</CodeBlock>
+
+---
+
+## ✅ Best Practices
+
+### 1. Har Doim Label Ishlatish
+
+```html
+<!-- ❌ Yomon - label yo'q -->
+<input type="email">
+
+<!-- ✅ Yaxshi - label bor -->
+<label for="email">Email:</label>
+<input type="email" id="email" name="email">
+```
+
+### 2. `name` Atributini Beya
+
+```html
+<!-- ❌ Yomon - name yo'q -->
+<input type="text">
+
+<!-- ✅ Yaxshi - name bor -->
+<input type="text" name="username">
+```
+
+### 3. Aniqlashni Ishlatish
+
+```html
+<!-- ✅ Yaxshi - aniqlash -->
+<form action="/register" method="POST" enctype="multipart/form-data">
+    <!-- Fayl yuklash -->
+</form>
+```
+
+### 4. Placeholder dan Label Joyiga Foydalanmang
+
+```html
+<!-- ❌ Yomon - label yo'q -->
+<input type="email" placeholder="Enter your email">
+
+<!-- ✅ Yaxshi - label bor -->
+<label for="email">Email Manzili:</label>
+<input type="email" id="email" name="email" placeholder="example@email.com">
+```
+
+---
+
+## ❌ Keng Uchraydigan Xatoliklar
+
+### 1. Name Atributisiz Input
+
+```html
+<!-- ❌ Yomon - server ma'lumot olmaydi -->
+<input type="text">
+
+<!-- ✅ Yaxshi - server ma'lumot oladi -->
+<input type="text" name="username">
+```
+
+### 2. Label Bilanishing O'zaro Bog'lanishi Yo'q
+
+```html
+<!-- ❌ Yomon - bog'lash yo'q -->
+<label>Email:</label>
+<input type="email">
+
+<!-- ✅ Yaxshi - bog'lash bor -->
+<label for="email">Email:</label>
+<input type="email" id="email">
+```
+
+### 3. Method Noto'g'ri
+
+```html
+<!-- ❌ Yomon - maxfiy ma'lumot GET da -->
+<form action="/login" method="GET">
+    <input type="password" name="pass">
+</form>
+
+<!-- ✅ Yaxshi - POST da -->
+<form action="/login" method="POST">
+    <input type="password" name="pass">
+</form>
+```
+
+---
+
+## 📋 Input Turlarini Qisqacha
+
+| Turi | Foydalanushi | Misol |
+|------|------------|-------|
+| text | Oddiy matn | Ism, username |
+| email | Email validatsiyasi | Email manzili |
+| password | Yashirun matn | Parol |
+| number | Raqamlar | Yosh, miqdor |
+| date | Sana tanlash | Tug'ilish sanasi |
+| checkbox | Bir nechta tanlash | Qabul qilish |
+| radio | Birini tanlash | Jins tanlash |
+| file | Fayl yuklash | Rasm, dokument |
+| submit | Forma yuborish | Yuborish tugmasi |
+
+---
+
+## 🎓 Amaliy Mashq
+
+**Mashq 1:** Sodda kontakt formasi
+1. Ism, Email, Xabar maydonlarini yarating
+2. Submit tugmasi qo'shing
+3. CSS bilan stilizatsiya qiling
+
+**Mashq 2:** Ro'yxatdan O'tish Formasi
+1. Username, Email, Parol maydonlarini yarating
+2. Validate qiling
+3. Submit tugmasini qo'shing
+
+---
+
+## 🎯 Xulosa
+
+Bu darsda siz o'rgandingiz:
+- ✅ Form tegi va atributlari (`action`, `method`)
+- ✅ Input tegi va turları
+- ✅ Label va accessibility
+- ✅ Input atributlari (`name`, `placeholder`, `required`)
+- ✅ Form boshqaruvi (GET vs POST)
+- ✅ Best practices
+
+---
+
+## 🚀 Keyingi Darsda
+
+**Lesson 8: Forma Input Turlari va Validatsiya** - Boshqa input turlarini, validation va HTML5 constrain'larini o'rganamiz!
 
 ```javascript
 const elem = document.getElementById("myElement");
