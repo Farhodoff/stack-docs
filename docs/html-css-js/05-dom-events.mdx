@@ -1,0 +1,168 @@
+---
+title: "DOM Manipulation va Events"
+description: "JavaScript bilan HTML elementlarini o'zgartirish"
+category: "html-css-js"
+order: 5
+tags:
+  - javascript
+  - dom
+  - events
+status: "published"
+---
+
+# DOM Manipulation va Events
+
+## DOM Nima?
+
+**DOM (Document Object Model)** - JavaScript'dan HTML elementlarini o'zgartirish uchun ishlatiladigan API.
+
+HTML sahifasini tree struktura sifatida ko'radi:
+
+```
+Document
+  └── html
+      ├── head
+      │   └── title
+      └── body
+          ├── h1
+          ├── p
+          └── div
+```
+
+## Elementlarni Topish
+
+```javascript
+// ID bilan topish
+const element = document.getElementById("myId");
+
+// Class bilan topish
+const elements = document.getElementsByClassName("myClass");
+
+// Tag nomi bilan topish
+const paragraphs = document.getElementsByTagName("p");
+
+// CSS selector bilan topish (tafsiylandi)
+const element = document.querySelector(".myClass");
+const elements = document.querySelectorAll(".myClass");
+```
+
+## Elementlarni O'zgartirish
+
+```javascript
+const elem = document.getElementById("myElement");
+
+// Kontentni o'zgartirish
+elem.textContent = "Yangi matn";           // Faqat matn
+elem.innerHTML = "<b>Qalin matn</b>";      // HTML bilan
+
+// Attributlarni o'zgartirish
+elem.setAttribute("class", "newClass");
+elem.setAttribute("id", "newId");
+elem.getAttribute("class");
+
+// Style'ni o'zgartirish
+elem.style.color = "red";
+elem.style.fontSize = "20px";
+elem.style.backgroundColor = "#f0f0f0";
+
+// Class'ni qo'shish/o'chirish
+elem.classList.add("active");
+elem.classList.remove("active");
+elem.classList.toggle("active");
+```
+
+## Elementlarni Yaratish va O'chirish
+
+```javascript
+// Element yaratish
+const newDiv = document.createElement("div");
+newDiv.textContent = "Yangi div";
+newDiv.className = "container";
+
+// DOM'ga qo'shish
+document.body.appendChild(newDiv);
+
+// Specific joyga qo'shish
+const parent = document.getElementById("parent");
+parent.appendChild(newDiv);
+
+// O'chirish
+newDiv.remove();
+// yoki
+parent.removeChild(newDiv);
+```
+
+## Events va Event Listeners
+
+```javascript
+const button = document.querySelector("button");
+
+// Click event
+button.addEventListener("click", () => {
+  console.log("Tugma bosildi!");
+});
+
+// Input event
+const input = document.querySelector("input");
+input.addEventListener("input", (event) => {
+  console.log("Matn:", event.target.value);
+});
+
+// Form submit
+const form = document.querySelector("form");
+form.addEventListener("submit", (event) => {
+  event.preventDefault(); // Default sarmayish o'chirish
+  console.log("Forma submited!");
+});
+
+// Mouse events
+element.addEventListener("mouseover", () => {
+  console.log("Mouse hover");
+});
+
+element.addEventListener("mouseout", () => {
+  console.log("Mouse leave");
+});
+```
+
+## Praktik Misol - Todo List
+
+```html
+<div id="app">
+  <input id="todoInput" type="text" placeholder="Qo'shing">
+  <button id="addBtn">Qo'shish</button>
+  <ul id="todoList"></ul>
+</div>
+```
+
+```javascript
+const input = document.getElementById("todoInput");
+const btn = document.getElementById("addBtn");
+const list = document.getElementById("todoList");
+
+btn.addEventListener("click", () => {
+  const text = input.value;
+
+  if (text.trim() === "") return;
+
+  // Li element yaratish
+  const li = document.createElement("li");
+  li.textContent = text;
+
+  // Delete tugmasi
+  const deleteBtn = document.createElement("button");
+  deleteBtn.textContent = "O'chirish";
+  deleteBtn.addEventListener("click", () => {
+    li.remove();
+  });
+
+  li.appendChild(deleteBtn);
+  list.appendChild(li);
+
+  input.value = "";
+});
+```
+
+---
+
+Keyingi darsda advanced JavaScript patternlarini o'rganamiz!

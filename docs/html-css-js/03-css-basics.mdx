@@ -1,0 +1,78 @@
+---
+title: "CSS Asoslari"
+description: "CSS bilan veb-sahifalarni stilizatsiya qilish"
+category: "html-css-js"
+order: 3
+tags:
+  - css
+  - styling
+  - basics
+status: "published"
+---
+
+# CSS Asoslari
+
+**CSS (Cascading Style Sheets)** - veb-sahifalarning rangini, o'lchamini va pozitsiyasini o'zgartirish tili.
+
+## CSS Qoidalari
+
+CSS qoidasi 3 ta asosiy qismdan iborat:
+
+```css
+selector {
+  property: value;
+}
+```
+
+- **Selector** - Qaysi HTML element'ni tanlaymiz?
+- **Property** - Nima o'zgartirmoqchi ekanligimiz?
+- **Value** - Qanday qilib o'zgartirmoqchi ekanligimiz?
+
+## Selector Turlari
+
+- **Element selector**: `p { ... }` - Barcha `<p>` elementlari
+- **Class selector**: `.myclass { ... }` - Class bilan elementlar
+- **ID selector**: `#myid { ... }` - ID bilan element
+- **Universal selector**: `* { ... }` - Barcha elementlar
+
+## Asosiy CSS Properties
+
+- **color** - Matn rangi
+- **background-color** - Fon rangi
+- **font-size** - Matn o'lchami
+- **margin** - Tashqari bo'sh joy
+- **padding** - Ichki bo'sh joy
+- **width** - Kenglik
+- **height** - Balandlik
+
+## Misol
+
+```css
+body {
+  background-color: #f0f0f0;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+h1 {
+  color: #2563eb;
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+#header {
+  background-color: #2563eb;
+  color: white;
+  padding: 40px;
+}
+```
+
+---
+
+Keyingi darsda CSS Flexbox va Grid'ni o'rganamiz!

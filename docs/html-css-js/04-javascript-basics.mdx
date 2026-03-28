@@ -1,0 +1,129 @@
+---
+title: "JavaScript Asoslari"
+description: "JavaScript bilan veb-sahifalarni dinamik qilish"
+category: "html-css-js"
+order: 4
+tags:
+  - javascript
+  - js
+  - basics
+status: "published"
+---
+
+# JavaScript Asoslari
+
+**JavaScript (JS)** - veb-sahifalarni dinamik va interaktiv qilish uchun ishlatiladigan dasturlash tili.
+
+## JavaScript Nima?
+
+JavaScript without:
+- Statik HTML va CSS - faqat ko'rinish
+- JavaScript bilan: Interaktin, dinamik, animatsiya, real-time
+
+## O'zgaruvchilar (Variables)
+
+JavaScript'da 3 ta usul bilan o'zgaruvchi yaratish mumkin:
+
+```javascript
+var x = 5;        // Eski usul (tashxisga tavsiya etilmaydi)
+let y = 10;       // Yangi usul - block scope
+const z = 15;     // O'zgarmas qiymat
+```
+
+**Tavsiya:** `const` va `let` ishlating, `var` dan voz oting.
+
+## Ma'lumot Turlari
+
+```javascript
+let number = 42;              // Number
+let text = "Salom";           // String
+let isTrue = true;            // Boolean
+let arr = [1, 2, 3];          // Array
+let obj = {name: "Ali"};      // Object
+let nothing = null;           // Null
+let undefined_var;            // Undefined
+```
+
+## Funksiyalar
+
+```javascript
+// Oddiy funksiya
+function greet(name) {
+  return "Salom, " + name;
+}
+
+// Arrow funksiya (ES6)
+const greet2 = (name) => {
+  return `Salom, ${name}`;
+}
+
+// Call qilish
+console.log(greet("Fatima"));
+```
+
+## DOM Manipulation
+
+HTML elementlarini o'zgartirishga DOM deyiladi:
+
+```javascript
+// Element topish
+const element = document.getElementById("myId");
+const elements = document.querySelectorAll(".myClass");
+
+// Element o'zgartirish
+element.textContent = "Yangi matn";
+element.style.color = "red";
+element.classList.add("active");
+
+// Element qo'shish
+const newElement = document.createElement("div");
+newElement.textContent = "Yangi element";
+document.body.appendChild(newElement);
+```
+
+## Events
+
+Foydalanuvchi harakatlariga javob berish:
+
+```javascript
+const button = document.querySelector("button");
+
+// Click event
+button.addEventListener("click", () => {
+  alert("Tugma bosildi!");
+});
+
+// Mouse over event
+button.addEventListener("mouseover", () => {
+  button.style.background = "blue";
+});
+
+// Form submit event
+const form = document.querySelector("form");
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  console.log("Forma submitted!");
+});
+```
+
+## Async/Await
+
+API'dan ma'lumot olish:
+
+```javascript
+async function fetchData() {
+  try {
+    const response = await fetch("https://api.example.com/data");
+    const data = await response.json();
+    console.log(data);
+  } catch (error) {
+    console.error("Xatolik:", error);
+  }
+}
+
+fetchData();
+```
+
+---
+
+Keyingi darsda React bilan JavaScript'ni islah qilishni o'rganamiz!
