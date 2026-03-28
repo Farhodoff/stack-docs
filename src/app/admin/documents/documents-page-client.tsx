@@ -29,10 +29,11 @@ interface Category {
   icon: string
 }
 
-export default function DocumentsPage({ docs }: DocumentsPageProps) {
+export default function DocumentsPage({ docs: initialDocs }: DocumentsPageProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
+  const [docs, setDocs] = useState<Document[]>(initialDocs)
 
   // Load categories from server
   useEffect(() => {
@@ -42,6 +43,11 @@ export default function DocumentsPage({ docs }: DocumentsPageProps) {
     }
     loadCategories()
   }, [])
+
+  // Handle document deletion from UI
+  const handleDocumentDeleted = (slug: string) => {
+    setDocs(prevDocs => prevDocs.filter(doc => doc.slug !== slug))
+  }
 
   // Get unique categories - prioritize from loaded categories, fallback to docs
   const uniqueCategories = useMemo(() => {
@@ -135,7 +141,7 @@ export default function DocumentsPage({ docs }: DocumentsPageProps) {
       </div>
 
       {/* Document list */}
-      <DocList docs={filteredDocs} />
+      <DocList docs={filteredDocs} onDocumentDeleted={handleDocumentDeleted} />
     </div>
   )
 }

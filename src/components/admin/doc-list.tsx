@@ -21,9 +21,10 @@ interface DocListProps {
     lastModified: Date
     status?: 'draft' | 'published'
   }>
+  onDocumentDeleted?: (slug: string) => void
 }
 
-export function DocList({ docs }: DocListProps) {
+export function DocList({ docs, onDocumentDeleted }: DocListProps) {
   const router = useRouter()
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null)
 
@@ -36,11 +37,19 @@ export function DocList({ docs }: DocListProps) {
       if (result.error) {
         toast.error(result.error)
       } else {
-        toast.success('Document deleted successfully')
+        toast.success('🗑️ Hujjat o\'chirildi')
+        
+        // Call parent callback to update UI immediately
+        if (onDocumentDeleted) {
+          onDocumentDeleted(deletingSlug)
+        }
+        
+        // Also refresh the page for backend sync
         router.refresh()
       }
-    } catch {
-      toast.error('An unexpected error occurred')
+    } catch (error) {
+      toast.error('Xatolik yuz berdi')
+      console.error(error)
     } finally {
       setDeletingSlug(null)
     }
@@ -60,19 +69,19 @@ export function DocList({ docs }: DocListProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Order</TableHead>
-              <TableHead>Tags</TableHead>
-              <TableHead>Last Modified</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Nomi</TableHead>
+              <TableHead>Kategoriya</TableHead>
+              <TableHead>Tartib</TableHead>
+              <TableHead>Teglar</TableHead>
+              <TableHead>O'zgartirilgan</TableHead>
+              <TableHead className="text-right">Amallar</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {docs.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  No documents found. Create your first one!
+                  Hujjat topilmadi. Yangi hujjat yarating!
                 </TableCell>
               </TableRow>
             ) : (
@@ -83,10 +92,10 @@ export function DocList({ docs }: DocListProps) {
                       <div className="flex items-center gap-2">
                         {doc.title}
                         {doc.status === 'published' && (
-                          <Badge variant="default" className="text-xs">Published</Badge>
+                          <Badge variant="default" className="text-xs">Chop etilgani</Badge>
                         )}
                         {doc.status === 'draft' && (
-                          <Badge variant="secondary" className="text-xs">Draft</Badge>
+                          <Badge variant="secondary" className="text-xs">Qoralama</Badge>
                         )}
                       </div>
                       <div className="text-sm text-muted-foreground">{doc.description}</div>
@@ -111,7 +120,7 @@ export function DocList({ docs }: DocListProps) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {new Date(doc.lastModified).toLocaleDateString()}
+                    {new Date(doc.lastModified).toLocaleDateString('uz-UZ')}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -119,6 +128,7 @@ export function DocList({ docs }: DocListProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => handlePreview(doc.slug)}
+                        title="Ko'rish"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -126,6 +136,7 @@ export function DocList({ docs }: DocListProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEdit(doc.slug)}
+                        title="Tahrirlash"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -133,6 +144,7 @@ export function DocList({ docs }: DocListProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => setDeletingSlug(doc.slug)}
+                        title="O'chirish"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
