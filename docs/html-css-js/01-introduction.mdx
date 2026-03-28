@@ -1,135 +1,119 @@
------
-
-title: "HTML, CSS va JavaScript-ga kirish"
-description: "Frontend veb-ishlab chiqishning asosiy ustunlari."
+---
+title: "Introduction to HTML, CSS, and JavaScript"
+description: "The foundational pillars of Frontend Web Development."
 category: "html-css-js"
 order: 1
 tags:
-
   - html
   - css
   - javascript
   - frontend
+---
 
------
+# The Pillars of the Web
 
-# Vebning asosiy ustunlari
+Every website on the internet, no matter how complex, is built using three core technologies: **HTML**, **CSS**, and **JavaScript**. Think of them as the skeleton, the skin, and the muscles of a web page.
 
-Internetdagi har bir veb-sayt, qanchalik murakkab bo'lmasin, uchta asosiy texnologiya yordamida quriladi: **HTML**, **CSS** va **JavaScript**. Ularni veb-sahifaning **suyagi**, **terisi** va **mushaklari** deb tasavvur qilishingiz mumkin.
+In this learning path, you will master these three fundamental languages to build modern, responsive, and interactive user interfaces.
 
-Ushbu o'quv yo'nalishida siz zamonaviy, moslashuvchan va interaktiv foydalanuvchi interfeyslarini yaratish uchun ushbu uchta asosiy tilni o'zlashtirasiz.
+---
 
------
+## 1. HTML: The Structure (The Skeleton)
 
-## 1\. HTML: Tuzilishi (Suyak)
+**HTML (HyperText Markup Language)** is the standard markup language for documents designed to be displayed in a web browser. It provides the basic structure of the site.
 
-**HTML (HyperText Markup Language)** — veb-brauzerda ko'rsatish uchun mo'ljallangan hujjatlar uchun standart belgilash tilidir. U saytning asosiy tuzilishini ta'minlaydi.
+- **Purpose:** Defines the content and layout (headings, paragraphs, images, links).
+- **Analogy:** The bricks and mortar of a house.
 
-  - **Maqsadi:** Tarkib va joylashuvni belgilaydi (sarlavhalar, paragraflar, rasmlar, havolalar).
-  - **O'xshatish:** Uyning g'ishtlari va poydevori.
-
-\<CodeBlock language="html" title="index.html"\>
-
+<CodeBlock language="html" title="index.html">
 ```html
-&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;uz&quot;&gt;
-&lt;head&gt;
-    &lt;title&gt;Mening birinchi veb-saytim&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;h1&gt;Fullstack Docs-ga xush kelibsiz!&lt;/h1&gt;
-    &lt;p&gt;Bu veb-saytni tavsiflovchi matnli paragraf.&lt;/p&gt;
-    &lt;button&gt;Meni bosing!&lt;/button&gt;
-&lt;/body&gt;
-&lt;/html&gt;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>My First Website</title>
+</head>
+<body>
+    <h1>Welcome to Fullstack Docs!</h1>
+    <p>This is a paragraph of text describing the website.</p>
+    <button>Click Me!</button>
+</body>
+</html>
 ```
+</CodeBlock>
 
-\</CodeBlock\>
+---
 
------
+## 2. CSS: The Presentation (The Skin)
 
-## 2\. CSS: Taqdimot (Teri)
+**CSS (Cascading Style Sheets)** is used to style and layout web pages. While HTML tells the browser *what* the content is, CSS tells the browser *how* it should look.
 
-**CSS (Cascading Style Sheets)** veb-sahifalarni shakllantirish va tartibga solish uchun ishlatiladi. HTML brauzerga kontent *nima* ekanligini aytsa, CSS brauzerga u *qanday* ko'rinishi kerakligini aytadi.
+- **Purpose:** Handles colors, fonts, spacing, animations, and responsive design.
+- **Analogy:** The paint, interior design, and architecture of the house.
 
-  - **Maqsadi:** Ranglar, shriftlar, masofalar, animatsiyalar va moslashuvchan dizaynni boshqaradi.
-  - **O'xshatish:** Uyning bo'yog'i, interyer dizayni va arxitekturasi.
-
-\<CodeBlock language="css" title="styles.css"\>
-
+<CodeBlock language="css" title="styles.css">
 ```css
 body {
-    font-family: &#39;Inter&#39;, sans-serif;
+    font-family: 'Inter', sans-serif;
     background-color: #f4f4f9;
     color: #333;
 }
 
 h1 {
-color: \#2563eb; /\* Chiroyli ko'k rang \*/
-text-align: center;
+    color: #2563eb; /* A nice blue color */
+    text-align: center;
 }
 
 button {
-background-color: \#2563eb;
-color: white;
-padding: 10px 20px;
-border-radius: 5px;
-border: none;
-cursor: pointer;
+    background-color: #2563eb;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
 }
 
 button:hover {
-background-color: \#1d4ed8;
+    background-color: #1d4ed8;
 }
-
 ```
-
 </CodeBlock>
 
------
+---
 
-## 3\. JavaScript: Xulq-atvor (Mushaklar)
+## 3. JavaScript: The Behavior (The Muscles)
 
-**JavaScript (JS)** — bu dinamik yangilanadigan tarkib yaratish, multimediani boshqarish, tasvirlarni harakatga keltirish va boshqa ko'p narsalarni amalga oshirish imkonini beruvchi skript tilidir. U sizning statik HTML va CSS-ga "jon" kiritadi.
+**JavaScript (JS)** is a scripting language that enables you to create dynamically updating content, control multimedia, animate images, and much more. It brings your static HTML and CSS to life.
 
-  - **Maqsadi:** Interaktivlik, mantiq, ma'lumotlarni qabul qilish va dinamik UI yangilanishlarini qo'shadi.
-  - **O'xshatish:** Uyning elektr energiyasi, suv tizimi va aqlli uy tizimi.
+- **Purpose:** Adds interactivity, logic, data fetching, and dynamic UI updates.
+- **Analogy:** The electricity, plumbing, and smart-home system of the house.
 
 <CodeBlock language="javascript" title="script.js">
 ```javascript
-// HTML ichidagi tugma (button) elementini topish
+// Find the button element in the HTML
 const myButton = document.querySelector('button');
 
-// Tugmani bosish (click) hodisasini kuzatuvchi qo'shish
-myButton.addEventListener('click', () =\> {
-// Bosilganda bildirishnoma chiqarish
-alert('Salom\! JavaScript dunyosiga xush kelibsiz\!');
-
-```
-// Tugma matnini o'zgartirish
-myButton.textContent = 'Bosildi!';
-```
-
+// Add a click event listener
+myButton.addEventListener('click', () => {
+    // When clicked, show an alert
+    alert('Hello! Welcome to the world of JavaScript!');
+    
+    // Change the text of the button
+    myButton.textContent = 'Clicked!';
 });
-
 ```
+</CodeBlock>
 
-&lt;/CodeBlock&gt;
+---
 
------
+## How They Work Together
 
-## Qanday qilib ular birgalikda ishlaydi
+When a user visits a website:
+1. The browser requests the **HTML** file first and starts reading it from top to bottom.
+2. When the browser sees a `<link>` tag in the HTML, it fetches the **CSS** and applies the styles.
+3. When the browser encounters a `<script>` tag, it executes the **JavaScript** code, which might modify the HTML or CSS on the fly.
 
-Foydalanuvchi veb-saytga tashrif buyurganida:
+<Callout type="info" title="What's Next?">
+In the next chapters, we will dive deep into modern **HTML5 semantic tags**, master **CSS3 Flexbox and Grid** layouts, and explore the power of **Modern JavaScript (ES6+)** including Arrow Functions, Promises, and the DOM API.
+</Callout>
 
-1.  Brauzer avval **HTML** faylini so'raydi va uni yuqoridan pastga o'qishni boshlaydi.
-2.  Brauzer HTML ichida `<link>` tegini ko'rsa, **CSS** faylini yuklaydi va uslublarni qo'llaydi.
-3.  Brauzer `<script>` tegiga duch kelganida, u **JavaScript** kodini bajaradi, bu esa o'z navbatida HTML yoki CSS-ni jarayon davomida o'zgartirishi mumkin.
-
-&lt;Callout type=&quot;info&quot; title=&quot;Keyingi qadam nima?&quot;&gt;
-Keyingi boblarda biz zamonaviy **HTML5 semantik teglarini** chuqur o&#39;rganamiz, **CSS3 Flexbox va Grid** maketlarini o&#39;zlashtiramiz hamda **Zamonaviy JavaScript (ES6+)** qudratini, jumladan Arrow Functions, Promises va DOM API-ni tadqiq qilamiz.
-&lt;/Callout&gt;
-
-Vebni qurishga tayyormisiz? "Keyingisi"ni bosing\!
-
------
+Ready to build the web? Click next!
