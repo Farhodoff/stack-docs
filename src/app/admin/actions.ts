@@ -263,7 +263,11 @@ tags: [${validated.tags.map((t) => `"${t}"`).join(", ")}]
   } catch (error) {
     console.error("Error creating document:", error);
     if (error instanceof z.ZodError) {
-      return { error: "Validation failed", details: error.errors };
+      const errorDetails = error.errors.map(e => `${e.path}: ${e.message}`).join(", ");
+      return { error: "Validation failed", details: errorDetails };
+    }
+    if (error instanceof Error) {
+      return { error: "Failed to create document", details: error.message };
     }
     return { error: "Failed to create document" };
   }
@@ -307,7 +311,11 @@ tags: [${validated.tags.map((t) => `"${t}"`).join(", ")}]
   } catch (error) {
     console.error("Error updating document:", error);
     if (error instanceof z.ZodError) {
-      return { error: "Validation failed", details: error.errors };
+      const errorDetails = error.errors.map(e => `${e.path}: ${e.message}`).join(", ");
+      return { error: "Validation failed", details: errorDetails };
+    }
+    if (error instanceof Error) {
+      return { error: "Failed to update document", details: error.message };
     }
     return { error: "Failed to update document" };
   }

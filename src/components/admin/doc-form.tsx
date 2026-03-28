@@ -73,6 +73,7 @@ export function DocForm({ mode = "create", initialData }: DocFormProps) {
             status: (initialData.frontmatter as any).status || "draft",
           }
         : {
+            order: 1,
             status: "draft",
           },
   });
@@ -116,16 +117,23 @@ export function DocForm({ mode = "create", initialData }: DocFormProps) {
             });
 
       if (result.error) {
-        toast.error(result.error);
+        // Show detailed error message
+        const errorMsg = result.details
+          ? `${result.error}: ${JSON.stringify(result.details)}`
+          : result.error;
+        toast.error(errorMsg);
+        console.error("Form error:", errorMsg);
       } else {
         toast.success(
-          mode === "create" ? "Document created!" : "Document updated!",
+          mode === "create" ? "Hujjat yaratildi! ✅" : "Hujjat yangilandi! ✅",
         );
         router.push("/admin");
         router.refresh();
       }
-    } catch {
-      toast.error("An unexpected error occurred");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Xatoli";
+      toast.error(`Xatolik: ${errorMessage}`);
+      console.error("Exception:", err);
     } finally {
       setIsSubmitting(false);
     }
