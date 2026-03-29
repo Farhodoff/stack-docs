@@ -6,11 +6,20 @@ export default function DocsIndexPage() {
   const categories = getCategories()
 
   return (
-    <div className="container py-12">
-      <div className="mb-12">
-        <h1 className="text-4xl font-bold mb-4">📚 Dokumentatsiya</h1>
-        <p className="text-xl text-muted-foreground">
-          Fullstack development uchun to'liq qo'llanmalar va darsliklar
+    <div className="container max-w-5xl py-12 px-6">
+      <div className="relative mb-16 pb-8 border-b border-border/40">
+        <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10" />
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-xl shadow-inner">
+            📚
+          </div>
+          <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary/60">Bilimlar Ombori</span>
+        </div>
+        <h1 className="text-5xl font-black tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          Dokumentatsiya
+        </h1>
+        <p className="text-lg text-muted-foreground/80 max-w-2xl leading-relaxed">
+          Fullstack development dunyosiga xush kelibsiz. Bu yerda siz eng zamonaviy teхnologiyalar bo'yicha mukammal darsliklar va amaliy qo'llanmalarni topasiz.
         </p>
       </div>
 

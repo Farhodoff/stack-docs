@@ -11,9 +11,9 @@ export default function DocsLayout({ children }: DocsLayoutProps) {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left Sidebar - 140px fixed */}
-      <aside className="hidden lg:flex w-35 flex-shrink-0 border-r border-border/50 bg-background">
-        <div className="sticky top-12 h-[calc(100vh-3rem)] w-full overflow-y-auto p-4">
+      {/* Left Sidebar - 256px fixed */}
+      <aside className="hidden lg:flex w-64 flex-shrink-0 border-r border-border/50 bg-background/50 backdrop-blur-sm">
+        <div className="sticky top-16 h-[calc(100vh-4rem)] w-full overflow-y-auto px-4 py-6 scrollbar-thin scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground/20 transition-colors">
           <CleanSidebar items={items} />
         </div>
       </aside>
@@ -25,9 +25,9 @@ export default function DocsLayout({ children }: DocsLayoutProps) {
         </div>
       </main>
 
-      {/* Right Context Panel - 140px fixed */}
-      <aside className="hidden xl:flex w-35 flex-shrink-0">
-        <div className="sticky top-12 h-[calc(100vh-3rem)] w-full p-4">
+      {/* Right Context Panel - 256px fixed */}
+      <aside className="hidden xl:flex w-64 flex-shrink-0 border-l border-border/50 bg-background/50 backdrop-blur-sm">
+        <div className="sticky top-16 h-[calc(100vh-4rem)] w-full px-4 py-6">
           <RightContextPanel repoUrl="https://github.com/Farhodoff/stack-docs" />
         </div>
       </aside>

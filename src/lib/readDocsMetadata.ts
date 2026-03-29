@@ -127,10 +127,15 @@ export function getNavigationItems() {
 
   const sortedCategories = Object.entries(categories)
     .map(([categoryName, docs]) => {
-      // Find minimum order in this category to sort categories
+      // Find minimum order and get potential category icon from first doc
       const minOrder = Math.min(...docs.map(d => d.order || 999));
+      const icon = docs.find(d => d.category === categoryName)?.category === categoryName 
+        ? docs.find(d => d.category === categoryName)?.category?.split(' ')[0] // Simple hack to get emoji if it's there
+        : null;
+
       return {
         category: categoryName,
+        icon: icon,
         minOrder,
         items: docs.map((doc) => ({
           slug: doc.slug,
@@ -144,6 +149,7 @@ export function getNavigationItems() {
 
   return sortedCategories.map(cat => ({
     category: cat.category,
+    icon: cat.icon,
     items: cat.items.sort((a, b) => (a.order || 0) - (b.order || 0)).map(item => ({
       slug: item.slug,
       title: item.title,

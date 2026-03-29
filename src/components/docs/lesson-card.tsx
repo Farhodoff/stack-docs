@@ -75,102 +75,87 @@ export function LessonCard({
   const categoryStyle = CATEGORY_COLORS[category] || CATEGORY_COLORS['html-css-js']
 
   return (
-    <Link href={`/docs/${slug}`}>
+    <Link href={`/docs/${slug}`} className="block group">
       <Card
         className={cn(
-          'group cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 border-l-4',
-          categoryStyle.border,
-          categoryStyle.bg,
+          'relative overflow-hidden h-full transition-all duration-300',
+          'hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1',
+          'border border-border/50 bg-card/50 backdrop-blur-sm',
           className
         )}
       >
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                {order && (
-                  <span className={cn('text-xs font-bold px-2 py-1 rounded-full', categoryStyle.text)}>
-                    Dars {order}
-                  </span>
-                )}
-              </div>
-              <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2">
-                {title}
-              </CardTitle>
+        {/* Left accent line */}
+        <div className={cn('absolute left-0 top-0 bottom-0 w-1', categoryStyle.bg.replace('bg-', 'bg-').replace('-50', '-500'))} />
+        
+        <CardHeader className="pb-3 pt-6 px-6">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              {order && (
+                <span className={cn('text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-muted/50 border border-border/50', categoryStyle.text)}>
+                  Dars {order}
+                </span>
+              )}
+              {difficulty && (
+                <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full border border-border/50', DIFFICULTY_COLORS[difficulty].replace('bg-', 'bg-opacity-10 bg-'))}>
+                  {getDifficultyLabel(difficulty)}
+                </span>
+              )}
             </div>
+            <CardTitle className="text-xl font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">
+              {title}
+            </CardTitle>
           </div>
 
           {description && (
-            <CardDescription className="mt-2 line-clamp-2">
+            <CardDescription className="mt-3 text-sm leading-relaxed line-clamp-2 text-muted-foreground/80">
               {description}
             </CardDescription>
           )}
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          {/* Metadata */}
-          <div className="flex flex-wrap items-center gap-2 text-xs">
+        <CardContent className="px-6 pb-6 space-y-5">
+          {/* Metadata Row */}
+          <div className="flex items-center gap-4 text-[11px] font-medium text-muted-foreground/60">
             {readTime && (
-              <div className="flex items-center gap-1 text-muted-foreground">
+              <div className="flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5" />
-                {getReadTimeLabel(readTime)}
+                <span>{getReadTimeLabel(readTime)} o'qish</span>
               </div>
             )}
-            {difficulty && (
-              <Badge variant="outline" className={DIFFICULTY_COLORS[difficulty]}>
-                {getDifficultyLabel(difficulty)}
-              </Badge>
-            )}
+            <div className="flex items-center gap-1.5">
+              <BookOpen className="h-3.5 w-3.5" />
+              <span className="uppercase tracking-tight">{category}</span>
+            </div>
           </div>
 
-          {/* Tags */}
-          {tags && tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {tags.slice(0, 3).map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-              {tags.length > 3 && (
-                <Badge variant="secondary" className="text-xs">
-                  +{tags.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
-
-          {/* Progress Tracker */}
+          {/* Progress (Subtle) */}
           {progress !== undefined && (
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <BookOpen className="h-3 w-3" />
-                  O'rganish davomiyligi
-                </span>
-                <span className={cn('font-semibold', categoryStyle.text)}>
-                  {progress}%
-                </span>
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
+                <span className="text-muted-foreground/50">Progress</span>
+                <span className={categoryStyle.text}>{progress}%</span>
               </div>
-              <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                {/* Dynamic progress width - inline style necessary for percentage calculation */}
-                {/* eslint-disable-next-line react/forbid-dom-props */}
-                {/* webhint:disable no-inline-styles */}
+              <div className="w-full bg-muted/30 rounded-full h-1 overflow-hidden">
                 <div
-                  className={cn('h-full transition-all duration-300', categoryStyle.bg)}
+                  className={cn('h-full transition-all duration-500 ease-out', categoryStyle.bg.replace('-50', '-500'))}
                   style={{ width: `${progress}%` }}
                 />
               </div>
             </div>
           )}
 
-          {/* Footer */}
-          <div className="flex items-center justify-between pt-2 border-t">
-            <span className={cn('text-xs font-medium', categoryStyle.text)}>
-              {category.toUpperCase()}
-            </span>
-            <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">
-              O'qish →
-            </span>
+          {/* Footer - Floating Arrow */}
+          <div className="pt-2 flex items-center justify-between">
+            <div className="flex flex-wrap gap-1.5">
+              {tags?.slice(0, 2).map((tag) => (
+                <span key={tag} className="text-[9px] px-1.5 py-0.5 rounded bg-muted/40 text-muted-foreground uppercase tracking-tighter">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+            <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300">
+              <span className="text-sm">→</span>
+            </div>
           </div>
         </CardContent>
       </Card>
