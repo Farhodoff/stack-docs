@@ -4,6 +4,7 @@ import createMDX from '@next/mdx'
 const nextConfig = {
   // Enable MDX files
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
+  output: 'standalone',
   
   // Configure MDX compiler
   experimental: {
