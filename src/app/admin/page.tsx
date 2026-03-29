@@ -3,7 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Layers, Clock, Plus, ExternalLink, TrendingUp } from "lucide-react";
 import Link from "next/link";
-import { getAllCategoriesAction } from "@/app/admin/actions";
+import { getAllCategoriesAction, CategoryFormData } from "@/app/admin/actions";
+
+// Type for category stats with count
+interface CategoryStat extends CategoryFormData {
+  count: number;
+}
 
 export default async function AdminDashboardPage() {
   const docs = getAllDocsMetadata();
@@ -13,13 +18,13 @@ export default async function AdminDashboardPage() {
   const categories = new Set(docs.map((doc) => doc.frontmatter?.category)).size;
 
   // Calculate docs per category
-  const categoryStats = allCategories.map((cat) => {
+  const categoryStats: CategoryStat[] = allCategories.map((cat: CategoryFormData) => {
     const count = docs.filter((doc) => doc.frontmatter?.category === cat.id).length;
     return {
       ...cat,
       count,
     };
-  }).filter((cat) => cat.count > 0).sort((a, b) => b.count - a.count);
+  }).filter((cat: CategoryStat) => cat.count > 0).sort((a: CategoryStat, b: CategoryStat) => b.count - a.count);
 
   // Just grabbing a few docs to display as "Recent" or "Top"
   const recentDocs = docs.slice(0, 5);
@@ -87,9 +92,11 @@ export default async function AdminDashboardPage() {
                 Statistika topilmadi
               </p>
             ) : (
-              categoryStats.map((cat) => (
+              categoryStats.map((cat: CategoryStat) => {
                 // Dynamic category colors - inline styles necessary for user-defined colors
                 // eslint-disable-next-line react/forbid-dom-props
+                // webhint:disable no-inline-styles
+                return (
                 <div
                   key={cat.id}
                   className="p-4 rounded-lg border transition-colors hover:bg-muted"
@@ -105,8 +112,6 @@ export default async function AdminDashboardPage() {
                         {cat.name}
                       </Link>
                     </div>
-                    {/* Dynamic category badge color - inline style necessary for user-defined colors */}
-                    {/* eslint-disable-next-line react/forbid-dom-props */}
                     <span
                       className="px-3 py-1 rounded-full text-white text-sm font-bold"
                       style={{ backgroundColor: cat.color }}
@@ -116,8 +121,6 @@ export default async function AdminDashboardPage() {
                   </div>
                   <p className="text-sm text-muted-foreground">{cat.description}</p>
                   <div className="mt-3 w-full bg-muted rounded-full h-2 overflow-hidden">
-                    {/* Dynamic progress bar with category color and calculated width */}
-                    {/* eslint-disable-next-line react/forbid-dom-props */}
                     <div
                       className="h-full transition-all"
                       style={{
@@ -127,7 +130,8 @@ export default async function AdminDashboardPage() {
                     />
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         </CardContent>
