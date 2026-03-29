@@ -12,10 +12,13 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react'],
     outputFileTracingExcludes: {
       '*': [
-        '.next/cache/**/*',
-        'node_modules/@swc/core-linux-x64-gnu/**/*',
-        'node_modules/@swc/core-linux-x64-musl/**/*',
+        '.next/cache/webpack/**/*',
       ],
+    },
+    outputFileTracingIncludes: {
+      '/*': ['./docs/**/*'],
+      '/docs/**/*': ['./docs/**/*'],
+      '/api/**/*': ['./docs/**/*'],
     },
   },
   
