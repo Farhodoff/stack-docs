@@ -11,6 +11,8 @@ export interface DocFrontmatter {
   order?: number
   tags?: string[]
   draft?: boolean
+  difficulty?: 'beginner' | 'intermediate' | 'advanced'
+  readTime?: number
 }
 
 /**
