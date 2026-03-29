@@ -30,6 +30,15 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+
+  // Webpack configuration to reduce bundle size
+  webpack: (config, { dev, isServer }) => {
+    // Disable cache in production to prevent massive .next/cache from being bundled
+    if (!dev) {
+      config.cache = false;
+    }
+    return config;
+  },
 }
 
 // Configure MDX with remark and rehype plugins
