@@ -1,4 +1,4 @@
-import { parse } from 'yaml'
+import matter from 'gray-matter'
 
 /**
  * Frontmatter interface for documentation files
@@ -21,17 +21,10 @@ export interface DocFrontmatter {
  * @returns Parsed frontmatter object
  */
 export function parseFrontmatter(content: string): DocFrontmatter | null {
-  const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---/
-  const match = content.match(frontmatterRegex)
-  
-  if (!match) {
-    return null
-  }
-  
   try {
-    const yamlContent = match[1]
-    const parsed = parse(yamlContent) as DocFrontmatter
-    return parsed
+    const { data } = matter(content)
+    if (Object.keys(data).length === 0) return null
+    return data as DocFrontmatter
   } catch (error) {
     console.error('Error parsing frontmatter:', error)
     return null
@@ -44,6 +37,10 @@ export function parseFrontmatter(content: string): DocFrontmatter | null {
  * @returns Content without frontmatter
  */
 export function extractBody(content: string): string {
-  const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\n?/
-  return content.replace(frontmatterRegex, '')
+  try {
+    const { content: body } = matter(content)
+    return body.trim()
+  } catch {
+    return content // Return original if parsing fails
+  }
 }

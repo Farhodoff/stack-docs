@@ -1,25 +1,25 @@
 import fs from 'fs'
 import path from 'path'
-import { parse } from 'yaml'
+import matter from 'gray-matter'
 import { DocFrontmatter, DocMetadata } from '@/types/admin'
 
 export function parseFrontmatter(content: string): DocFrontmatter | null {
-  const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---/
-  const match = content.match(frontmatterRegex)
-  
-  if (!match) return null
-  
   try {
-    const yamlContent = match[1]
-    return parse(yamlContent) as DocFrontmatter
+    const { data } = matter(content)
+    if (Object.keys(data).length === 0) return null
+    return data as DocFrontmatter
   } catch {
     return null
   }
 }
 
 export function extractBody(content: string): string {
-  const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\n?/
-  return content.replace(frontmatterRegex, '').trim()
+  try {
+    const { content: body } = matter(content)
+    return body.trim()
+  } catch {
+    return content.trim()
+  }
 }
 
 export function getDocMetadata(filePath: string): DocMetadata | null {
