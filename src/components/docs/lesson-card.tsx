@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { Clock, BookOpen } from 'lucide-react'
 
@@ -152,7 +151,12 @@ export function LessonCard({
                   {progress}%
                 </span>
               </div>
-              <Progress value={progress} className="h-1.5" />
+              <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                <div
+                  className={cn('h-full transition-all duration-300', categoryStyle.bg)}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
           )}
 

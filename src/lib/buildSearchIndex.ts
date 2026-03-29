@@ -13,6 +13,8 @@ export interface SearchDocument {
   tags?: string[]
   content: string
   filePath: string
+  difficulty?: 'beginner' | 'intermediate' | 'advanced'
+  readTime?: number
 }
 
 /**
@@ -67,6 +69,8 @@ export function buildSearchIndex(dir: string = 'docs'): SearchDocument[] {
           tags: frontmatter.tags,
           content: plainTextContent.slice(0, 5000), // Limit content length
           filePath: fullPath,
+          difficulty: (frontmatter as any).difficulty,
+          readTime: (frontmatter as any).readTime,
         })
       }
     }

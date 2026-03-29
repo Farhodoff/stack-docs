@@ -6,7 +6,7 @@ import Fuse from "fuse.js";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search as SearchIcon, FileText } from "lucide-react";
+import { Search as SearchIcon, FileText, Clock } from "lucide-react";
 
 interface SearchDocument {
   slug: string;
@@ -15,10 +15,31 @@ interface SearchDocument {
   category?: string;
   tags?: string[];
   content: string;
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  readTime?: number;
 }
 
 interface SearchClientProps {
   index: SearchDocument[];
+}
+
+const DIFFICULTY_COLORS: Record<string, string> = {
+  beginner: 'bg-green-100 text-green-800',
+  intermediate: 'bg-yellow-100 text-yellow-800',
+  advanced: 'bg-red-100 text-red-800',
+}
+
+const getDifficultyLabel = (difficulty?: string) => {
+  switch (difficulty) {
+    case 'beginner':
+      return '🟢 Boshlang\'ich'
+    case 'intermediate':
+      return '🟡 O\'rta'
+    case 'advanced':
+      return '🔴 Murakkab'
+    default:
+      return null
+  }
 }
 
 export function SearchClient({ index }: SearchClientProps) {
@@ -82,13 +103,33 @@ export function SearchClient({ index }: SearchClientProps) {
                 <p className="text-muted-foreground mb-3">
                   {item.description}
                 </p>
+
+                <div className="flex items-center gap-4 mb-3 flex-wrap">
+                  {item.readTime && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3.5 w-3.5" />
+                      {item.readTime} min
+                    </div>
+                  )}
+                  {item.difficulty && (
+                    <Badge className={DIFFICULTY_COLORS[item.difficulty]}>
+                      {getDifficultyLabel(item.difficulty)}
+                    </Badge>
+                  )}
+                </div>
+
                 {item.tags && item.tags.length > 0 && (
                   <div className="flex gap-2 flex-wrap">
-                    {item.tags.map((tag) => (
+                    {item.tags.slice(0, 3).map((tag) => (
                       <Badge key={tag} variant="outline" className="text-xs">
                         {tag}
                       </Badge>
                     ))}
+                    {item.tags.length > 3 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{item.tags.length - 3}
+                      </Badge>
+                    )}
                   </div>
                 )}
               </CardContent>

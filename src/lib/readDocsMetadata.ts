@@ -13,6 +13,8 @@ export interface DocMetadata {
   order?: number;
   tags?: string[];
   filePath: string;
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  readTime?: number;
 }
 
 // Ensure we always have an absolute path to the docs directory
@@ -60,6 +62,8 @@ export function getAllDocs(dir: string = DOCS_DIR): DocMetadata[] {
           order: frontmatter.order || 0,
           tags: frontmatter.tags || [],
           filePath: fullPath,
+          difficulty: (frontmatter as any).difficulty as 'beginner' | 'intermediate' | 'advanced' | undefined,
+          readTime: (frontmatter as any).readTime as number | undefined,
         });
       }
     }
