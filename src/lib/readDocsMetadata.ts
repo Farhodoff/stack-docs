@@ -89,29 +89,44 @@ export function getDocBySlug(slug: string): DocMetadata | null {
 }
 
 /**
- * Get docs by category
+ * Normalize category name for comparison (lowercase and trim)
+ */
+function normalizeCategory(category?: string): string {
+  return (category || "Other").trim().toLowerCase();
+}
+
+/**
+ * Get docs by category (case-insensitive)
  * @param category - Category name
  * @returns Array of document metadata in that category
  */
 export function getDocsByCategory(category: string): DocMetadata[] {
   const docs = getAllDocs();
-  return docs.filter((doc) => doc.category === category);
+  const normalizedSearch = normalizeCategory(category);
+  return docs.filter((doc) => normalizeCategory(doc.category) === normalizedSearch);
 }
 
 /**
- * Get all categories with their docs
+ * Get all categories with their docs (case-insensitive grouping)
  * @returns Object with category names as keys and docs as values
  */
 export function getCategories(): Record<string, DocMetadata[]> {
   const docs = getAllDocs();
   const categories: Record<string, DocMetadata[]> = {};
+  // Map to store normalized keys (lowercase) to first-encountered display name
+  const normalizedToOriginal: Record<string, string> = {};
 
   docs.forEach((doc) => {
-    const category = doc.category || "Other";
-    if (!categories[category]) {
-      categories[category] = [];
+    const rawCategory = (doc.category || "Other").trim();
+    const normalized = normalizeCategory(rawCategory);
+
+    if (!normalizedToOriginal[normalized]) {
+      normalizedToOriginal[normalized] = rawCategory;
+      categories[rawCategory] = [];
     }
-    categories[category].push(doc);
+
+    const targetCategory = normalizedToOriginal[normalized];
+    categories[targetCategory].push(doc);
   });
 
   return categories;
@@ -129,9 +144,10 @@ export function getNavigationItems() {
     .map(([categoryName, docs]) => {
       // Find minimum order and get potential category icon from first doc
       const minOrder = Math.min(...docs.map(d => d.order || 999));
-      const icon = docs.find(d => d.category === categoryName)?.category === categoryName 
-        ? docs.find(d => d.category === categoryName)?.category?.split(' ')[0] // Simple hack to get emoji if it's there
-        : null;
+      
+      // Since docs are already grouped, any doc in the list has the same normalized category
+      const firstDoc = docs[0];
+      const icon = firstDoc?.category?.split(' ')[0] || null;
 
       return {
         category: categoryName,
@@ -161,7 +177,7 @@ export function getNavigationItems() {
 /**
  * Get previous and next docs for pagination (CATEGORY-AWARE)
  * @param currentSlug - Current document slug
- * @param category - Category to filter by (only navigate within same category)
+ * @param category - Category to filter by (case-insensitive)
  * @returns Previous and next doc metadata within the same category
  */
 export function getPrevNextDocs(currentSlug: string, category?: string) {
@@ -169,7 +185,8 @@ export function getPrevNextDocs(currentSlug: string, category?: string) {
   
   // Filter by category if provided
   if (category) {
-    docs = docs.filter((doc) => doc.category === category);
+    const normalizedSearch = normalizeCategory(category);
+    docs = docs.filter((doc) => normalizeCategory(doc.category) === normalizedSearch);
   }
   
   const currentIndex = docs.findIndex((doc) => doc.slug === currentSlug);
