@@ -123,6 +123,7 @@ export default function SearchPageContent() {
             <button
               onClick={() => setQuery("")}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              title="Qidiruv matnini tozalash"
             >
               <X className="h-4 w-4" />
             </button>
@@ -141,6 +142,7 @@ export default function SearchPageContent() {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                title="Kategoriya tanlash"
               >
                 <option value="all">Barchasi</option>
                 {allCategories.map((cat) => (
@@ -158,6 +160,7 @@ export default function SearchPageContent() {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                title="Saralash usuli tanlash"
               >
                 <option value="relevance">Moslik</option>
                 <option value="date">Sana</option>
@@ -173,6 +176,7 @@ export default function SearchPageContent() {
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                title="Saralash tartibi tanlash"
               >
                 <option value="desc">Kamayish</option>
                 <option value="asc">O'sish</option>
