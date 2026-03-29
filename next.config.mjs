@@ -9,6 +9,7 @@ const nextConfig = {
   // Configure MDX compiler
   experimental: {
     mdxRs: false, // Use @mdx-js/loader instead
+    optimizePackageImports: ['lucide-react'],
   },
   
   // Allow images from external sources
