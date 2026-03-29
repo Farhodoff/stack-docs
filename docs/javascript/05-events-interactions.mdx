@@ -1,0 +1,1229 @@
+---
+title: "JavaScript Events va Interaksiya"
+description: "JavaScript events bilan ishlash: click, keyboard, mouse events. Event handling, delegation va zamonaviy interaktiv web sahifalar yaratish."
+order: 5
+category: javascript
+tags: ["javascript", "events", "interactions", "event-listeners", "user-interface"]
+difficulty: intermediate
+readTime: 35
+---
+
+# JavaScript Events va Interaksiya
+
+Events - bu foydalanuvchi yoki brauzer tomonidan sodir bo'ladigan hodisalar. JavaScript orqali bu hodisarlarga javob қaytarish va interaqtiv web sahifalar yaratish mumkin.
+
+## Event nima?
+
+Event - bu web sahifada sodir bo'ladigan hodisa:
+- Foydalanuvchi tugmani bosdi (click)
+- Tekstni yozdi (keypress)
+- Sahifa yuklandi (load)
+- Forma jo'natildi (submit)
+- Sichqoncha harakatlandi (mouseover)
+
+```javascript
+// Event misoli
+function tugmaBosildi() {
+    alert("Tugma bosildi!");
+}
+
+// HTML: <button onclick="tugmaBosildi()">Bosing</button>
+```
+
+## Event Listeners
+
+### addEventListener() Metodi
+
+```javascript
+let tugma = document.querySelector("#my-button");
+
+// Event listener qo'shish
+tugma.addEventListener("click", function() {
+    console.log("Tugma bosildi!");
+});
+
+// Arrow function bilan
+tugma.addEventListener("click", () => {
+    console.log("Arrow function ishlatildi!");
+});
+
+// Named function bilan
+function tugmaHodisasi() {
+    console.log("Named function!");
+}
+
+tugma.addEventListener("click", tugmaHodisasi);
+```
+
+### Event Listener O'chirish
+
+```javascript
+let tugma = document.querySelector("#my-button");
+
+function tugmaBos() {
+    console.log("Faqat bitta marta!");
+    // O'zini o'chirish
+    tugma.removeEventListener("click", tugmaBos);
+}
+
+tugma.addEventListener("click", tugmaBos);
+
+// yoki
+function birMartaUch() {
+    console.log("Bir marta!");
+}
+
+tugma.addEventListener("click", birMartaUch, { once: true });
+```
+
+## Event Turlari
+
+### Mouse Events
+
+```html
+<div id="mouse-area" style="width: 200px; height: 200px; background: lightblue; margin: 20px;">
+    Mouse area
+</div>
+```
+
+```javascript
+let mouseArea = document.getElementById("mouse-area");
+
+// Click events
+mouseArea.addEventListener("click", (e) => {
+    console.log("Click!", e.clientX, e.clientY);
+});
+
+mouseArea.addEventListener("dblclick", (e) => {
+    console.log("Double click!");
+});
+
+mouseArea.addEventListener("contextmenu", (e) => {
+    e.preventDefault(); // Default right-click menyunsi to'xtatish
+    console.log("Right click!");
+});
+
+// Mouse movement
+mouseArea.addEventListener("mouseenter", () => {
+    mouseArea.style.backgroundColor = "lightgreen";
+    console.log("Sichqoncha kirib keldi");
+});
+
+mouseArea.addEventListener("mouseleave", () => {
+    mouseArea.style.backgroundColor = "lightblue";
+    console.log("Sichqoncha chiqib ketdi");
+});
+
+mouseArea.addEventListener("mousemove", (e) => {
+    let rect = mouseArea.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+    console.log(`Mouse position: ${x}, ${y}`);
+});
+
+// Mouse button states
+mouseArea.addEventListener("mousedown", (e) => {
+    console.log("Mouse button bosildi", e.button);
+    // 0 = left, 1 = middle, 2 = right
+});
+
+mouseArea.addEventListener("mouseup", (e) => {
+    console.log("Mouse button qo'yildi");
+});
+```
+
+### Keyboard Events
+
+```html
+<input type="text" id="text-input" placeholder="Nimadir yozing...">
+<div id="key-info"></div>
+```
+
+```javascript
+let textInput = document.getElementById("text-input");
+let keyInfo = document.getElementById("key-info");
+
+// Keyboard events
+textInput.addEventListener("keydown", (e) => {
+    console.log("Key down:", e.key, e.code);
+
+    // Maxsus tugmalar
+    if (e.key === "Enter") {
+        console.log("Enter bosildi!");
+    }
+
+    if (e.ctrlKey && e.key === "s") {
+        e.preventDefault(); // Brauzer saqlashni to'xtatish
+        console.log("Ctrl+S bosildi!");
+    }
+
+    // Key info ko'rsatish
+    keyInfo.innerHTML = `
+        Key: ${e.key}<br>
+        Code: ${e.code}<br>
+        Ctrl: ${e.ctrlKey}<br>
+        Shift: ${e.shiftKey}<br>
+        Alt: ${e.altKey}
+    `;
+});
+
+textInput.addEventListener("keyup", (e) => {
+    console.log("Key up:", e.key);
+});
+
+textInput.addEventListener("keypress", (e) => {
+    // DEPRECATED - keydown/keyup ishlatish tavsiya etiladi
+    console.log("Key press:", e.key);
+});
+
+// Input events (text o'zgarganda)
+textInput.addEventListener("input", (e) => {
+    console.log("Input value:", e.target.value);
+});
+
+textInput.addEventListener("change", (e) => {
+    console.log("Input changed:", e.target.value);
+});
+```
+
+### Form Events
+
+```html
+<form id="my-form">
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Jo'natish</button>
+    <button type="reset">Tozalash</button>
+</form>
+```
+
+```javascript
+let form = document.getElementById("my-form");
+let inputs = form.querySelectorAll("input");
+
+// Form submit
+form.addEventListener("submit", (e) => {
+    e.preventDefault(); // Sahifa reload bo'lmaslik uchun
+
+    let formData = new FormData(form);
+    let data = Object.fromEntries(formData);
+
+    console.log("Form data:", data);
+
+    // Validation
+    if (validateForm(data)) {
+        console.log("Form valid - serverga jo'natish mumkin");
+        // Serverga jo'natish logikasi
+    } else {
+        console.log("Form invalid");
+    }
+});
+
+// Form reset
+form.addEventListener("reset", () => {
+    console.log("Form tozalandi");
+});
+
+// Input validation
+inputs.forEach(input => {
+    input.addEventListener("blur", (e) => {
+        validateField(e.target);
+    });
+
+    input.addEventListener("focus", (e) => {
+        clearFieldError(e.target);
+    });
+});
+
+function validateField(field) {
+    let value = field.value.trim();
+    let error = "";
+
+    switch (field.name) {
+        case "username":
+            if (!value) error = "Username majburiy";
+            else if (value.length < 3) error = "Username kamida 3 harf bo'lishi kerak";
+            break;
+
+        case "email":
+            let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!value) error = "Email majburiy";
+            else if (!emailPattern.test(value)) error = "Email formati noto'g'ri";
+            break;
+
+        case "password":
+            if (!value) error = "Parol majburiy";
+            else if (value.length < 6) error = "Parol kamida 6 harf bo'lishi kerak";
+            break;
+    }
+
+    showFieldError(field, error);
+    return !error;
+}
+
+function showFieldError(field, error) {
+    let errorElement = field.parentElement.querySelector(".error");
+    if (!errorElement) {
+        errorElement = document.createElement("div");
+        errorElement.className = "error";
+        field.parentElement.appendChild(errorElement);
+    }
+
+    errorElement.textContent = error;
+    field.classList.toggle("invalid", !!error);
+}
+
+function clearFieldError(field) {
+    field.classList.remove("invalid");
+    let errorElement = field.parentElement.querySelector(".error");
+    if (errorElement) {
+        errorElement.textContent = "";
+    }
+}
+```
+
+### Window va Document Events
+
+```javascript
+// Sahifa yuklanganda
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM yuklandi");
+});
+
+window.addEventListener("load", () => {
+    console.log("Sahifa to'liq yuklandi (rasmlar bilan)");
+});
+
+// Sahifa o'lchami o'zgarishi
+window.addEventListener("resize", () => {
+    console.log("Window size:", window.innerWidth, window.innerHeight);
+});
+
+// Sahifani yopishdan oldin
+window.addEventListener("beforeunload", (e) => {
+    e.returnValue = "Sahifani yopishga ishonchli ekanmisiz?";
+});
+
+// Scroll hodisai
+window.addEventListener("scroll", () => {
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    console.log("Scroll position:", scrollTop);
+
+    // Header ni yashirish/ko'rsatish misoli
+    let header = document.querySelector("#header");
+    if (scrollTop > 100) {
+        header.classList.add("hidden");
+    } else {
+        header.classList.remove("hidden");
+    }
+});
+
+// Visibility API
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        console.log("Sahifa hidden");
+        // Timer to'xtatish, video pause qilish
+    } else {
+        console.log("Sahifa visible");
+        // Faoliyatni qayta boshlash
+    }
+});
+```
+
+## Event Object
+
+```javascript
+button.addEventListener("click", (event) => {
+    console.log("Event object:", event);
+
+    // Event tugi va ma'lumotlar
+    console.log("Type:", event.type);          // "click"
+    console.log("Target:", event.target);      // Bosilgan element
+    console.log("Current Target:", event.currentTarget); // Event listener qo'yilgan element
+
+    // Mouse position
+    console.log("Client X/Y:", event.clientX, event.clientY); // Viewport bo'yicha
+    console.log("Page X/Y:", event.pageX, event.pageY);       // Sahifa bo'yicha
+    console.log("Screen X/Y:", event.screenX, event.screenY); // Monitor bo'yicha
+
+    // Keyboard modifiers
+    console.log("Ctrl:", event.ctrlKey);
+    console.log("Shift:", event.shiftKey);
+    console.log("Alt:", event.altKey);
+
+    // Event flow boshqaruvi
+    event.preventDefault();  // Default ishni to'xtatadi
+    event.stopPropagation(); // Bubbling to'xtatadi
+});
+```
+
+## Event Bubbling va Capturing
+
+```html
+<div id="outer" style="padding: 50px; background: lightblue;">
+    Outer div
+    <div id="inner" style="padding: 20px; background: lightgreen;">
+        Inner div
+        <button id="button">Button</button>
+    </div>
+</div>
+```
+
+```javascript
+let outer = document.getElementById("outer");
+let inner = document.getElementById("inner");
+let button = document.getElementById("button");
+
+// Bubbling (default) - ichkaridan tashqariga
+outer.addEventListener("click", (e) => {
+    console.log("Outer clicked");
+});
+
+inner.addEventListener("click", (e) => {
+    console.log("Inner clicked");
+});
+
+button.addEventListener("click", (e) => {
+    console.log("Button clicked");
+    // e.stopPropagation(); // Bubbling to'xtatish
+});
+
+// Capturing - tashqaridan ichkariga
+outer.addEventListener("click", (e) => {
+    console.log("Outer capturing");
+}, { capture: true });
+
+inner.addEventListener("click", (e) => {
+    console.log("Inner capturing");
+}, { capture: true });
+```
+
+## Event Delegation
+
+```html
+<ul id="todo-list">
+    <li>Dars o'qish <button class="delete">O'chirish</button></li>
+    <li>Codingga o'tish <button class="delete">O'chirish</button></li>
+    <li>loyiha tugatish <button class="delete">O'chirish</button></li>
+</ul>
+<button id="add-todo">Yangi qo'shish</button>
+```
+
+```javascript
+let todoList = document.getElementById("todo-list");
+let addBtn = document.getElementById("add-todo");
+
+// Event delegation - bitta listener barcha childlar uchun
+todoList.addEventListener("click", (e) => {
+    if (e.target.classList.contains("delete")) {
+        // O'chirish tugmasi bosildi
+        let listItem = e.target.parentElement;
+        listItem.remove();
+        console.log("Todo o'chirildi");
+    }
+});
+
+// Yangi todo qo'shish
+addBtn.addEventListener("click", () => {
+    let newTodo = document.createElement("li");
+    newTodo.innerHTML = `
+        Yangi vazifa ${Date.now()}
+        <button class="delete">O'chirish</button>
+    `;
+    todoList.appendChild(newTodo);
+});
+
+// Event delegation afzalliklari:
+// 1. Kam memory ishlatadi (bitta listener)
+// 2. Dynamic content bilan ishlaydi
+// 3. Better performance
+```
+
+## Advanced Event Features
+
+### Passive Events
+
+```javascript
+// Passive event - preventDefault() ishlatilmaydi, performance yaxshi
+element.addEventListener("touchstart", (e) => {
+    // e.preventDefault(); // Xato! Passive eventda ishlamaydi
+    console.log("Touch start");
+}, { passive: true });
+
+// Default passive: touchstart, touchmove, wheel
+element.addEventListener("wheel", (e) => {
+    // Bu passive bo'ladi defaultda
+}, { passive: false }); // Passive bo'lmaslik uchun
+```
+
+### Custom Events
+
+```javascript
+// Custom event yaratish
+let customEvent = new CustomEvent("myCustomEvent", {
+    detail: {
+        message: "Bu custom event!",
+        timestamp: new Date()
+    },
+    bubbles: true,
+    cancelable: true
+});
+
+// Custom eventga listener
+document.addEventListener("myCustomEvent", (e) => {
+    console.log("Custom event keldi:", e.detail);
+});
+
+// Custom eventni dispatch qilish
+document.dispatchEvent(customEvent);
+
+// Component-to-component communication misoli
+class ComponentA {
+    constructor() {
+        this.element = document.querySelector("#component-a");
+        this.setupEvents();
+    }
+
+    setupEvents() {
+        this.element.addEventListener("click", () => {
+            this.notify("ComponentA clicked");
+        });
+    }
+
+    notify(message) {
+        let event = new CustomEvent("component-message", {
+            detail: { sender: "ComponentA", message }
+        });
+        document.dispatchEvent(event);
+    }
+}
+
+class ComponentB {
+    constructor() {
+        this.element = document.querySelector("#component-b");
+        this.listen();
+    }
+
+    listen() {
+        document.addEventListener("component-message", (e) => {
+            console.log(`ComponentB Received: ${e.detail.message}`);
+            this.element.textContent = `Last message: ${e.detail.message}`;
+        });
+    }
+}
+```
+
+## Amaliy Misollar
+
+### 1. Drag and Drop
+
+```html
+<div class="container">
+    <div class="draggable-items">
+        <div class="item" draggable="true" data-id="1">Element 1</div>
+        <div class="item" draggable="true" data-id="2">Element 2</div>
+        <div class="item" draggable="true" data-id="3">Element 3</div>
+    </div>
+
+    <div class="drop-zones">
+        <div class="drop-zone" data-zone="A">Zone A</div>
+        <div class="drop-zone" data-zone="B">Zone B</div>
+        <div class="drop-zone" data-zone="C">Zone C</div>
+    </div>
+</div>
+```
+
+```javascript
+class DragAndDrop {
+    constructor() {
+        this.draggedElement = null;
+        this.init();
+    }
+
+    init() {
+        // Draggable elementlar
+        document.querySelectorAll(".item").forEach(item => {
+            item.addEventListener("dragstart", (e) => this.handleDragStart(e));
+            item.addEventListener("dragend", (e) => this.handleDragEnd(e));
+        });
+
+        // Drop zones
+        document.querySelectorAll(".drop-zone").forEach(zone => {
+            zone.addEventListener("dragover", (e) => this.handleDragOver(e));
+            zone.addEventListener("dragenter", (e) => this.handleDragEnter(e));
+            zone.addEventListener("dragleave", (e) => this.handleDragLeave(e));
+            zone.addEventListener("drop", (e) => this.handleDrop(e));
+        });
+    }
+
+    handleDragStart(e) {
+        this.draggedElement = e.target;
+        e.target.style.opacity = "0.5";
+
+        // Ma'lumot o'rnatish
+        e.dataTransfer.setData("text/plain", e.target.dataset.id);
+        e.dataTransfer.effectAllowed = "move";
+
+        console.log("Drag start:", e.target.dataset.id);
+    }
+
+    handleDragEnd(e) {
+        e.target.style.opacity = "1";
+        this.draggedElement = null;
+
+        // Barcha highlight'larni olib tashlash
+        document.querySelectorAll(".drop-zone").forEach(zone => {
+            zone.classList.remove("drag-over");
+        });
+    }
+
+    handleDragOver(e) {
+        e.preventDefault(); // Drop'ni ruxsat berish uchun
+        e.dataTransfer.dropEffect = "move";
+    }
+
+    handleDragEnter(e) {
+        e.target.classList.add("drag-over");
+    }
+
+    handleDragLeave(e) {
+        // Faqat zonadan chiqishda (ichki elementlarga o'tishda emas)
+        if (!e.target.contains(e.relatedTarget)) {
+            e.target.classList.remove("drag-over");
+        }
+    }
+
+    handleDrop(e) {
+        e.preventDefault();
+        e.target.classList.remove("drag-over");
+
+        if (this.draggedElement) {
+            let itemId = e.dataTransfer.getData("text/plain");
+            let zoneName = e.target.dataset.zone;
+
+            console.log(`Item ${itemId} dropped in zone ${zoneName}`);
+
+            // Elementni yangi joyga ko'chirish
+            e.target.appendChild(this.draggedElement);
+
+            // Animation
+            this.draggedElement.style.transform = "scale(1.1)";
+            setTimeout(() => {
+                this.draggedElement.style.transform = "scale(1)";
+            }, 200);
+
+            this.logState();
+        }
+    }
+
+    logState() {
+        let state = {};
+        document.querySelectorAll(".drop-zone").forEach(zone => {
+            let zoneName = zone.dataset.zone;
+            let items = Array.from(zone.querySelectorAll(".item")).map(item =>
+                item.dataset.id
+            );
+            state[zoneName] = items;
+        });
+        console.log("Current state:", state);
+    }
+}
+
+// Drag and Drop ni ishga tushirish
+document.addEventListener("DOMContentLoaded", () => {
+    new DragAndDrop();
+});
+```
+
+### 2. Real-time Search
+
+```html
+<div class="search-container">
+    <input type="text" id="search-input" placeholder="Qidiruv...">
+    <div id="search-results"></div>
+    <div class="search-stats">
+        <span id="result-count">0</span> natija topildi
+        <span id="search-time"></span>
+    </div>
+</div>
+```
+
+```javascript
+class RealTimeSearch {
+    constructor() {
+        this.searchInput = document.getElementById("search-input");
+        this.resultsContainer = document.getElementById("search-results");
+        this.resultCount = document.getElementById("result-count");
+        this.searchTime = document.getElementById("search-time");
+
+        // Sample data
+        this.data = [
+            { id: 1, title: "JavaScript Asoslari", category: "Programming", tags: ["js", "web"] },
+            { id: 2, title: "React Framework", category: "Frontend", tags: ["react", "ui"] },
+            { id: 3, title: "Node.js Server", category: "Backend", tags: ["nodejs", "server"] },
+            { id: 4, title: "HTML va CSS", category: "Frontend", tags: ["html", "css"] },
+            { id: 5, title: "Database Design", category: "Backend", tags: ["db", "sql"] },
+            // ... ko'proq ma'lumot
+        ];
+
+        this.init();
+    }
+
+    init() {
+        let searchTimer;
+
+        this.searchInput.addEventListener("input", (e) => {
+            clearTimeout(searchTimer);
+
+            // Debouncing - 300ms kutish
+            searchTimer = setTimeout(() => {
+                this.performSearch(e.target.value.trim());
+            }, 300);
+        });
+
+        this.searchInput.addEventListener("focus", () => {
+            this.searchInput.parentElement.classList.add("focused");
+        });
+
+        this.searchInput.addEventListener("blur", () => {
+            this.searchInput.parentElement.classList.remove("focused");
+        });
+
+        this.searchInput.addEventListener("keydown", (e) => {
+            this.handleKeyboardNavigation(e);
+        });
+    }
+
+    performSearch(query) {
+        let startTime = performance.now();
+
+        if (!query) {
+            this.showResults([], 0);
+            return;
+        }
+
+        // Search algorithm
+        let results = this.data.filter(item => {
+            let searchText = `${item.title} ${item.category} ${item.tags.join(" ")}`.toLowerCase();
+            return searchText.includes(query.toLowerCase());
+        });
+
+        // Relevance sorting
+        results = results.map(item => {
+            let score = 0;
+
+            // Title match = higher score
+            if (item.title.toLowerCase().includes(query.toLowerCase())) {
+                score += 10;
+            }
+
+            // Exact category match
+            if (item.category.toLowerCase() === query.toLowerCase()) {
+                score += 5;
+            }
+
+            // Tag match
+            if (item.tags.some(tag => tag.includes(query.toLowerCase()))) {
+                score += 3;
+            }
+
+            return { ...item, score };
+        }).sort((a, b) => b.score - a.score);
+
+        let endTime = performance.now();
+        let searchTime = endTime - startTime;
+
+        this.showResults(results, searchTime);
+    }
+
+    showResults(results, searchTime) {
+        this.resultCount.textContent = results.length;
+        this.searchTime.textContent = `(${searchTime.toFixed(1)}ms)`;
+
+        if (results.length === 0) {
+            this.resultsContainer.innerHTML = "<div class='no-results'>Hech narsa topilmadi</div>";
+            return;
+        }
+
+        let html = results.map((item, index) => `
+            <div class="search-result ${index === 0 ? 'active' : ''}" data-id="${item.id}">
+                <h4>${this.highlightText(item.title, this.searchInput.value)}</h4>
+                <span class="category">${item.category}</span>
+                <div class="tags">
+                    ${item.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}
+                </div>
+            </div>
+        `).join("");
+
+        this.resultsContainer.innerHTML = html;
+
+        // Result click eventi
+        this.resultsContainer.querySelectorAll(".search-result").forEach(result => {
+            result.addEventListener("click", (e) => {
+                let itemId = result.dataset.id;
+                this.selectResult(itemId);
+            });
+        });
+    }
+
+    highlightText(text, query) {
+        if (!query) return text;
+
+        let regex = new RegExp(`(${query})`, "gi");
+        return text.replace(regex, "<mark>$1</mark>");
+    }
+
+    handleKeyboardNavigation(e) {
+        let results = this.resultsContainer.querySelectorAll(".search-result");
+        let activeIndex = Array.from(results).findIndex(r => r.classList.contains("active"));
+
+        switch (e.key) {
+            case "ArrowDown":
+                e.preventDefault();
+                if (activeIndex < results.length - 1) {
+                    results[activeIndex]?.classList.remove("active");
+                    results[activeIndex + 1]?.classList.add("active");
+                }
+                break;
+
+            case "ArrowUp":
+                e.preventDefault();
+                if (activeIndex > 0) {
+                    results[activeIndex]?.classList.remove("active");
+                    results[activeIndex - 1]?.classList.add("active");
+                }
+                break;
+
+            case "Enter":
+                if (results[activeIndex]) {
+                    let itemId = results[activeIndex].dataset.id;
+                    this.selectResult(itemId);
+                }
+                break;
+
+            case "Escape":
+                this.searchInput.blur();
+                this.resultsContainer.innerHTML = "";
+                break;
+        }
+    }
+
+    selectResult(itemId) {
+        let selectedItem = this.data.find(item => item.id == itemId);
+        if (selectedItem) {
+            console.log("Selected:", selectedItem);
+            this.searchInput.value = selectedItem.title;
+            this.resultsContainer.innerHTML = "";
+
+            // Custom event dispatch
+            let event = new CustomEvent("search-select", {
+                detail: { item: selectedItem }
+            });
+            document.dispatchEvent(event);
+        }
+    }
+}
+
+// Search'ni ishga tushirish
+document.addEventListener("DOMContentLoaded", () => {
+    let search = new RealTimeSearch();
+
+    // Search select eventini eshitish
+    document.addEventListener("search-select", (e) => {
+        console.log("Item tanlandi:", e.detail.item);
+    });
+});
+```
+
+### 3. Interactive Game: Snake
+
+```html
+<div class="game-container">
+    <div class="game-controls">
+        <button id="start-btn">Boshlash</button>
+        <button id="pause-btn">Pauza</button>
+        <div class="score">Score: <span id="score">0</span></div>
+    </div>
+
+    <canvas id="game-canvas" width="400" height="400"></canvas>
+
+    <div class="instructions">
+        Arrow keys yoki WASD bilan boshqaring
+    </div>
+</div>
+```
+
+```javascript
+class SnakeGame {
+    constructor() {
+        this.canvas = document.getElementById("game-canvas");
+        this.ctx = this.canvas.getContext("2d");
+        this.startBtn = document.getElementById("start-btn");
+        this.pauseBtn = document.getElementById("pause-btn");
+        this.scoreElement = document.getElementById("score");
+
+        // Game state
+        this.gridSize = 20;
+        this.snake = [{ x: 200, y: 200 }];
+        this.food = this.generateFood();
+        this.direction = { x: 0, y: 0 };
+        this.score = 0;
+        this.gameRunning = false;
+        this.gameLoop = null;
+
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+        this.render();
+    }
+
+    setupEventListeners() {
+        // Game controls
+        this.startBtn.addEventListener("click", () => this.startGame());
+        this.pauseBtn.addEventListener("click", () => this.pauseGame());
+
+        // Keyboard controls
+        document.addEventListener("keydown", (e) => this.handleKeyPress(e));
+
+        // Game focus
+        this.canvas.addEventListener("click", () => {
+            this.canvas.focus();
+        });
+
+        this.canvas.tabIndex = 0; // Focusable qilish
+
+        // Touch controls (mobile uchun)
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        this.canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        this.canvas.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            let touchEndX = e.changedTouches[0].clientX;
+            let touchEndY = e.changedTouches[0].clientY;
+
+            let deltaX = touchEndX - touchStartX;
+            let deltaY = touchEndY - touchStartY;
+
+            let threshold = 50;
+
+            if (Math.abs(deltaX) > threshold || Math.abs(deltaY) > threshold) {
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    // Horizontal swipe
+                    this.changeDirection(deltaX > 0 ? "right" : "left");
+                } else {
+                    // Vertical swipe
+                    this.changeDirection(deltaY > 0 ? "down" : "up");
+                }
+            }
+        });
+    }
+
+    handleKeyPress(e) {
+        if (!this.gameRunning) return;
+
+        switch (e.key) {
+            case "ArrowUp":
+            case "w":
+            case "W":
+                this.changeDirection("up");
+                break;
+            case "ArrowDown":
+            case "s":
+            case "S":
+                this.changeDirection("down");
+                break;
+            case "ArrowLeft":
+            case "a":
+            case "A":
+                this.changeDirection("left");
+                break;
+            case "ArrowRight":
+            case "d":
+            case "D":
+                this.changeDirection("right");
+                break;
+            case " ":
+                e.preventDefault();
+                this.pauseGame();
+                break;
+        }
+    }
+
+    changeDirection(newDirection) {
+        const directions = {
+            up: { x: 0, y: -this.gridSize },
+            down: { x: 0, y: this.gridSize },
+            left: { x: -this.gridSize, y: 0 },
+            right: { x: this.gridSize, y: 0 }
+        };
+
+        const newDir = directions[newDirection];
+
+        // Teskari yo'nalishga o'tmaslik
+        if (newDir.x !== -this.direction.x || newDir.y !== -this.direction.y) {
+            this.direction = newDir;
+        }
+    }
+
+    startGame() {
+        if (this.gameRunning) return;
+
+        this.gameRunning = true;
+        this.startBtn.disabled = true;
+        this.pauseBtn.disabled = false;
+
+        this.gameLoop = setInterval(() => {
+            this.update();
+            this.render();
+        }, 150); // 150ms = game speed
+    }
+
+    pauseGame() {
+        this.gameRunning = false;
+        this.startBtn.disabled = false;
+        this.pauseBtn.disabled = true;
+
+        if (this.gameLoop) {
+            clearInterval(this.gameLoop);
+            this.gameLoop = null;
+        }
+    }
+
+    update() {
+        // Snake boshi
+        const head = { ...this.snake[0] };
+        head.x += this.direction.x;
+        head.y += this.direction.y;
+
+        // Wall collision
+        if (head.x < 0 || head.x >= this.canvas.width ||
+            head.y < 0 || head.y >= this.canvas.height) {
+            this.gameOver();
+            return;
+        }
+
+        // Self collision
+        if (this.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+            this.gameOver();
+            return;
+        }
+
+        this.snake.unshift(head);
+
+        // Food check
+        if (head.x === this.food.x && head.y === this.food.y) {
+            this.score += 10;
+            this.scoreElement.textContent = this.score;
+            this.food = this.generateFood();
+
+            // Snake grow (don't remove tail)
+        } else {
+            // Remove tail
+            this.snake.pop();
+        }
+    }
+
+    generateFood() {
+        let food;
+        do {
+            food = {
+                x: Math.floor(Math.random() * (this.canvas.width / this.gridSize)) * this.gridSize,
+                y: Math.floor(Math.random() * (this.canvas.height / this.gridSize)) * this.gridSize
+            };
+        } while (this.snake.some(segment => segment.x === food.x && segment.y === food.y));
+
+        return food;
+    }
+
+    render() {
+        // Clear canvas
+        this.ctx.fillStyle = "#000";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Draw snake
+        this.ctx.fillStyle = "#0f0";
+        this.snake.forEach((segment, index) => {
+            if (index === 0) {
+                // Head
+                this.ctx.fillStyle = "#090";
+            } else {
+                this.ctx.fillStyle = "#0f0";
+            }
+            this.ctx.fillRect(segment.x, segment.y, this.gridSize - 2, this.gridSize - 2);
+        });
+
+        // Draw food
+        this.ctx.fillStyle = "#f00";
+        this.ctx.fillRect(this.food.x, this.food.y, this.gridSize - 2, this.gridSize - 2);
+
+        // Draw grid (optional)
+        this.ctx.strokeStyle = "#333";
+        this.ctx.lineWidth = 1;
+        for (let x = 0; x <= this.canvas.width; x += this.gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, this.canvas.height);
+            this.ctx.stroke();
+        }
+        for (let y = 0; y <= this.canvas.height; y += this.gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(this.canvas.width, y);
+            this.ctx.stroke();
+        }
+    }
+
+    gameOver() {
+        this.pauseGame();
+
+        // Game over animation
+        this.ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.fillStyle = "#fff";
+        this.ctx.font = "32px Arial";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText("O'YIN TUGADI", this.canvas.width / 2, this.canvas.height / 2 - 20);
+
+        this.ctx.font = "16px Arial";
+        this.ctx.fillText(`Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2 + 20);
+
+        this.ctx.fillText("Qayta boshlash uchun Start bosing", this.canvas.width / 2, this.canvas.height / 2 + 50);
+
+        // Reset game state
+        setTimeout(() => {
+            this.resetGame();
+        }, 3000);
+    }
+
+    resetGame() {
+        this.snake = [{ x: 200, y: 200 }];
+        this.food = this.generateFood();
+        this.direction = { x: 0, y: 0 };
+        this.score = 0;
+        this.scoreElement.textContent = this.score;
+        this.render();
+    }
+}
+
+// O'yinni ishga tushirish
+document.addEventListener("DOMContentLoaded", () => {
+    new SnakeGame();
+});
+```
+
+## Performance Optimizatsiya
+
+### Event Listener Optimizatsiya
+
+```javascript
+// ❌ Har bir element uchun alohida listener
+document.querySelectorAll(".item").forEach(item => {
+    item.addEventListener("click", handleClick); // Ko'p memory
+});
+
+// ✅ Event delegation
+document.querySelector(".container").addEventListener("click", (e) => {
+    if (e.target.classList.contains("item")) {
+        handleClick(e);
+    }
+});
+
+// ❌ Heavy function to'g'ridan-to'g'ri
+input.addEventListener("input", heavyFunction);
+
+// ✅ Debouncing
+function debounce(func, delay) {
+    let timer;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+input.addEventListener("input", debounce(heavyFunction, 300));
+
+// ✅ Throttling
+function throttle(func, limit) {
+    let inThrottle;
+    return function (...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+window.addEventListener("scroll", throttle(onScroll, 100));
+```
+
+## Best Practices
+
+```javascript
+// 1. Event listenerlarni tozalang
+class MyComponent {
+    constructor() {
+        this.handleClick = this.handleClick.bind(this);
+        this.button = document.querySelector("#my-button");
+        this.button.addEventListener("click", this.handleClick);
+    }
+
+    destroy() {
+        this.button.removeEventListener("click", this.handleClick);
+    }
+
+    handleClick(e) {
+        console.log("Click handled");
+    }
+}
+
+// 2. Moderne API'larni ishlatag
+// ❌ Eski event assignment
+button.onclick = function() { /* ... */ };
+
+// ✅ Modern addEventListener
+button.addEventListener("click", () => { /* ... */ });
+
+// 3. Passive eventlar
+element.addEventListener("wheel", handler, { passive: true });
+
+// 4. AbortController signal bilan
+const controller = new AbortController();
+element.addEventListener("click", handler, {
+    signal: controller.signal
+});
+
+// O'chirish
+controller.abort();
+```
+
+## Xulosa
+
+Bu darsda Events va Interaction asoslarini o'rgandik:
+
+- ✅ **Event Types**: Mouse, keyboard, form, window events
+- ✅ **Event Handling**: addEventListener, event object
+- ✅ **Event Flow**: Bubbling, capturing, delegation
+- ✅ **Advanced**: Drag&drop, real-time search, game development
+- ✅ **Performance**: Debouncing, throttling, optimization
+
+Bu bilan JavaScript asoslarini tugatdik. Endi React dasturlashga o'ta olasiz! 🚀
+
+## Qo'shimcha Resurslar
+
+- [MDN Event Reference](https://developer.mozilla.org/en-US/docs/Web/Events)
+- [Event Handling Best Practices](https://javascript.info/events)
+
+---
+
+🎮 **Amaliyot**: Snake o'yinini o'zingizning feature'laringiz bilan yaxshilang!

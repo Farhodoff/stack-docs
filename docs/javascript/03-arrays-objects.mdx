@@ -1,0 +1,756 @@
+---
+title: "JavaScript Massivlar va Obyektlar"
+description: "JavaScript'da massivlar va obyektlar bilan ishlash: yaratish, o'zgartirish, metodlar va praktik dashturlar. Ma'lumot tuzilmalari asoslari."
+order: 3
+category: javascript
+tags: ["javascript", "arrays", "objects", "data-structures", "methods"]
+difficulty: intermediate
+readTime: 25
+---
+
+# JavaScript Massivlar va Obyektlar
+
+Massivlar va obyektlar JavaScript'ning eng muhim ma'lumot tuzilmalaridir. Ular murakkab ma'lumotlarni saqlash va boshqarish imkonini beradi.
+
+## Massivlar (Arrays)
+
+Massiv - bu tartiblangan elementlar ro'yxati. Har bir elementning o'z indeksi (pozitsiyasi) bor.
+
+### Massiv Yaratish
+
+```javascript
+// 1. Array literal (tavsiya etiladi)
+let mevalar = ["olma", "nok", "banan"];
+let raqamlar = [1, 2, 3, 4, 5];
+let aralash = ["matn", 42, true, null, undefined];
+
+// 2. Array constructor
+let bo'shMassiv = new Array();
+let uzunlikBilan = new Array(5); // 5 ta undefined element
+
+// 3. Array.from() metodi
+let harflar = Array.from("salom"); // ['s', 'a', 'l', 'o', 'm']
+let ketmaSet = Array.from({length: 5}, (_, i) => i); // [0, 1, 2, 3, 4]
+
+console.log(mevalar);    // ['olma', 'nok', 'banan']
+console.log(mevalar[0]); // 'olma' (birinchi element)
+console.log(mevalar.length); // 3
+```
+
+### Massiv Elementlariga Murojaat
+
+```javascript
+let talabalar = ["Ali", "Fatima", "Jasur", "Zilola"];
+
+// Elementlarni o'qish
+console.log(talabalar[0]);  // "Ali"
+console.log(talabalar[2]);  // "Jasur"
+console.log(talabalar[-1]); // undefined (manfiy indekslar yo'q)
+
+// Oxirgi elementni olish
+console.log(talabalar[talabalar.length - 1]); // "Zilola"
+
+// Elementlarni o'zgartirish
+talabalar[1] = "Malika";
+console.log(talabalar); // ["Ali", "Malika", "Jasur", "Zilola"]
+
+// Yangi element qo'shish
+talabalar[4] = "Ahmad";
+talabalar[10] = "Sevara"; // Bo'shliqlar undefined bo'ladi
+console.log(talabalar); // ["Ali", "Malika", "Jasur", "Zilola", "Ahmad", undefined, undefined, undefined, undefined, undefined, "Sevara"]
+```
+
+### Massiv Metodlari
+
+#### Element qo'shish va o'chirish
+
+```javascript
+let sonlar = [1, 2, 3];
+
+// push() - oxiriga qo'shish
+sonlar.push(4, 5);
+console.log(sonlar); // [1, 2, 3, 4, 5]
+
+// unshift() - boshiga qo'shish
+sonlar.unshift(0);
+console.log(sonlar); // [0, 1, 2, 3, 4, 5]
+
+// pop() - oxiridan o'chirish
+let oxirgi = sonlar.pop();
+console.log(oxirgi);  // 5
+console.log(sonlar);  // [0, 1, 2, 3, 4]
+
+// shift() - boshidan o'chirish
+let birinchi = sonlar.shift();
+console.log(birinchi); // 0
+console.log(sonlar);   // [1, 2, 3, 4]
+
+// splice() - istalgan joydan o'zgartirish
+let o'chirilgan = sonlar.splice(1, 2, "yangi1", "yangi2");
+console.log(o'chirilgan); // [2, 3]
+console.log(sonlar);      // [1, "yangi1", "yangi2", 4]
+```
+
+#### Massivni qidirish va tekshirish
+
+```javascript
+let mevalar = ["olma", "nok", "banan", "olma"];
+
+// indexOf() - birinchi indeksni topish
+console.log(mevalar.indexOf("olma"));    // 0
+console.log(mevalar.indexOf("shaftoli")); // -1 (topilmadi)
+
+// lastIndexOf() - oxirgi indeksni topish
+console.log(mevalar.lastIndexOf("olma")); // 3
+
+// includes() - element bormi?
+console.log(mevalar.includes("nok"));     // true
+console.log(mevalar.includes("shaftoli")); // false
+
+// find() - shartni qanoatlantiruvchi birinchi element
+let talabalar = [
+    {ism: "Ali", yosh: 20},
+    {ism: "Fatima", yosh: 19},
+    {ism: "Ahmad", yosh: 21}
+];
+
+let topilgan = talabalar.find(talaba => talaba.yosh > 20);
+console.log(topilgan); // {ism: "Ahmad", yosh: 21}
+
+// findIndex() - shartni qanoatlantiruvchi indeks
+let indeks = talabalar.findIndex(talaba => talaba.ism === "Fatima");
+console.log(indeks); // 1
+```
+
+#### Massivni o'zgartirish va yaratish
+
+```javascript
+let raqamlar = [1, 2, 3, 4, 5];
+
+// map() - har bir elementni o'zgartirish
+let kvadratlar = raqamlar.map(son => son * son);
+console.log(kvadratlar); // [1, 4, 9, 16, 25]
+
+// filter() - shartga mos elementlarni saqlash
+let juftSonlar = raqamlar.filter(son => son % 2 === 0);
+console.log(juftSonlar); // [2, 4]
+
+// reduce() - bir qiymatga kamaytirish
+let yigindi = raqamlar.reduce((akkum, current) => akkum + current, 0);
+console.log(yigindi); // 15
+
+let maxSoni = raqamlar.reduce((max, current) =>
+    current > max ? current : max, raqamlar[0]);
+console.log(maxSoni); // 5
+
+// forEach() - har bir element bilan amal bajarish
+raqamlar.forEach((son, indeks) => {
+    console.log(`Indeks ${indeks}: ${son}`);
+});
+
+// sort() - tartiblash
+let ismlar = ["Zara", "Ali", "Bobur", "Fatima"];
+ismlar.sort();
+console.log(ismlar); // ["Ali", "Bobur", "Fatima", "Zara"]
+
+// Raqamlarni to'g'ri tartiblash
+let sonlarТартиbi = [10, 1, 5, 100, 2];
+sonlarТартиbi.sort((a, b) => a - b); // O'sish tartibida
+console.log(sonlarТартиbi); // [1, 2, 5, 10, 100]
+
+// reverse() - teskari tartiblash
+ismlar.reverse();
+console.log(ismlar); // ["Zara", "Fatima", "Bobur", "Ali"]
+```
+
+#### Massivni birlashtirish va bo'lish
+
+```javascript
+let massiv1 = [1, 2, 3];
+let massiv2 = [4, 5, 6];
+
+// concat() - birlashtirilgan yangi massiv
+let birlashtirilgan = massiv1.concat(massiv2);
+console.log(birlashtirilgan); // [1, 2, 3, 4, 5, 6]
+
+// Spread operator (tavsiya etiladi)
+let yangiMassiv = [...massiv1, ...massiv2];
+console.log(yangiMassiv); // [1, 2, 3, 4, 5, 6]
+
+// slice() - qismini olish
+let bolak = birlashtirilgan.slice(2, 5);
+console.log(bolak); // [3, 4, 5]
+console.log(birlashtirilgan); // Original o'zgarmaydi
+
+// join() - stringga aylantirish
+let matn = massiv1.join(" - ");
+console.log(matn); // "1 - 2 - 3"
+```
+
+### Nested Arrays (Ichma-ich massivlar)
+
+```javascript
+let matrica = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+];
+
+// Elementlarga murojaat
+console.log(matrica[1][2]); // 6
+console.log(matrica[2][0]); // 7
+
+// Flat massiv yaratish
+let flatMassiv = matrica.flat();
+console.log(flatMassiv); // [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+// Chuqur nested
+let chuqur = [1, [2, [3, [4, 5]]]];
+console.log(chuqur.flat());    // [1, 2, [3, [4, 5]]]
+console.log(chuqur.flat(2));   // [1, 2, 3, [4, 5]]
+console.log(chuqur.flat(Infinity)); // [1, 2, 3, 4, 5]
+```
+
+## Obyektlar (Objects)
+
+Obyekt - bu kalit-qiymat juftliklaridan iborat ma'lumot tuzilmasi.
+
+### Obyekt Yaratish
+
+```javascript
+// 1. Object literal (tavsiya etiladi)
+let talaba = {
+    ism: "Ali",
+    familiya: "Karimov",
+    yosh: 20,
+    fakultet: "IT",
+    aktiv: true
+};
+
+// 2. Object constructor
+let bo'shObyekt = new Object();
+
+// 3. Object.create()
+let prototip = {tur: "talaba"};
+let yangiTalaba = Object.create(prototip);
+
+// 4. Constructor function
+function Talaba(ism, yosh) {
+    this.ism = ism;
+    this.yosh = yosh;
+    this.salomlash = function() {
+        return `Salom, men ${this.ism}`;
+    };
+}
+
+let talaba1 = new Talaba("Fatima", 19);
+```
+
+### Obyekt Xususiyatlariga Murojaat
+
+```javascript
+let mashina = {
+    marka: "Toyota",
+    model: "Camry",
+    yil: 2020,
+    "rang matniga": "qora", // Probel bo'lsa qo'shtirnoq kerak
+    'maxsulotche': "Toyota Motor"
+};
+
+// Dot notation (nuqta orqali)
+console.log(mashina.marka);  // "Toyota"
+console.log(mashina.model);  // "Camry"
+
+// Bracket notation (to'rtburchak qavs orqali)
+console.log(mashina["yil"]);  // 2020
+console.log(mashina["rang matniga"]); // "qora" (probel bo'lgani uchun)
+
+// O'zgaruvchi orqali kalit
+let kalit = "marka";
+console.log(mashina[kalit]); // "Toyota"
+
+// Xususiyatni o'zgartirish
+mashina.yil = 2021;
+mashina["rang matniga"] = "oq";
+
+// Yangi xususiyat qo'shish
+mashina.narx = 25000;
+mashina.avtomatikmi = true;
+
+console.log(mashina);
+```
+
+### Obyekt Metodlari
+
+```javascript
+let talaba = {
+    ism: "Ahmad",
+    familiya: "Toshmatov",
+    yosh: 22,
+    baholar: [4, 5, 4, 5, 3],
+
+    // Metodlar
+    toliqIsm: function() {
+        return `${this.ism} ${this.familiya}`;
+    },
+
+    // Short method syntax (ES6)
+    ortachaBaho() {
+        return this.baholar.reduce((a, b) => a + b) / this.baholar.length;
+    },
+
+    // Arrow function - this ishlami!
+    salomlash: () => {
+        return `Salom!`; // this ishlatmagan
+    },
+
+    tanish() {
+        let o'rtacha = this.ortachaBaho();
+        return `Men ${this.toliqIsm()}, yoshim ${this.yosh}, o'rtacha bahom ${o'rtacha.toFixed(1)}`;
+    }
+};
+
+console.log(talaba.toliqIsm());    // "Ahmad Toshmatov"
+console.log(talaba.ortachaBaho()); // 4.2
+console.log(talaba.tanish());      // "Men Ahmad Toshmatov, yoshim 22, o'rtacha bahom 4.2"
+```
+
+### Object Static Metodlari
+
+```javascript
+let malumot = {
+    ism: "Zara",
+    yosh: 25,
+    kasb: "dasturchi"
+};
+
+// Object.keys() - kalitlar massivi
+let kalitlar = Object.keys(malumot);
+console.log(kalitlar); // ["ism", "yosh", "kasb"]
+
+// Object.values() - qiymatlar massivi
+let qiymatlar = Object.values(malumot);
+console.log(qiymatlar); // ["Zara", 25, "dasturchi"]
+
+// Object.entries() - kalit-qiymat juftliklari
+let juftliklar = Object.entries(malumot);
+console.log(juftliklar); // [["ism", "Zara"], ["yosh", 25], ["kasb", "dasturchi"]]
+
+// Object.fromEntries() - juftliklardan obyekt
+let yangiObyekt = Object.fromEntries([
+    ["marka", "Honda"],
+    ["model", "Civic"],
+    ["yil", 2019]
+]);
+console.log(yangiObyekt); // {marka: "Honda", model: "Civic", yil: 2019}
+
+// Object.assign() - obyektlarni birlashtirish
+let obj1 = {a: 1, b: 2};
+let obj2 = {b: 3, c: 4};
+let birlashtirilgan = Object.assign({}, obj1, obj2);
+console.log(birlashtirilgan); // {a: 1, b: 3, c: 4}
+
+// Spread operator bilan (tavsiya etiladi)
+let spread = {...obj1, ...obj2};
+console.log(spread); // {a: 1, b: 3, c: 4}
+```
+
+### Obyekt Xususiyatlarini Tekshirish
+
+```javascript
+let kitob = {
+    nomi: "JavaScript asoslari",
+    muallif: "Ahmad Karimov",
+    yil: 2023
+};
+
+// in operator
+console.log("nomi" in kitob);      // true
+console.log("sahifalar" in kitob); // false
+
+// hasOwnProperty()
+console.log(kitob.hasOwnProperty("muallif")); // true
+console.log(kitob.hasOwnProperty("toString")); // false (prototipdan keledi)
+
+// Xususiyatni o'chirish
+delete kitob.yil;
+console.log(kitob); // {nomi: "JavaScript asoslari", muallif: "Ahmad Karimov"}
+```
+
+### Destructuring (Qismlarгa ajratish)
+
+```javascript
+// Array destructuring
+let ranglar = ["qizil", "yashil", "ko'k"];
+let [birinchi, ikkinchi, uchinchi] = ranglar;
+
+console.log(birinchi); // "qizil"
+console.log(ikkinchi); // "yashil"
+
+// Bir nechta elementni o'tkazib yuborish
+let [bosh, , oxir] = ranglar;
+console.log(bosh);  // "qizil"
+console.log(oxir);  // "ko'k"
+
+// Rest operator bilan
+let [head, ...qolganlari] = ranglar;
+console.log(head);       // "qizil"
+console.log(qolganlari); // ["yashil", "ko'k"]
+
+// Object destructuring
+let shaxs = {
+    ism: "Malika",
+    yosh: 28,
+    kasb: "o'qituvchi",
+    manzil: {
+        shahar: "Toshkent",
+        ko'cha: "Amir Temur"
+    }
+};
+
+let {ism, yosh, kasb} = shaxs;
+console.log(ism);  // "Malika"
+console.log(yosh); // 28
+
+// Rename bilan
+let {ism: ismi, kasb: vazifasi} = shaxs;
+console.log(ismi);     // "Malika"
+console.log(vazifasi); // "o'qituvchi"
+
+// Default qiymatlar bilan
+let {ism: nomi, telefon = "noma'lum"} = shaxs;
+console.log(telefon); // "noma'lum"
+
+// Nested destructuring
+let {manzil: {shahar, ko'cha}} = shaxs;
+console.log(shahar); // "Toshkent"
+
+// Function parametrlarida
+function taqqoslash({ism, yosh}) {
+    return `${ism} ${yosh} yoshda`;
+}
+
+console.log(taqqoslash(shaxs)); // "Malika 28 yoshda"
+```
+
+### JSON bilan Ishlash
+
+```javascript
+let talaba = {
+    ism: "Ali",
+    yosh: 20,
+    fanlar: ["Math", "Physics", "IT"],
+    aktiv: true
+};
+
+// Object'ni JSON stringiga aylantirish
+let jsonString = JSON.stringify(talaba);
+console.log(jsonString);
+// '{"ism":"Ali","yosh":20,"fanlar":["Math","Physics","IT"],"aktiv":true}'
+
+// JSON stringni Object'ga aylantirish
+let qaytganОbyekt = JSON.parse(jsonString);
+console.log(qaytganОbyekt); // {ism: "Ali", yosh: 20, fanlar: Array(3), aktiv: true}
+
+// lokalStorage bilan ishlash
+localStorage.setItem('talaba', JSON.stringify(talaba));
+let saqlanganTalaba = JSON.parse(localStorage.getItem('talaba'));
+console.log(saqlanganTalaba);
+```
+
+## Amaliy Misollar
+
+### 1. Talabalar Boshqaruv Tizimi
+
+```javascript
+let talabalarTizimi = {
+    talabalar: [],
+
+    talabaqoshish(ism, familiya, yosh, fakultet) {
+        let yangiTalaba = {
+            id: Date.now(),
+            ism,
+            familiya,
+            yosh,
+            fakultet,
+            baholar: [],
+            royxatgaOlingan: new Date(),
+            aktiv: true
+        };
+
+        this.talabalar.push(yangiTalaba);
+        return yangiTalaba;
+    },
+
+    talabaniTopish(id) {
+        return this.talabalar.find(talaba => talaba.id === id);
+    },
+
+    bahoQoshish(talabaId, fan, baho) {
+        let talaba = this.talabaniTopish(talabaId);
+        if (talaba) {
+            if (!talaba.baholar.find(b => b.fan === fan)) {
+                talaba.baholar.push({fan, baholar: []});
+            }
+            let fanBaholari = talaba.baholar.find(b => b.fan === fan);
+            fanBaholari.baholar.push({
+                baho,
+                sana: new Date()
+            });
+        }
+    },
+
+    talabaniOchirish(id) {
+        let indeks = this.talabalar.findIndex(t => t.id === id);
+        if (indeks !== -1) {
+            this.talabalar[indeks].aktiv = false;
+            return true;
+        }
+        return false;
+    },
+
+    statistika() {
+        let aktiv = this.talabalar.filter(t => t.aktiv).length;
+        let jamiTalabalar = this.talabalar.length;
+
+        return {
+            jamiTalabalar,
+            aktivTalabalar: aktiv,
+            ochirilganTalabalar: jamiTalabalar - aktiv
+        };
+    },
+
+    fakultetBoyichayaFiltr(fakultet) {
+        return this.talabalar.filter(t => t.fakultet === fakultet && t.aktiv);
+    }
+};
+
+// Test
+let ali = talabalarTizimi.talabaqoshish("Ali", "Karimov", 20, "IT");
+let fatima = talabalarTizimi.talabaqoshish("Fatima", "Toshmatova", 19, "IT");
+
+talabalarTizimi.bahoQoshish(ali.id, "JavaScript", 5);
+talabalarTizimi.bahoQoshish(ali.id, "JavaScript", 4);
+talabalarTizimi.bahoQoshish(fatima.id, "HTML", 5);
+
+console.log(talabalarTizimi.statistika());
+console.log(talabalarTizimi.fakultetBoyichayaFiltr("IT"));
+```
+
+### 2. E-commerce Savatcha
+
+```javascript
+let savatcha = {
+    mahsulotlar: [],
+
+    qoshish(mahsulot) {
+        let mavjudМахсулот = this.mahsulotlar.find(m => m.id === mahsulot.id);
+
+        if (mavjudМахсулот) {
+            mavjudМахсулот.miqdor += mahsulot.miqdor || 1;
+        } else {
+            this.mahsulotlar.push({...mahsulot, miqdor: mahsulot.miqdor || 1});
+        }
+
+        this.hisobniYangilash();
+    },
+
+    ochirish(mahsulotId) {
+        this.mahsulotlar = this.mahsulotlar.filter(m => m.id !== mahsulotId);
+        this.hisobniYangilash();
+    },
+
+    miqdorOzgartirish(mahsulotId, yangmiqdor) {
+        let mahsulot = this.mahsulotlar.find(m => m.id === mahsulotId);
+        if (mahsulot) {
+            mahsulot.miqdor = yangiMiqdor;
+            this.hisobniYangilash();
+        }
+    },
+
+    hisobniYangilash() {
+        this.jamiNarx = this.mahsulotlar.reduce((jami, mahsulot) => {
+            return jami + (mahsulot.narx * mahsulot.miqdor);
+        }, 0);
+
+        this.jamiМiqdor = this.mahsulotlar.reduce((jami, mahsulot) => {
+            return jami + mahsulot.miqdor;
+        }, 0);
+    },
+
+    savatniTozalash() {
+        this.mahsulotlar = [];
+        this.jamiNarx = 0;
+        this.jamiМiqdor = 0;
+    },
+
+    hisobot() {
+        return {
+            mahhulotlarSoni: this.mahsulotlar.length,
+            jamiМiqdor: this.jamiМiqdor,
+            jamiNarx: this.jamiNarx,
+            mahsulotlar: this.mahsulotlar
+        };
+    }
+};
+
+// Test
+savatcha.qoshish({id: 1, nomi: "Telefon", narx: 500, miqdor: 1});
+savatcha.qoshish({id: 2, nomi: "Naushnik", narx: 50, miqdor: 2});
+savatcha.qoshish({id: 1, nomi: "Telefon", narx: 500, miqdor: 1}); // Miqdor oshadi
+
+console.log(savatcha.hisobot());
+```
+
+### 3. Kutubxona Tizimi
+
+```javascript
+function Kutubxona() {
+    let kitoblar = [];
+    let oquvchilar = [];
+
+    return {
+        kitobQoshish(kitob) {
+            kitoblar.push({
+                ...kitob,
+                id: Date.now(),
+                sanaQohilgan: new Date(),
+                mavjud: true,
+                olinganVaqtlar: []
+            });
+        },
+
+        oquvchiRoyxatgaOlish(ism, familiya) {
+            oquvchilar.push({
+                id: Date.now(),
+                ism,
+                familiya,
+                royхatgаOligan: new Date(),
+                olinganKitoblar: []
+            });
+        },
+
+        kitobBerish(oquvchiId, kitobId) {
+            let oquvchi = oquvchilar.find(o => o.id === oquvchiId);
+            let kitob = kitoblar.find(k => k.id === kitobId);
+
+            if (oquvchi && kitob && kitob.mavjud) {
+                kitob.mavjud = false;
+                kitob.olinganVaqtlar.push({
+                    oquvchi: oquvchi.ism + " " + oquvchi.familiya,
+                    olingan: new Date()
+                });
+
+                oquvchi.olinganKitoblar.push({
+                    kitobId: kitobId,
+                    kitobNomi: kitob.nomi,
+                    olingan: new Date()
+                });
+
+                return true;
+            }
+            return false;
+        },
+
+        kitobQaytarish(kitobId) {
+            let kitob = kitoblar.find(k => k.id === kitobId);
+            if (kitob) {
+                kitob.mavjud = true;
+
+                // Оxirgi oluvchi
+                let oxirgiOluvchi = kitob.olinganVaqtlar[kitob.olinganVaqtlar.length - 1];
+                if (oxirgiOluvchi) {
+                    oxirgiOluvchi.qaytaring = new Date();
+                }
+
+                return true;
+            }
+            return false;
+        },
+
+        statistika() {
+            return {
+                jamiKitoblar: kitoblar.length,
+                mavjudKitoblar: kitoblar.filter(k => k.mavjud).length,
+                berilganKitoblar: kitoblar.filter(k => !k.mavjud).length,
+                oquvchilarSoni: oquvchilar.length
+            };
+        },
+
+        qidirish(kalit) {
+            return kitoblar.filter(kitob =>
+                kitob.nomi.toLowerCase().includes(kalit.toLowerCase()) ||
+                kitob.muallif.toLowerCase().includes(kalit.toLowerCase())
+            );
+        }
+    };
+}
+
+// Test
+let kutubxona = Kutubxona();
+
+kutubxana.kitobQoshish({
+    nomi: "JavaScript: The Definitive Guide",
+    muallif: "David Flanagan",
+    janr: "Dasturlash",
+    sahifalar: 1078
+});
+
+kutubxana.kitobQoshish({
+    nomi: "Clean Code",
+    muallif: "Robert Martin",
+    janr: "Dasturlash",
+    sahifalar: 464
+});
+
+kutubxana.oquvchiRoyxatgaOlish("Ahmad", "Karimov");
+console.log(kutubxana.statistika());
+```
+
+## Amaliyot Mashqlari
+
+### 1. Talaba sistemasi yarating
+```javascript
+// Talaba obyekti yarating:
+// - ism, familiya, yosh, fakultet
+// - baholar massivi
+// - ortacha baho hisoblash metodi
+// - yangi baho qo'shish metodi
+```
+
+### 2. Mahsulotlar katalogi
+```javascript
+// Mahsulotlar massivi yarating va:
+// - Narxi 100$ dan yuqori mahsulotlarni toping
+// - Kategoriya bo'yicha guruhlang
+// - Eng qimmat va arzon mahsulotlarni toping
+```
+
+### 3. Weather API simulator
+```javascript
+// Shahar ob-havosi obyekti yarating:
+// - Har xil shaharlar uchun harorat ma'lumotlari
+// - 7 kunlik prognoz
+// - O'rtacha haroratni hisoblash
+```
+
+## Xulosa
+
+Bu darsda biz JavaScript'ning eng muhim ma'lumot tuzilmalarini o'rgandik:
+
+- ✅ **Massivlar**: Yaratish, metod'lar, nested arrays
+- ✅ **Obyektlar**: Properties, methods, this kalit so'zi
+- ✅ **Destructuring**: Array va object destructuring
+- ✅ **JSON**: Ma'lumot almashinuvi
+- ✅ **Amaliy misollar**: Real-world dasturlar
+
+Keyingi darsda **DOM manipulation** o'rganamiz - web sahifa bilan ishlash!
+
+## Qo'shimcha Resurslar
+
+- [MDN Arrays Guide](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)
+- [MDN Objects Guide](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_Objects)
+
+---
+
+⚡ **Maslahat**: Har bir metodNI amaliyotda sinab ko'ring va o'zingizning misollaringizni yarating!

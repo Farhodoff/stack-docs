@@ -1,0 +1,617 @@
+---
+title: "JavaScript Funksiyalar va Scope"
+description: "JavaScript'da funksiyalar yaratish, chaqirish va scope kontsepsiyasini tushunish. Parametrlar, qayttirish qiymatlari va funksiya turlari."
+order: 2
+category: javascript
+tags: ["javascript", "functions", "scope", "parameters", "arrow-functions"]
+difficulty: beginner
+readTime: 20
+---
+
+# JavaScript Funksiyalar va Scope
+
+Funksiyalar JavaScript'ning eng muhim qismidir. Ular kod blоklarini qayta-qayta ishlatishga imkon beradi va dasturni tartibli qiladi.
+
+## Funksiya nima?
+
+Funksiya - bu ma'lum vazifani bajaradigan kod bloki. Uni bir marta yozib, ko'p marta chaqirish mumkin.
+
+```javascript
+// Oddat funksiya
+function salomlash() {
+    console.log("Salom, dunyo!");
+}
+
+// Funksiyani chaqirish
+salomlash(); // "Salom, dunyo!"
+```
+
+## Funksiya Yaratish Usullari
+
+### 1. Function Declaration (Funksiya e'lon qilish)
+
+```javascript
+function hisobla(a, b) {
+    return a + b;
+}
+
+let natija = hisobla(5, 3);
+console.log(natija); // 8
+```
+
+### 2. Function Expression (Funksiya ifoda)
+
+```javascript
+const kopaytir = function(x, y) {
+    return x * y;
+};
+
+console.log(kopaytir(4, 6)); // 24
+```
+
+### 3. Arrow Function (O'q funksiya)
+
+```javascript
+// Oddiy arrow function
+const ayir = (a, b) => {
+    return a - b;
+};
+
+// Qisqartirilgan (bitta ifoda uchun)
+const kvadrat = x => x * x;
+const salom = () => "Salom!";
+
+console.log(ayir(10, 3));  // 7
+console.log(kvadrat(4));   // 16
+console.log(salom());      // "Salom!"
+```
+
+## Parametrlar va Argumentlar
+
+### Oddiy Parametrlar
+
+```javascript
+function tanish(ism, familiya, yosh) {
+    console.log(`Mening ismim ${ism} ${familiya}, yoshim ${yosh}`);
+}
+
+tanish("Ali", "Karimov", 25);
+// "Mening ismim Ali Karimov, yoshim 25"
+```
+
+### Standart Qiymatlar (Default Parameters)
+
+```javascript
+function salomlash(ism = "Mehmon", til = "O'zbek") {
+    return `Salom, ${ism}! (${til} tilida)`;
+}
+
+console.log(salomlash());              // "Salom, Mehmon! (O'zbek tilida)"
+console.log(salomlash("Ahmad"));       // "Salom, Ahmad! (O'zbek tilida)"
+console.log(salomlash("John", "English")); // "Salom, John! (English tilida)"
+```
+
+### Rest Parametrlari
+
+```javascript
+function hammaniQosh(...raqamlar) {
+    let yigindi = 0;
+    for (let raqam of raqamlar) {
+        yigindi += raqam;
+    }
+    return yigindi;
+}
+
+console.log(hammaniQosh(1, 2, 3));        // 6
+console.log(hammaniQosh(1, 2, 3, 4, 5));  // 15
+console.log(hammaniQosh());               // 0
+```
+
+## Return (Qayttirish)
+
+```javascript
+// Qiymat qayttirish
+function daraja(asos, ko'rsatkich) {
+    return Math.pow(asos, ko'rsatkich);
+}
+
+let natija = daraja(2, 3);
+console.log(natija); // 8
+
+// Bir nechta qiymat qayttirish (obyekt orqali)
+function doiraHisob(radius) {
+    return {
+        maydoni: Math.PI * radius * radius,
+        aylana: 2 * Math.PI * radius
+    };
+}
+
+let doira = doiraHisob(5);
+console.log(doira.maydoni);  // 78.54
+console.log(doira.aylana);   // 31.42
+
+// Shartli qayttirish
+function absolyutQiymat(son) {
+    if (son < 0) {
+        return -son;
+    }
+    return son;
+}
+
+console.log(absolyutQiymat(-5));  // 5
+console.log(absolyutQiymat(3));   // 3
+```
+
+## Scope (Ko'rinish Doirasi)
+
+### Global Scope
+
+```javascript
+// Global o'zgaruvchi - hamma joydan ko'rinadi
+let globalOzgaruvchi = "Men global-man!";
+
+function konsolgaYoz() {
+    console.log(globalOzgaruvchi); // Global'ga kirish mumkin
+}
+
+konsolgaYoz(); // "Men global-man!"
+console.log(globalOzgaruvchi); // "Men global-man!"
+```
+
+### Function Scope
+
+```javascript
+function funksiyaVidki() {
+    let ichkiOzgaruvchi = "Men faqat funksiya ichida ko'rinaman";
+
+    console.log(ichkiOzgaruvchi); // Ishlaydi
+}
+
+funksiyaVidki(); // "Men faqat funksiya ichida ko'rinaman"
+
+// console.log(ichkiOzgaruvchi); // ReferenceError!
+```
+
+### Block Scope
+
+```javascript
+function scopeMisol() {
+    let message = "";
+
+    if (true) {
+        let blokOzgaruvchi = "Men faqat if blokida mavjudman";
+        message = blokOzgaruvchi;
+        console.log(blokOzgaruvchi); // Ishlaydi
+    }
+
+    // console.log(blokOzgaruvchi); // ReferenceError!
+    console.log(message); // "Men faqat if blokida mavjudman"
+}
+
+scopeMisol();
+```
+
+### Lexical Scope
+
+```javascript
+function tashqi() {
+    let tashqiOzgaruvchi = "Tashqi funksiya";
+
+    function ichki() {
+        console.log(tashqiOzgaruvchi); // Tashqi scope'ga kirish
+    }
+
+    ichki();
+}
+
+tashqi(); // "Tashqi funksiya"
+```
+
+## IIFE (Immediately Invoked Function Expression)
+
+```javascript
+// Darhol bajаriladigаn funksiya
+(function() {
+    let maxfiyOzgaruvchi = "Men tashqariga chiqmayman";
+    console.log("IIFE ishladi!");
+})();
+
+// Arrow function bilan IIFE
+(() => {
+    console.log("Arrow IIFE ham ishladi!");
+})();
+```
+
+## Callback Funksiyalar
+
+```javascript
+function amal(a, b, amaliCallback) {
+    return amaliCallback(a, b);
+}
+
+function qosh(x, y) {
+    return x + y;
+}
+
+function kopaytir(x, y) {
+    return x * y;
+}
+
+console.log(amal(5, 3, qosh));     // 8
+console.log(amal(5, 3, kopaytir)); // 15
+
+// Anonymous callback
+console.log(amal(10, 2, function(a, b) {
+    return a / b;
+})); // 5
+```
+
+## Higher-Order Functions
+
+```javascript
+// Funksiya qayttiradigаn funksiya
+function yaratuvchi(amal) {
+    return function(a, b) {
+        console.log(`Amal bajarilmoqda: ${amal}`);
+        switch(amal) {
+            case 'qosh':
+                return a + b;
+            case 'ayir':
+                return a - b;
+            case 'kopaytir':
+                return a * b;
+            default:
+                return 0;
+        }
+    };
+}
+
+const qoshuvchi = yaratuvchi('qosh');
+const ko'paytiruvchi = yaratuvchi('kopaytir');
+
+console.log(qoshuvchi(5, 3));      // 8
+console.log(ko'paytiruvchi(4, 6)); // 24
+```
+
+## Recursion (O'z-o'zini chaqirish)
+
+```javascript
+// Faktorial hisоblash
+function faktorial(n) {
+    if (n <= 1) {
+        return 1; // Base case
+    }
+    return n * faktorial(n - 1); // Recursive case
+}
+
+console.log(faktorial(5)); // 120 (5*4*3*2*1)
+
+// Fibonacci ketma-ketligi
+function fibonacci(n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log(fibonacci(6)); // 8
+```
+
+## Closure (Yopuv)
+
+```javascript
+function tashqiFunksiya(x) {
+    // Tashqi o'zgaruvchi
+    let tashqiQiymat = x;
+
+    function ichkiFunksiya(y) {
+        return tashqiQiymat + y; // Tashqi o'zgaruvchiga kirish
+    }
+
+    return ichkiFunksiya;
+}
+
+const qosh10 = tashqiFunksiya(10);
+console.log(qosh10(5)); // 15
+console.log(qosh10(3)); // 13
+
+// Praktik misol: Hisoblagich
+function hisoblagichYaratuvchi() {
+    let hisob = 0;
+
+    return function() {
+        hisob++;
+        return hisob;
+    };
+}
+
+const hisoblagich1 = hisoblagichYaratuvchi();
+const hisoblagich2 = hisoblagichYaratuvchi();
+
+console.log(hisoblagich1()); // 1
+console.log(hisoblagich1()); // 2
+console.log(hisoblagich2()); // 1 (alohida hisoblagich)
+```
+
+## Amaliy Misollar
+
+### 1. Talaba Baho Tizimi
+
+```javascript
+function bahoTizimi(baholar) {
+    // Eng yuqori baho
+    function engYuqori(arr) {
+        return Math.max(...arr);
+    }
+
+    // Eng past baho
+    function engPast(arr) {
+        return Math.min(...arr);
+    }
+
+    // O'rtacha baho
+    function ortacha(arr) {
+        return arr.reduce((jami, baho) => jami + baho, 0) / arr.length;
+    }
+
+    // Baho harfi
+    function bahoHarfi(orrtacha) {
+        if (orrtacha >= 90) return 'A';
+        if (orrtacha >= 80) return 'B';
+        if (orrtacha >= 70) return 'C';
+        if (orrtacha >= 60) return 'D';
+        return 'F';
+    }
+
+    const orrtachaBaho = ortacha(baholar);
+
+    return {
+        baholar: baholar,
+        engYuqori: engYuqori(baholar),
+        engPast: engPast(baholar),
+        ortacha: orrtachaBaho.toFixed(2),
+        baho: bahoHarfi(orrtachaBaho),
+        otiganligi: orrtachaBaho >= 60 ? "O'tgan" : "O'tmagan"
+    };
+}
+
+// Test
+const talabaBaholari = [85, 92, 78, 96, 87];
+const natija = bahoTizimi(talabaBaholari);
+
+console.log(natija);
+// {
+//   baholar: [85, 92, 78, 96, 87],
+//   engYuqori: 96,
+//   engPast: 78,
+//   ortacha: '87.60',
+//   baho: 'B',
+//   otiganligi: "O'tgan"
+// }
+```
+
+### 2. Bank Account Klassik Misol
+
+```javascript
+function bankAccount(boshlangichSaldo = 0) {
+    let saldo = boshlangichSaldo;
+
+    return {
+        depozit: function(miqdor) {
+            if (miqdor > 0) {
+                saldo += miqdor;
+                return `Depozit: ${miqdor}. Yangi saldo: ${saldo}`;
+            }
+            return "Noto'g'ri miqdor!";
+        },
+
+        yechib_olish: function(miqdor) {
+            if (miqdor > 0 && miqdor <= saldo) {
+                saldo -= miqdor;
+                return `Yechib olindi: ${miqdor}. Qolgan saldo: ${saldo}`;
+            }
+            return "Yetarli mablag' yo'q yoki noto'g'ri miqdor!";
+        },
+
+        saldoKorish: function() {
+            return `Sizning saldingiz: ${saldo}`;
+        }
+    };
+}
+
+// Test
+const menngHisobim = bankAccount(1000);
+
+console.log(mengingHisobim.saldoKorish());        // "Sizning saldingiz: 1000"
+console.log(mengingHisobim.depozit(500));         // "Depozit: 500. Yangi saldo: 1500"
+console.log(mengingHisobim.yechib_olish(200));    // "Yechib olindi: 200. Qolgan saldo: 1300"
+console.log(mengingHisobim.yechib_olish(2000));   // "Yetarli mablag' yo'q..."
+```
+
+### 3. Sanal Timer
+
+```javascript
+function timerYaratuvchi() {
+    let vaqt = 0;
+    let interval;
+
+    return {
+        boshlash: function() {
+            if (!interval) {
+                interval = setInterval(() => {
+                    vaqt++;
+                    console.log(`Timer: ${vaqt} sekund`);
+                }, 1000);
+                console.log("Timer boshlandi!");
+            } else {
+                console.log("Timer allaqachon ishlayapti!");
+            }
+        },
+
+        toxtash: function() {
+            if (interval) {
+                clearInterval(interval);
+                interval = null;
+                console.log(`Timer to'xtatildi. Jami: ${vaqt} sekund`);
+            } else {
+                console.log("Timer ishlamayapti!");
+            }
+        },
+
+        reset: function() {
+            this.toxtash();
+            vaqt = 0;
+            console.log("Timer resetlandi!");
+        },
+
+        vaqtniKorish: function() {
+            return `Hozirgi vaqt: ${vaqt} sekund`;
+        }
+    };
+}
+
+// Test
+const timer = timerYaratuvchi();
+timer.boshlash();
+// Timer boshlash va 5 sekunddan keyin to'xtatish mumkin
+```
+
+## Xatolardan Qochish
+
+```javascript
+// ❌ Noto'g'ri - hoisting
+console.log(funksiya1()); // TypeError: funksiya1 is not a function
+
+var funksiya1 = function() {
+    return "Bu function expression";
+};
+
+// ✅ To'g'ri - function declaration
+console.log(funksiya2()); // "Bu function declaration"
+
+function funksiya2() {
+    return "Bu function declaration";
+}
+
+// ❌ Noto'g'ri - scope masalasi
+function scopeMuammosi() {
+    if (true) {
+        var x = 1; // function scope
+        let y = 2; // block scope
+    }
+    console.log(x); // 1 (ishlaydi)
+    console.log(y); // ReferenceError!
+}
+
+// ✅ To'g'ri - let/const ishlatish
+function to'g'riScope() {
+    let x, y;
+    if (true) {
+        x = 1;
+        y = 2;
+    }
+    console.log(x, y); // 1 2
+}
+```
+
+## Best Practices (Eng Yaxshi Amaliyotlar)
+
+```javascript
+// 1. Funksiya nomlarini aniq va tushunarli qiling
+// ❌ Noto'g'ri
+function f(x, y) { return x + y; }
+
+// ✅ To'g'ri
+function ikiSonniQoshish(birinchi, ikkinchi) {
+    return birinchi + ikkinchiSON;
+}
+
+// 2. Bir funksiya - bir vazifa
+function talabaMalumotlari(ism, baholar) {
+    // O'rtacha baho hisоblash
+    const ortacha = baholar.reduce((a, b) => a + b) / baholar.length;
+
+    // Malumot qayttirish
+    return {
+        ism,
+        baholar,
+        ortacha: ortacha.toFixed(2)
+    };
+}
+
+// 3. Arrow function qachon ishlatish
+const oddiyAmallar = {
+    qosh: (a, b) => a + b,
+    kopaytir: (a, b) => a * b,
+    kvadrat: x => x * x
+};
+
+// 4. Error handling
+function xavfsizBolish(a, b) {
+    if (b === 0) {
+        throw new Error("Nolga bo'lish mumkin emas!");
+    }
+    return a / b;
+}
+
+try {
+    console.log(xavfsizBolish(10, 0));
+} catch (error) {
+    console.error("Xatolik:", error.message);
+}
+```
+
+## Amaliyot Mashqlari
+
+### 1. Kalkulyator yarating
+
+```javascript
+function kalkulyator() {
+    // 4 ta asosiy amal (qosh, ayir, kopaytir, bol) uchun funksiyalar yarating
+    // Har bir funksiya 2ta parametr olishi kerak
+    // Natijani return qilishi kerak
+}
+```
+
+### 2. Palindrom tekshiruvchi
+
+```javascript
+function palindromMi(soz) {
+    // So'z palindrom ekanini tekshiring
+    // "tenet", "level" - palindrom
+    // true yoki false qaytarishi kerak
+}
+```
+
+### 3. O'yin: Son topish
+
+```javascript
+function sonTopishOyini() {
+    // 1-100 orasida tasodifiy son yarating
+    // Return: obyekt
+    // - tahmin: function(son) - tahminni tekshiradi
+    // - urinishlarSoni: nechta urinish qilingani
+    // - oynTugadimi: true/false
+}
+```
+
+## Xulosa
+
+Bu darsda biz JavaScript funksiyalarining barcha atrафларini tushundik:
+
+- ✅ **Funksiya yaratish**: Declaration, Expression, Arrow
+- ✅ **Parametrlar**: Default, Rest parametrlar
+- ✅ **Scope**: Global, Function, Block, Lexical
+- ✅ **Advanced**: Closure, Callback, Higher-order, Recursion
+- ✅ **Amaliy**: Real-world misollar
+
+Keyingi darsda **massivlar va obyektlar** bilan chuqurroq ishlaymiz!
+
+## Qo'shimcha Resurslar
+
+- [MDN Functions Guide](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions)
+- [JavaScript.info Functions](https://javascript.info/function-basics)
+
+---
+
+🎯 **Vazifa**: Quyidаgi miqsollarni amalga oshiring va natijalarni console'da ko'rib chiqing!

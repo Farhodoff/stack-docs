@@ -1,0 +1,880 @@
+---
+title: "JavaScript DOM Manipulation"
+description: "JavaScript orqali HTML va CSS bilan ishlash: elementlarni tanlash, o'zgartirish va dinamik web sahifalar yaratish. DOM asoslari."
+order: 4
+category: javascript
+tags: ["javascript", "dom", "html", "css", "web-development", "dynamic"]
+difficulty: intermediate
+readTime: 30
+---
+
+# JavaScript DOM Manipulation
+
+DOM (Document Object Model) - bu HTML hujjatning JavaScript orqali o'zgartirib bo'ladigan daraxt tuzilmasi. Bu dars orqali web sahifalarni dinamik qilishni o'rganasiz.
+
+## DOM nima?
+
+DOM - bu brauzer tomonidan yaratilgan HTML sahifaning obyekt ko'rinishi. Har bir HTML element JavaScript obyektiga aylanadi.
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DOM Misol</title>
+</head>
+<body>
+    <h1 id="sarlavha">Salom, DOM!</h1>
+    <p class="matn">Bu birinchi paragraf.</p>
+    <button onclick="o'zgartir()">O'zgartir</button>
+</body>
+</html>
+```
+
+```javascript
+// Bu HTML DOM daraxtini tasvirlaydi:
+// document
+//   └── html
+//       ├── head
+//       │   └── title
+//       └── body
+//           ├── h1 (id="sarlavha")
+//           ├── p (class="matn")
+//           └── button
+```
+
+## Element Tanlash (Selecting Elements)
+
+### Asosiy Selektorlar
+
+```javascript
+// ID bo'yicha tanlash
+let sarlavha = document.getElementById("sarlavha");
+console.log(sarlavha); // <h1 id="sarlavha">Salom, DOM!</h1>
+
+// Class bo'yicha tanlash (birinchi topilgani)
+let matn = document.getElementsByClassName("matn")[0];
+console.log(matn); // <p class="matn">Bu birinchi paragraf.</p>
+
+// Tag bo'yicha tanlash
+let tugmalar = document.getElementsByTagName("button");
+console.log(tugmalar); // HTMLCollection [button]
+
+// CSS selektorlar bilan
+let cssSelector = document.querySelector("#sarlavha"); // ID
+let classSelektor = document.querySelector(".matn");   // Class
+let tagSelektor = document.querySelector("button");    // Tag
+
+// Barcha mos elementlar
+let barcha = document.querySelectorAll("p"); // Barcha p elementlari
+```
+
+### Zamonaviy Selektorlar (querySelector)
+
+```html
+<div class="container">
+    <h2 class="title primary">Asоsiy sarlavha</h2>
+    <p class="description">Tavsif matni</p>
+    <ul class="list">
+        <li data-type="item">Birinchi element</li>
+        <li data-type="item">Ikkinchi element</li>
+        <li data-type="special">Maxsus element</li>
+    </ul>
+</div>
+```
+
+```javascript
+// CSS kombinatorlari
+let container = document.querySelector(".container");
+let titleInside = document.querySelector(".container .title");
+let firstItem = document.querySelector("li:first-child");
+let specialItem = document.querySelector("[data-type='special']");
+
+// Attribute selektorlar
+let dataItems = document.querySelectorAll("[data-type='item']");
+let primaryTitle = document.querySelector(".title.primary");
+
+// Pseudo-classlar
+let lastParagraph = document.querySelector("p:last-of-type");
+let evenItems = document.querySelectorAll("li:nth-child(even)");
+```
+
+## Element Tarkibi va Xususiyatlari
+
+### Text Content
+
+```javascript
+let element = document.querySelector("h1");
+
+// Text content o'qish va o'zgartirish
+console.log(element.textContent);  // "Salom, DOM!"
+console.log(element.innerText);    // "Salom, DOM!" (ko'rinаdigan text)
+
+element.textContent = "Yangi sarlavha";
+// yoki
+element.innerText = "Yana yangi sarlavha";
+
+// HTML bilan ishlash
+element.innerHTML = "<strong>Qalin</strong> sarlavha";
+console.log(element.innerHTML); // "<strong>Qalin</strong> sarlavha"
+```
+
+### Attributes
+
+```javascript
+let img = document.querySelector("img");
+
+// Attribute olish va o'rnatish
+console.log(img.getAttribute("src"));
+img.setAttribute("src", "yangi-rasm.jpg");
+img.setAttribute("alt", "Yangi rasm tavsifi");
+
+// Attribute mavjudligini tekshirish
+if (img.hasAttribute("data-lazy")) {
+    console.log("Lazy loading bor");
+}
+
+// Attribute o'chirish
+img.removeAttribute("data-lazy");
+
+// Standart attributlar
+img.src = "direct-access.jpg";
+img.alt = "To'g'ridan-to'g'ri kirish";
+img.className = "responsive-image";
+img.id = "main-image";
+```
+
+### CSS Styles
+
+```javascript
+let element = document.querySelector(".box");
+
+// Inline style o'rnatish
+element.style.color = "red";
+element.style.backgroundColor = "yellow";
+element.style.fontSize = "20px";
+element.style.margin = "10px";
+
+// CSS Property bilan
+element.style.setProperty("border", "2px solid blue");
+
+// Style o'qish (computed style)
+let computedStyle = window.getComputedStyle(element);
+console.log(computedStyle.color);      // "rgb(255, 0, 0)"
+console.log(computedStyle.fontSize);   // "20px"
+
+// CSS Custom Properties (CSS Variables)
+element.style.setProperty("--main-color", "#ff6b6b");
+document.documentElement.style.setProperty("--global-color", "#4ecdc4");
+```
+
+### Classes
+
+```javascript
+let element = document.querySelector(".item");
+
+// Class qo'shish va o'chirish
+element.classList.add("active");
+element.classList.add("featured", "highlighted");
+
+element.classList.remove("old-class");
+element.classList.toggle("visible"); // Bor bo'lsa o'chiradi, yo'q bo'lsa qo'shadi
+
+// Class mavjudligini tekshirish
+if (element.classList.contains("active")) {
+    console.log("Element faol");
+}
+
+// Class almashtrish
+element.classList.replace("old", "new");
+
+// Barcha classlar
+console.log(element.className); // "item active featured highlighted visible new"
+console.log(element.classList); // DOMTokenList
+```
+
+## Element Yaratish va O'zgartirish
+
+### Yangi Elementlar Yaratish
+
+```javascript
+// Element yaratish
+let yangiDiv = document.createElement("div");
+let yangiP = document.createElement("p");
+let yangiImg = document.createElement("img");
+
+// Text node yaratish
+let textNode = document.createTextNode("Bu text node");
+
+// Element sozlash
+yangiDiv.className = "container";
+yangiDiv.id = "main-container";
+yangiDiv.setAttribute("data-role", "container");
+
+yangiP.textContent = "Bu yangi paragraf";
+yangiP.style.color = "blue";
+
+yangiImg.src = "image.jpg";
+yangiImg.alt = "Tasvir";
+yangiImg.classList.add("responsive");
+
+// Element ichiga content qo'shish
+yangiDiv.innerHTML = `
+    <h2>Dinamik yaratilgan</h2>
+    <p>Bu content JavaScript orqali yaratildi</p>
+`;
+```
+
+### DOM ga Qo'shish
+
+```javascript
+// Parent element
+let container = document.querySelector("#container");
+
+// Oxiriga qo'shish
+container.appendChild(yangiDiv);
+
+// Boshiga qo'shish
+container.prepend(yangiP);
+
+// Ma'lum joyga qo'shish
+let referenceElement = document.querySelector(".reference");
+container.insertBefore(yangiImg, referenceElement);
+
+// Modern metodlar
+container.append(yangiDiv, yangiP, "Text content");
+container.prepend("Boshiga text");
+
+// insertAdjacentElement
+let targetElement = document.querySelector(".target");
+targetElement.insertAdjacentElement("beforebegin", yangiDiv);  // Oldiga
+targetElement.insertAdjacentElement("afterbegin", yangiP);     // Ichiga boshiga
+targetElement.insertAdjacentElement("beforeend", yangiImg);    // Ichiga oxiriga
+targetElement.insertAdjacentElement("afterend", newSpan);      // Orqasiga
+
+// insertAdjacentHTML (xavfsiz emas, XSS xavfi)
+targetElement.insertAdjacentHTML("beforeend", "<strong>HTML content</strong>");
+```
+
+### Element O'chirish
+
+```javascript
+// Element o'chirish (modern)
+let element = document.querySelector(".remove-me");
+element.remove();
+
+// Parent orqali o'chirish (eski usul)
+let parent = element.parentNode;
+parent.removeChild(element);
+
+// Barcha childlarni o'chirish
+let container = document.querySelector(".container");
+container.innerHTML = ""; // Barini o'chiradi
+
+// yoki
+while (container.firstChild) {
+    container.removeChild(container.firstChild);
+}
+```
+
+## DOM Navigation
+
+### Parent, Child, Sibling
+
+```html
+<div class="grandparent">
+    <div class="parent">
+        <span class="child">1-child</span>
+        <span class="child">2-child</span>
+        <span class="child">3-child</span>
+    </div>
+</div>
+```
+
+```javascript
+let child = document.querySelector(".child");
+
+// Parent elementlar
+console.log(child.parentNode);      // Bevosita parent
+console.log(child.parentElement);   // Parent element
+console.log(child.closest(".grandparent")); // Eng yaqin parent selector
+
+// Child elementlar
+let parent = document.querySelector(".parent");
+console.log(parent.children);       // HTMLCollection of children
+console.log(parent.firstElementChild); // Birinchi child
+console.log(parent.lastElementChild);  // Oxirgi child
+console.log(parent.childElementCount); // Childlar soni
+
+// Including text nodes
+console.log(parent.childNodes);      // NodeList (text nodelar ham)
+console.log(parent.firstChild);      // Birinchi node (text bo'lishi mumkin)
+console.log(parent.lastChild);       // Oxirgi node
+
+// Sibling elementlar
+let secondChild = document.querySelector(".child:nth-child(2)");
+console.log(secondChild.previousElementSibling); // Oldingisi
+console.log(secondChild.nextElementSibling);     // Keyingisi
+
+// Including text nodes
+console.log(secondChild.previousSibling); // Oldingi node
+console.log(secondChild.nextSibling);     // Keyingi node
+```
+
+## Amaliy Misollar
+
+### 1. Todo List Dasturi
+
+```html
+<div class="todo-app">
+    <h2>Todo List</h2>
+    <div class="input-section">
+        <input type="text" id="todo-input" placeholder="Yangi vazifa...">
+        <button id="add-btn">Qo'shish</button>
+    </div>
+    <ul id="todo-list"></ul>
+    <div class="stats">
+        Jami: <span id="total">0</span> |
+        Tugagan: <span id="completed">0</span> |
+        Qolgan: <span id="remaining">0</span>
+    </div>
+</div>
+```
+
+```javascript
+class TodoApp {
+    constructor() {
+        this.todos = [];
+        this.todoInput = document.getElementById("todo-input");
+        this.addBtn = document.getElementById("add-btn");
+        this.todoList = document.getElementById("todo-list");
+        this.totalSpan = document.getElementById("total");
+        this.completedSpan = document.getElementById("completed");
+        this.remainingSpan = document.getElementById("remaining");
+
+        this.init();
+    }
+
+    init() {
+        // Event listenerlar
+        this.addBtn.addEventListener("click", () => this.addTodo());
+        this.todoInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") this.addTodo();
+        });
+    }
+
+    addTodo() {
+        let text = this.todoInput.value.trim();
+        if (!text) return;
+
+        let todo = {
+            id: Date.now(),
+            text: text,
+            completed: false
+        };
+
+        this.todos.push(todo);
+        this.renderTodo(todo);
+        this.updateStats();
+
+        this.todoInput.value = "";
+        this.todoInput.focus();
+    }
+
+    renderTodo(todo) {
+        let li = document.createElement("li");
+        li.className = "todo-item";
+        li.dataset.id = todo.id;
+
+        li.innerHTML = `
+            <input type="checkbox" class="toggle" ${todo.completed ? "checked" : ""}>
+            <span class="text ${todo.completed ? "completed" : ""}">${todo.text}</span>
+            <button class="delete-btn">×</button>
+        `;
+
+        let checkbox = li.querySelector(".toggle");
+        let deleteBtn = li.querySelector(".delete-btn");
+        let textSpan = li.querySelector(".text");
+
+        checkbox.addEventListener("change", () => {
+            this.toggleTodo(todo.id);
+            textSpan.classList.toggle("completed", checkbox.checked);
+        });
+
+        deleteBtn.addEventListener("click", () => {
+            this.deleteTodo(todo.id);
+            li.remove();
+        });
+
+        this.todoList.appendChild(li);
+    }
+
+    toggleTodo(id) {
+        let todo = this.todos.find(t => t.id === id);
+        if (todo) {
+            todo.completed = !todo.completed;
+            this.updateStats();
+        }
+    }
+
+    deleteTodo(id) {
+        this.todos = this.todos.filter(t => t.id !== id);
+        this.updateStats();
+    }
+
+    updateStats() {
+        let total = this.todos.length;
+        let completed = this.todos.filter(t => t.completed).length;
+        let remaining = total - completed;
+
+        this.totalSpan.textContent = total;
+        this.completedSpan.textContent = completed;
+        this.remainingSpan.textContent = remaining;
+    }
+}
+
+// Dasturni ishga tushirish
+document.addEventListener("DOMContentLoaded", () => {
+    new TodoApp();
+});
+```
+
+### 2. Dinamik Form Validator
+
+```html
+<form id="user-form" class="form">
+    <div class="field">
+        <label for="name">Ism:</label>
+        <input type="text" id="name" name="name" required>
+        <span class="error" id="name-error"></span>
+    </div>
+
+    <div class="field">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <span class="error" id="email-error"></span>
+    </div>
+
+    <div class="field">
+        <label for="phone">Telefon:</label>
+        <input type="tel" id="phone" name="phone">
+        <span class="error" id="phone-error"></span>
+    </div>
+
+    <div class="field">
+        <label for="password">Parol:</label>
+        <input type="password" id="password" name="password" required>
+        <span class="error" id="password-error"></span>
+        <div class="password-strength" id="strength"></div>
+    </div>
+
+    <button type="submit">Jo'natish</button>
+</form>
+```
+
+```javascript
+class FormValidator {
+    constructor(formSelector) {
+        this.form = document.querySelector(formSelector);
+        this.rules = {
+            name: {
+                required: true,
+                minLength: 2,
+                pattern: /^[a-zA-Z\s]+$/
+            },
+            email: {
+                required: true,
+                pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+            },
+            phone: {
+                pattern: /^[\d\+\-\(\)\s]+$/,
+                minLength: 10
+            },
+            password: {
+                required: true,
+                minLength: 8,
+                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/
+            }
+        };
+
+        this.init();
+    }
+
+    init() {
+        // Real-time validation
+        Object.keys(this.rules).forEach(fieldName => {
+            let field = this.form.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.addEventListener("input", () => this.validateField(fieldName));
+                field.addEventListener("blur", () => this.validateField(fieldName));
+            }
+        });
+
+        // Form submit validation
+        this.form.addEventListener("submit", (e) => this.handleSubmit(e));
+    }
+
+    validateField(fieldName) {
+        let field = this.form.querySelector(`[name="${fieldName}"]`);
+        let errorElement = this.form.querySelector(`#${fieldName}-error`);
+        let rule = this.rules[fieldName];
+        let value = field.value.trim();
+
+        let errors = [];
+
+        // Required validation
+        if (rule.required && !value) {
+            errors.push(`${fieldName} majburiy`);
+        }
+
+        // Pattern validation
+        if (value && rule.pattern && !rule.pattern.test(value)) {
+            errors.push(`${fieldName} format noto'g'ri`);
+        }
+
+        // Length validation
+        if (value && rule.minLength && value.length < rule.minLength) {
+            errors.push(`${fieldName} kamida ${rule.minLength} ta belgi bo'lishi kerak`);
+        }
+
+        // Show/hide errors
+        if (errors.length > 0) {
+            errorElement.textContent = errors[0];
+            field.classList.add("invalid");
+            field.classList.remove("valid");
+        } else {
+            errorElement.textContent = "";
+            field.classList.remove("invalid");
+            field.classList.add("valid");
+        }
+
+        // Password strength
+        if (fieldName === "password") {
+            this.updatePasswordStrength(value);
+        }
+
+        return errors.length === 0;
+    }
+
+    updatePasswordStrength(password) {
+        let strengthElement = document.getElementById("strength");
+        let strength = 0;
+        let feedback = [];
+
+        if (password.length >= 8) strength++;
+        else feedback.push("8+ belgi");
+
+        if (/[a-z]/.test(password)) strength++;
+        else feedback.push("kichik harf");
+
+        if (/[A-Z]/.test(password)) strength++;
+        else feedback.push("katta harf");
+
+        if (/\d/.test(password)) strength++;
+        else feedback.push("raqam");
+
+        if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
+        else feedback.push("maxsus belgi");
+
+        let levels = ["", "Juda zaif", "Zaif", "O'rtacha", "Kuchli", "Juda kuchli"];
+        let colors = ["", "#ff4757", "#ff6348", "#ffa502", "#2ed573", "#00d2d3"];
+
+        strengthElement.textContent = levels[strength];
+        strengthElement.style.color = colors[strength];
+
+        if (feedback.length > 0) {
+            strengthElement.textContent += ` (Kerak: ${feedback.join(", ")})`;
+        }
+    }
+
+    handleSubmit(e) {
+        e.preventDefault();
+
+        let isValid = true;
+
+        // Validate all fields
+        Object.keys(this.rules).forEach(fieldName => {
+            if (!this.validateField(fieldName)) {
+                isValid = false;
+            }
+        });
+
+        if (isValid) {
+            this.submitForm();
+        } else {
+            this.showFormError("Iltimos, barcha xatolarni tuzating");
+        }
+    }
+
+    showFormError(message) {
+        let existingError = this.form.querySelector(".form-error");
+        if (existingError) {
+            existingError.remove();
+        }
+
+        let errorDiv = document.createElement("div");
+        errorDiv.className = "form-error";
+        errorDiv.textContent = message;
+        errorDiv.style.color = "red";
+        errorDiv.style.marginTop = "10px";
+
+        this.form.appendChild(errorDiv);
+    }
+
+    submitForm() {
+        // Form ma'lumotlarini to'plash
+        let formData = new FormData(this.form);
+        let data = Object.fromEntries(formData);
+
+        console.log("Form ma'lumotlari:", data);
+
+        // Success message
+        let successDiv = document.createElement("div");
+        successDiv.className = "success-message";
+        successDiv.textContent = "Ma'lumotlar muvaffaqiyatli jo'natildi!";
+        successDiv.style.color = "green";
+        successDiv.style.marginTop = "10px";
+
+        this.form.appendChild(successDiv);
+
+        // Form ni tozalash
+        setTimeout(() => {
+            this.form.reset();
+            successDiv.remove();
+            this.form.querySelectorAll(".valid, .invalid").forEach(el => {
+                el.classList.remove("valid", "invalid");
+            });
+            this.form.querySelectorAll(".error").forEach(el => {
+                el.textContent = "";
+            });
+        }, 3000);
+    }
+}
+
+// Validatorni ishga tushirish
+document.addEventListener("DOMContentLoaded", () => {
+    new FormValidator("#user-form");
+});
+```
+
+### 3. Image Gallery
+
+```html
+<div class="gallery">
+    <h2>Rasm Galereya</h2>
+    <div class="filters">
+        <button class="filter-btn active" data-filter="all">Barchasi</button>
+        <button class="filter-btn" data-filter="nature">Tabiat</button>
+        <button class="filter-btn" data-filter="city">Shahar</button>
+        <button class="filter-btn" data-filter="people">Odamlar</button>
+    </div>
+    <div class="gallery-grid" id="gallery-grid"></div>
+
+    <div class="modal" id="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modal-img">
+        <div class="modal-info">
+            <h3 id="modal-title"></h3>
+            <p id="modal-description"></p>
+        </div>
+    </div>
+</div>
+```
+
+```javascript
+class ImageGallery {
+    constructor(containerId) {
+        this.container = document.getElementById(containerId);
+        this.modal = document.getElementById("modal");
+        this.modalImg = document.getElementById("modal-img");
+        this.modalTitle = document.getElementById("modal-title");
+        this.modalDescription = document.getElementById("modal-description");
+
+        this.images = [
+            { id: 1, url: "nature1.jpg", title: "Tog'lar", description: "Go'zal tog' manzarasi", category: "nature" },
+            { id: 2, url: "city1.jpg", title: "Shahar", description: "Kechki shahar ko'rinishi", category: "city" },
+            { id: 3, url: "people1.jpg", title: "Oila", description: "Baxtli oila", category: "people" },
+            // ... ko'proq rasmlar
+        ];
+
+        this.currentFilter = "all";
+        this.init();
+    }
+
+    init() {
+        this.renderGallery();
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        // Filter tugmalari
+        let filterBtns = document.querySelectorAll(".filter-btn");
+        filterBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                filterBtns.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                this.currentFilter = btn.dataset.filter;
+                this.renderGallery();
+            });
+        });
+
+        // Modal yopish
+        let closeBtn = document.querySelector(".close");
+        closeBtn.addEventListener("click", () => this.closeModal());
+
+        // Modal tashqarisini bosish
+        this.modal.addEventListener("click", (e) => {
+            if (e.target === this.modal) {
+                this.closeModal();
+            }
+        });
+
+        // Klaviatura ESC
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                this.closeModal();
+            }
+        });
+    }
+
+    renderGallery() {
+        this.container.innerHTML = "";
+
+        let filteredImages = this.currentFilter === "all"
+            ? this.images
+            : this.images.filter(img => img.category === this.currentFilter);
+
+        filteredImages.forEach(image => {
+            let imageItem = this.createImageElement(image);
+            this.container.appendChild(imageItem);
+        });
+    }
+
+    createImageElement(image) {
+        let item = document.createElement("div");
+        item.className = "gallery-item";
+        item.dataset.category = image.category;
+
+        item.innerHTML = `
+            <img src="${image.url}" alt="${image.title}" loading="lazy">
+            <div class="overlay">
+                <h4>${image.title}</h4>
+                <p>${image.description}</p>
+            </div>
+        `;
+
+        Item.addEventListener("click", () => this.openModal(image));
+
+        return item;
+    }
+
+    openModal(image) {
+        this.modal.style.display = "block";
+        this.modalImg.src = image.url;
+        this.modalImg.alt = image.title;
+        this.modalTitle.textContent = image.title;
+        this.modalDescription.textContent = image.description;
+
+        // Animation
+        setTimeout(() => {
+            this.modal.classList.add("show");
+        }, 10);
+    }
+
+    closeModal() {
+        this.modal.classList.remove("show");
+        setTimeout(() => {
+            this.modal.style.display = "none";
+        }, 300);
+    }
+}
+
+// Gallery ni ishga tushirish
+document.addEventListener("DOMContentLoaded", () => {
+    new ImageGallery("gallery-grid");
+});
+```
+
+## Best Practices
+
+### Performance
+
+```javascript
+// ❌ Har safar DOM query
+for (let i = 0; i < 100; i++) {
+    document.querySelector(".container").innerHTML += "<p>Element</p>";
+}
+
+// ✅ Bir marta select qiling va fragment ishlatag
+let container = document.querySelector(".container");
+let fragment = document.createDocumentFragment();
+
+for (let i = 0; i < 100; i++) {
+    let p = document.createElement("p");
+    p.textContent = "Element";
+    fragment.appendChild(p);
+}
+
+container.appendChild(fragment);
+
+// ❌ Har o'zgarishda reflow
+element.style.left = "10px";
+element.style.top = "10px";
+element.style.width = "100px";
+
+// ✅ Bir vaqtda o'zgartirish
+element.style.cssText = "left: 10px; top: 10px; width: 100px;";
+// yoki
+Object.assign(element.style, {
+    left: "10px",
+    top: "10px",
+    width: "100px"
+});
+```
+
+### Security
+
+```javascript
+// ❌ Xavfli - XSS hujum
+let userInput = "<script>alert('XSS')</script>";
+element.innerHTML = userInput;
+
+// ✅ Xavfsiz
+element.textContent = userInput;
+// yoki input ni sanitize qiling
+
+function sanitizeHTML(str) {
+    let temp = document.createElement('div');
+    temp.textContent = str;
+    return temp.innerHTML;
+}
+```
+
+## Amaliyot Mashqlari
+
+1. **Accordion Component** yarating
+2. **Tab System** amalga oshiring
+3. **Modal Dialog** yarating
+4. **Carousel/Slider** yasang
+5. **Form Builder** yarating
+
+## Xulosa
+
+Bu darsda DOM manipulation asoslari:
+
+- ✅ **Element Selection**: ID, class, CSS selectors
+- ✅ **Content Manipulation**: text, HTML, attributes
+- ✅ **Style Management**: CSS, classes
+- ✅ **Element Creation**: createElement, appendChild
+- ✅ **DOM Navigation**: parent, child, siblings
+- ✅ **Amaliy dasturlar**: Todo, Form validator, Gallery
+
+Keyingi darsda **Events va interaksiya** o'rganamiz!
+
+## Qo'shimcha Resurslar
+
+- [MDN DOM Introduction](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model)
+- [DOM Manipulation Guide](https://javascript.info/document)
+
+---
+
+🚀 **Amaliyot**: Har bir misolni o'zingizning HTML sahifangizda sinab ko'ring!

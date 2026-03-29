@@ -1,0 +1,396 @@
+---
+title: "JavaScript Asoslari - O'zgaruvchilar va Ma'lumot Turlari"
+description: "JavaScript dasturlash tilining asoslari: o'zgaruvchilar, ma'lumot turlari va dasturlash mantigi. 0 dan JavaScript o'rganish bosqichi."
+order: 1
+category: javascript
+tags: ["javascript", "variables", "data-types", "basics", "syntax"]
+difficulty: beginner
+readTime: 15
+---
+
+# JavaScript Asoslari - O'zgaruvchilar va Ma'lumot Turlari
+
+JavaScript - bu web sahifalarni interaktiv qilish uchun ishlatilаdigan dasturlash tili. Bu darsda JavaScript dasturlashning eng muhim asoslarini o'rganamiz.
+
+## JavaScript nima?
+
+JavaScript - bu:
+- **Web dasturlash tili** - brauzer ichida ishlaydi
+- **Dinamik til** - o'zgaruvchi turlarini avtomatik aniqlaydi
+- **Interpretatsiya qilinadigan** - kodingizni bevosita bajariladi
+- **Cross-platform** - har xil muhitlarda ishlaydi
+
+```javascript
+// Birinchi JavaScript kodingiz!
+console.log("Salom, JavaScript dunyosi!");
+```
+
+## O'zgaruvchilar (Variables)
+
+O'zgaruvchilar - ma'lumotlarni saqlaydigan konteynerlar. JavaScript'da uch xil o'zgaruvchi e'lon qilish usuli bor:
+
+### 1. `let` - Zamonaviy o'zgaruvchi
+
+```javascript
+let ism = "Ahmad";
+let yosh = 25;
+let talaba = true;
+
+console.log(ism);   // "Ahmad"
+console.log(yosh);  // 25
+console.log(talaba); // true
+```
+
+### 2. `const` - O'zgarmas qiymat
+
+```javascript
+const PI = 3.14159;
+const UNIVERSITET = "TATU";
+const ROYXAT = ["olma", "nok", "uzum"];
+
+// Xato! const o'zgaruvchini o'zgartirish mumkin emas
+// PI = 3.14; // TypeError!
+```
+
+### 3. `var` - Eski usul (tavsiya etilmaydi)
+
+```javascript
+var eskiUsul = "var ishlatmang";
+// let yoki const ishlatish tavsiya etiladi
+```
+
+## Ma'lumot Turlari (Data Types)
+
+JavaScript'da asosiy ma'lumot turlari:
+
+### 1. String (Matn)
+
+```javascript
+let ism = "Fatima";
+let shahar = 'Toshkent';
+let xabar = `Salom, ${ism}! Siz ${shahar}da yashaysizmi?`;
+
+console.log(xabar); // "Salom, Fatima! Siz Toshkentda yashaysizmi?"
+```
+
+### 2. Number (Raqam)
+
+```javascript
+let butunSon = 42;
+let onlikSon = 3.14;
+let manfiySon = -10;
+
+// Matematik amallar
+let yigindi = 10 + 5;     // 15
+let ayirma = 20 - 8;      // 12
+let kopaytma = 6 * 7;     // 42
+let bolish = 15 / 3;      // 5
+let qoldiq = 17 % 5;      // 2
+```
+
+### 3. Boolean (Mantiqiy)
+
+```javascript
+let rost = true;
+let yolgon = false;
+
+let katta = 10 > 5;       // true
+let kichik = 3 > 8;       // false
+let teng = 5 === 5;       // true
+```
+
+### 4. Array (Massiv)
+
+```javascript
+let mevalar = ["olma", "nok", "banan"];
+let raqamlar = [1, 2, 3, 4, 5];
+let aralash = ["matn", 42, true, null];
+
+// Elementlarga murojaat
+console.log(mevalar[0]);  // "olma"
+console.log(mevalar[1]);  // "nok"
+console.log(mevalar.length); // 3
+```
+
+### 5. Object (Obyekt)
+
+```javascript
+let talaba = {
+    ism: "Ali",
+    yosh: 20,
+    fakultet: "IT",
+    aktiv: true
+};
+
+// Obyekt xususiyatlariga murojaat
+console.log(talaba.ism);      // "Ali"
+console.log(talaba["yosh"]);  // 20
+```
+
+### 6. null va undefined
+
+```javascript
+let boshQiymat = null;        // Ataylab bo'sh
+let aniqlanmagan;             // undefined
+
+console.log(boshQiymat);      // null
+console.log(aniqlanmagan);    // undefined
+```
+
+## typeof Operatori
+
+O'zgaruvchi turini aniqlash uchun:
+
+```javascript
+console.log(typeof "salom");     // "string"
+console.log(typeof 42);          // "number"
+console.log(typeof true);        // "boolean"
+console.log(typeof [1,2,3]);     // "object"
+console.log(typeof {ism:"Ali"}); // "object"
+console.log(typeof null);        // "object" (JavaScriptning xatosi)
+console.log(typeof undefined);   // "undefined"
+```
+
+## Template Literals (Shablon Literallari)
+
+Matnlarni qulay birlashtirish:
+
+```javascript
+let ism = "Zara";
+let yosh = 22;
+let kasb = "dizayner";
+
+// Eski usul
+let tavsif1 = "Mening ismim " + ism + ", yoshim " + yosh + ", kasbim " + kasb;
+
+// Yangi usul (Template Literals)
+let tavsif2 = `Mening ismim ${ism}, yoshim ${yosh}, kasbim ${kasb}`;
+
+console.log(tavsif2);
+```
+
+## Matematik Operatorlar
+
+```javascript
+let a = 10;
+let b = 3;
+
+console.log(a + b);    // 13 (qo'shish)
+console.log(a - b);    // 7  (ayirish)
+console.log(a * b);    // 30 (ko'paytirish)
+console.log(a / b);    // 3.33... (bo'lish)
+console.log(a % b);    // 1 (qoldiq)
+console.log(a ** b);   // 1000 (daraja)
+
+// Increment va Decrement
+let hisoblagich = 5;
+hisoblagich++;         // 6
+hisoblagich--;         // 5
+```
+
+## Taqqoslash Operatorlari
+
+```javascript
+let x = 10;
+let y = "10";
+
+// Oddiy taqqoslash
+console.log(x == y);   // true (qiymat teng)
+console.log(x != y);   // false
+
+// Qattiq taqqoslash
+console.log(x === y);  // false (turi boshqa)
+console.log(x !== y);  // true
+
+// Kattalik taqqoslashi
+console.log(x > 5);    // true
+console.log(x < 15);   // true
+console.log(x >= 10);  // true
+console.log(x <= 9);   // false
+```
+
+## Mantiqiy Operatorlar
+
+```javascript
+let yosh = 20;
+let talaba = true;
+
+// AND (va) operatori
+console.log(yosh > 18 && talaba);  // true
+
+// OR (yoki) operatori
+console.log(yosh < 18 || talaba);  // true
+
+// NOT (emas) operatori
+console.log(!talaba);              // false
+```
+
+## Type Conversion (Tur Almashtirish)
+
+```javascript
+// String ga aylantirish
+let raqam = 42;
+let matn = String(raqam);        // "42"
+let matn2 = raqam.toString();    // "42"
+
+// Number ga aylantirish
+let matn3 = "123";
+let raqam2 = Number(matn3);      // 123
+let raqam3 = parseInt("123px");  // 123
+let raqam4 = parseFloat("3.14"); // 3.14
+
+// Boolean ga aylantirish
+let bool1 = Boolean(1);          // true
+let bool2 = Boolean(0);          // false
+let bool3 = Boolean("");         // false
+let bool4 = Boolean("salom");    // true
+```
+
+## Amaliy Misol: Talaba Ma'lumotlari
+
+```javascript
+// Talaba haqida ma'lumot saqlash
+const TALABA_MALUMOTI = {
+    ism: "Dilshoda",
+    familiya: "Karimova",
+    yosh: 19,
+    kurs: 2,
+    fakultet: "Informatika",
+    stipendiya: true,
+    baholar: [4, 5, 4, 5, 5],
+    manzil: {
+        viloyat: "Toshkent",
+        tuman: "Chilonzor",
+        kocha: "Bunyodkor"
+    }
+};
+
+// Talaba haqida hisobot
+let toliqIsm = `${TALABA_MALUMOTI.ism} ${TALABA_MALUMOTI.familiya}`;
+let yoshiKatta = TALABA_MALUMOTI.yosh >= 18;
+let stipendiyaHolati = TALABA_MALUMOTI.stipendiya ? "Bor" : "Yo'q";
+
+console.log(`Talaba: ${toliqIsm}`);
+console.log(`Yoshi: ${TALABA_MALUMOTI.yosh} (Katta: ${yoshiKatta ? "Ha" : "Yo'q"})`);
+console.log(`Stipendiyasi: ${stipendiyaHolati}`);
+console.log(`Fakultet: ${TALABA_MALUMOTI.fakultet}, ${TALABA_MALUMOTI.kurs}-kurs`);
+
+// Baholar o'rtacha
+let jami = 0;
+for (let i = 0; i < TALABA_MALUMOTI.baholar.length; i++) {
+    jami += TALABA_MALUMOTI.baholar[i];
+}
+let ortacha = jami / TALABA_MALUMOTI.baholar.length;
+console.log(`O'rtacha baho: ${ortacha.toFixed(1)}`);
+```
+
+## Console bilan Ishlash
+
+```javascript
+// Har xil console metodlari
+console.log("Oddiy xabar");
+console.warn("Ogohlantirish!");
+console.error("Xatolik yuz berdi!");
+console.info("Ma'lumot uchun");
+
+// Obyektni chop etish
+console.table(TALABA_MALUMOTI.baholar);
+console.dir(TALABA_MALUMOTI);
+```
+
+## Xatolardan Qilib Saqlaning
+
+```javascript
+// ❌ Noto'g'ri
+let ism = "Ahmad;        // Qo'shtirnoq yopilmagan
+let yosh = ;             // Qiymat berilmagan
+const raqam = 5;
+raqam = 10;              // const o'zgartirib bo'lmaydi
+
+// ✅ To'g'ri
+let ism = "Ahmad";       // To'liq yozilgan
+let yosh = 25;           // Qiymat berilgan
+let raqam = 5;           // let ishlatilgan
+raqam = 10;              // Endi o'zgartirib bo'ladi
+```
+
+## Kod Yozish Qoidalari
+
+1. **O'zgaruvchi nomlarini aniq tanlag**:
+```javascript
+// ❌ Noto'g'ri
+let x = "Toshkent";
+let a = 25;
+
+// ✅ To'g'ri
+let shaharNomi = "Toshkent";
+let talabaBeni = 25;
+```
+
+2. **camelCase ishlatig**:
+```javascript
+let ismFamiliya = "Ahmad Karimov";
+let tugilganSana = "1998-05-15";
+let telefenRaqami = "+998901234567";
+```
+
+3. **const ishlatishga harakat qilig**:
+```javascript
+const PI = 3.14159;
+const MAX_AGE = 120;
+const universitetsName = "TATU";
+```
+
+## Amaliyot Mashqlari
+
+1. **O'zingiz haqida obyekt yarating** va barcha ma'lumot turlarini ishlating:
+
+```javascript
+const MEN = {
+    // Bu yerga o'zingiz haqingizda yozing
+};
+```
+
+2. **Matematik kalkulyator** yarating:
+
+```javascript
+let a = 15;
+let b = 4;
+
+// Barcha matematik amallarni bajaring va natijalarni console.log qiling
+```
+
+3. **Yosh kategoriyasini aniqlang**:
+
+```javascript
+let yosh = 20;
+
+// Yosh bo'yicha kategoriya aniqlang:
+// 0-12: Bola
+// 13-19: O'smir
+// 20-59: Yoshalagan
+// 60+: Keksa
+```
+
+## Xulosa
+
+Bu darsda biz JavaScript'ning asoslarini o'rgandik:
+
+- ✅ **O'zgaruvchilar**: `let`, `const`, `var`
+- ✅ **Ma'lumot turlari**: String, Number, Boolean, Array, Object
+- ✅ **Operatorlar**: Matematik, taqqoslash, mantiqiy
+- ✅ **Type conversion**: Turlarni almashtirish
+- ✅ **Template literals**: Matnlarni birlashtirish
+- ✅ **Console metodlari**: Dasturni testing qilish
+
+Keyingi darsda **funksiyalar** va **scope** haqida o'rganamiz!
+
+## Qo'shimcha Resurslar
+
+- [MDN JavaScript Guide](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide)
+- [JavaScript.info](https://javascript.info/)
+- Browser DevTools'da console tab ochib amaliyot qiling
+
+---
+
+💡 **Maslahat**: Har bir kod namunasini brauzer console'da sinab ko'ring va o'zingizning keluar misollarni yaratishga harakat qiling!
