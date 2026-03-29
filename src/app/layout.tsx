@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/theme-provider";
-import { Navbar } from "@/components/layout/navbar";
+import { ClientLayout } from "@/components/layout/client-layout";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
 import { getNavigationItems } from "@/lib/readDocsMetadata";
+import { buildSearchIndex } from "@/lib/buildSearchIndex";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -56,7 +57,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const items = getNavigationItems();
+  const navigationItems = getNavigationItems();
+  const searchIndex = buildSearchIndex();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -72,17 +75,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="relative flex min-h-screen flex-col">
-            <Navbar items={items} />
-            <main className="flex-1">{children}</main>
-            <footer className="border-t py-6 md:py-0">
-              <div className="container flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
-                <p className="text-sm text-muted-foreground">
-                  © {new Date().getFullYear()} Stack Docs. All rights reserved.
-                </p>
-              </div>
-            </footer>
-          </div>
+          <ClientLayout
+            navigationItems={navigationItems}
+            searchIndex={searchIndex}
+          >
+            {children}
+          </ClientLayout>
           <Toaster />
         </ThemeProvider>
       </body>

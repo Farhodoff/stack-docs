@@ -16,6 +16,9 @@ const config: Config = {
       },
     },
     extend: {
+      spacing: {
+        '35': '8.75rem', // 140px for sidebar widths
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
