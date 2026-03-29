@@ -166,7 +166,7 @@ model Lesson {
   slug       String // "jsx-asoslari-sintaksis"
 
   // Content
-  content    String // MDX content
+  // content    String // MDX content (REMOVED: Now stored in filesystem for performance)
   excerpt    String? // Short description
 
   // Metadata

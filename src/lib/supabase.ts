@@ -15,7 +15,7 @@ export interface DocRecord {
   title: string;
   description: string;
   category: string;
-  content: string;
+  content?: string; // Optional: stored in filesystem, not database
   tags: string[];
   order: number;
   status: "draft" | "published";
@@ -35,9 +35,10 @@ export async function createDocInSupabase(doc: DocRecord) {
   }
 
   try {
+    const { content, ...docWithoutContent } = doc;
     const { data, error } = await supabase
-      .from("documents")
-      .insert([{ ...doc, created_at: new Date().toISOString() }]);
+      .from("lessons")
+      .insert([{ ...docWithoutContent, created_at: new Date().toISOString() }]);
 
     if (error) {
       return { success: false, error: error.message };
@@ -56,9 +57,10 @@ export async function updateDocInSupabase(slug: string, doc: Partial<DocRecord>)
   }
 
   try {
+    const { content, ...docWithoutContent } = doc;
     const { data, error } = await supabase
-      .from("documents")
-      .update({ ...doc, updated_at: new Date().toISOString() })
+      .from("lessons")
+      .update({ ...docWithoutContent, updated_at: new Date().toISOString() })
       .eq("slug", slug);
 
     if (error) {
@@ -79,7 +81,7 @@ export async function deleteDocInSupabase(slug: string) {
 
   try {
     const { error } = await supabase
-      .from("documents")
+      .from("lessons")
       .delete()
       .eq("slug", slug);
 
@@ -101,7 +103,7 @@ export async function getAllDocsFromSupabase() {
 
   try {
     const { data, error } = await supabase
-      .from("documents")
+      .from("lessons")
       .select("*")
       .eq("status", "published")
       .order("order", { ascending: true });
@@ -124,7 +126,7 @@ export async function getDocBySlugFromSupabase(slug: string) {
 
   try {
     const { data, error } = await supabase
-      .from("documents")
+      .from("lessons")
       .select("*")
       .eq("slug", slug)
       .single();
