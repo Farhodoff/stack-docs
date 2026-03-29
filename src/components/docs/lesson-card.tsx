@@ -119,7 +119,7 @@ export function LessonCard({
             {readTime && (
               <div className="flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5" />
-                <span>{getReadTimeLabel(readTime)} o'qish</span>
+                <span>{getReadTimeLabel(readTime)} o&apos;qish</span>
               </div>
             )}
             <div className="flex items-center gap-1.5">

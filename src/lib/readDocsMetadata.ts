@@ -144,11 +144,10 @@ export function getNavigationItems() {
     .map(([categoryName, docs]) => {
       // Find minimum order and get potential category icon from first doc
       const minOrder = Math.min(...docs.map(d => d.order || 999));
-      
-      // Since docs are already grouped, any doc in the list has the same normalized category
       const firstDoc = docs[0];
-      const icon = firstDoc?.category?.split(' ')[0] || null;
-
+      const rawCategory = firstDoc?.category || categoryName;
+      const iconMatch = rawCategory.match(/^[^\w\s\d]/); // Matches a character that is not a word, space, or digit at the start
+      const icon = iconMatch ? rawCategory.split(' ')[0] : null;
       return {
         category: categoryName,
         icon: icon,

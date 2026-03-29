@@ -223,7 +223,7 @@ export function SearchOverlay({ open, onOpenChange, index }: SearchOverlayProps)
                   Hech narsa topilmadi
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  <span className="font-bold text-primary">"{query}"</span> bo'yicha hech qanday hujjat topilmadi. Boshqa kalit so'zlar bilan qidiring.
+                  <span className="font-bold text-primary">&quot;{query}&quot;</span> bo&apos;yicha hech qanday hujjat topilmadi. Boshqa kalit so&apos;zlar bilan qidiring.
                 </p>
               </div>
             )}
@@ -258,7 +258,7 @@ export function SearchOverlay({ open, onOpenChange, index }: SearchOverlayProps)
                     </p>
                     {index === selectedIndex && (
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase tracking-wider animate-in fade-in slide-in-from-right-2">
-                        O'qish <ChevronRight className="h-3 w-3" />
+                        O&apos;qish <ChevronRight className="h-3 w-3" />
                       </div>
                     )}
                   </button>
@@ -269,7 +269,7 @@ export function SearchOverlay({ open, onOpenChange, index }: SearchOverlayProps)
 
           {/* Enhanced Footer */}
           <div className="h-12 border-t border-border/30 bg-muted/10 px-6 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
-            <div className="flex items-center gap-6">
+            <div className="hidden sm:flex items-center gap-6">
               <div className="flex items-center gap-1.5">
                 <kbd className="rounded border border-border/40 bg-background px-1.5 py-0.5">↑↓</kbd>
                 <span>Navigatsiya</span>

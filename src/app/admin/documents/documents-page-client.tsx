@@ -120,7 +120,6 @@ export default function DocumentsPage({ docs: initialDocs }: DocumentsPageProps)
               size="sm"
               onClick={() => setSelectedCategory(category.id)}
               /* Dynamic category colors - inline style necessary for user-defined colors */
-              /* eslint-disable-next-line react/no-inline-styles */
               style={
                 selectedCategory === category.id
                   ? { backgroundColor: category.color }

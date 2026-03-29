@@ -88,9 +88,7 @@ export function MobileNavigation({ open, onOpenChange, items }: MobileNavigation
                 pathname === `/docs/${item.slug}`
               )
 
-              // Dynamic animation delay for staggered entrance - inline style necessary
-              // eslint-disable-next-line react/no-inline-styles
-              // webhint:disable no-inline-styles
+              // Dynamic animation delay for staggered entrance
               return (
                 <div key={index} className="group animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                   <button
