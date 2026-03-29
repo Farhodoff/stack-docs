@@ -152,6 +152,8 @@ export function LessonCard({
                 </span>
               </div>
               <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                {/* Dynamic progress width - inline style necessary for percentage calculation */}
+                {/* eslint-disable-next-line */}
                 <div
                   className={cn('h-full transition-all duration-300', categoryStyle.bg)}
                   style={{ width: `${progress}%` }}
