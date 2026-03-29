@@ -61,8 +61,9 @@ export function CleanSidebar({ items, className }: CleanSidebarProps) {
           )
 
           // Try to extract icon from name if not provided (e.g. "🚀 Introduction")
-          const categoryDisplay = group.category.replace(/^[^\w\s]*\s*/, "")
-          const icon = group.icon || group.category.match(/^[^\w\s]*/)?.[0] || "📁"
+          const categoryName = group.category || "General"
+          const categoryDisplay = categoryName.replace(/^[^\w\s]*\s*/, "")
+          const icon = group.icon || categoryName.match(/^[^\w\s]*/)?.[0] || "📁"
 
           return (
             <div key={index} className="space-y-1.5">

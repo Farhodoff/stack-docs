@@ -85,7 +85,7 @@ export function LessonCard({
         )}
       >
         {/* Left accent line */}
-        <div className={cn('absolute left-0 top-0 bottom-0 w-1', categoryStyle.bg.replace('bg-', 'bg-').replace('-50', '-500'))} />
+        <div className={cn('absolute left-0 top-0 bottom-0 w-1', (categoryStyle.bg || 'bg-slate-500').replace('bg-', 'bg-').replace('-50', '-500'))} />
         
         <CardHeader className="pb-3 pt-6 px-6">
           <div className="space-y-3">
@@ -95,7 +95,7 @@ export function LessonCard({
                   Dars {order}
                 </span>
               )}
-              {difficulty && (
+              {difficulty && DIFFICULTY_COLORS[difficulty] && (
                 <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full border border-border/50', DIFFICULTY_COLORS[difficulty].replace('bg-', 'bg-opacity-10 bg-'))}>
                   {getDifficultyLabel(difficulty)}
                 </span>
@@ -137,7 +137,7 @@ export function LessonCard({
               </div>
               <div className="w-full bg-muted/30 rounded-full h-1 overflow-hidden">
                 <div
-                  className={cn('h-full transition-all duration-500 ease-out', categoryStyle.bg.replace('-50', '-500'))}
+                  className={cn('h-full transition-all duration-500 ease-out', (categoryStyle.bg || 'bg-slate-500').replace('-50', '-500'))}
                   style={{ width: `${progress}%` }}
                 />
               </div>
