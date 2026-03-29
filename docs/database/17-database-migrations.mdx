@@ -1,0 +1,1123 @@
+---
+title: "Database Migrations va Version Control"
+description: "Schema evolution, data migrations, production deployment strategies va team collaboration patterns"
+difficulty: "Advanced"
+readTime: "35 daqiqa"
+tags: ["migrations", "schema-evolution", "deployment", "version-control", "prisma", "production"]
+category: "database"
+---
+
+# Database Migrations va Version Control
+
+Salom! Bu darsda biz database migrations - schema evolution va production deployment'ning eng muhim qismlaridan birini o'rganamiz.
+
+## Bu darsdan nimani o'rganasiz?
+
+- 🔄 **Migration Fundamentals** - Schema versioning va evolution asoslari
+- 🛠️ **Prisma Migration System** - Advanced migration patterns
+- 📊 **Data Transformations** - Safe data migration strategies
+- 🚀 **Production Deployment** - Zero-downtime deployment patterns
+- 👥 **Team Collaboration** - Git workflows va conflict resolution
+- ⚠️ **Risk Management** - Rollback strategies va error handling
+
+---
+
+## 1. Migration Fundamentals 🔄
+
+### Migration nima va nega kerak?
+
+Database migration - bu database schema'ni bir versiyadan ikkinchisiga o'tkazish jarayoni.
+
+```sql
+-- Migration misoli: users jadvaliga phone column qo'shish
+-- VERSION 1: Migration yaratilishidan oldin
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- VERSION 2: Migration qo'llanganidan keyin
+ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT false;
+```
+
+### Migration'ning afzalliklari:
+
+1. **Version Control** - Schema o'zgarishlari versiyalanadi
+2. **Team Sync** - Barcha developers'da bir xil schema
+3. **Deployment Safety** - Production'da xavfsiz o'zgarishlar
+4. **Rollback Capability** - Muammolar holatida orqaga qaytish
+5. **Audit Trail** - Schema o'zgarishlari tarixi
+
+### Prisma Migration Architecture:
+
+```bash
+prisma/
+├── schema.prisma          # Current schema definition
+├── migrations/            # Migration history
+│   ├── migration_lock.toml
+│   ├── 20240315120000_init/
+│   │   └── migration.sql
+│   ├── 20240316130000_add_user_profile/
+│   │   └── migration.sql
+│   └── 20240317140000_add_post_tags/
+│       └── migration.sql
+```
+
+---
+
+## 2. Prisma Migration System Deep Dive 🛠️
+
+### Migration Commands
+
+```bash
+# 1. Generate migration (development)
+npx prisma migrate dev --name migration_name
+
+# 2. Deploy migrations (production)
+npx prisma migrate deploy
+
+# 3. Check migration status
+npx prisma migrate status
+
+# 4. Reset database (development only)
+npx prisma migrate reset
+
+# 5. Create migration without applying
+npx prisma migrate diff --from-empty --to-schema-datamodel
+
+# 6. Fix failed migration
+npx prisma migrate resolve --applied migration_name
+```
+
+### Migration Workflow
+
+```typescript
+// prisma/schema.prisma - o'zgarish qilish
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String   @unique
+
+  // Yangi fieldlar qo'shish
+  firstName String?  // ✅ Null bo'lishi mumkin - safe
+  lastName  String?  // ✅ Null bo'lishi mumkin - safe
+  phone     String?  @unique // ✅ Optional unique field
+
+  // Timestamp fieldlari
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  posts     Post[]
+  profile   UserProfile?
+
+  @@map("users")
+}
+
+// Yangi model qo'shish
+model UserProfile {
+  id       Int    @id @default(autoincrement())
+  userId   Int    @unique
+  bio      String?
+  website  String?
+  location String?
+
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+```
+
+```bash
+# Migration yaratish
+npx prisma migrate dev --name add_user_profile
+
+# Bu quyidagilarni bajaradi:
+# 1. Migration file yaratadi
+# 2. Database'ni yangilaydi
+# 3. Prisma Client'ni regenerate qiladi
+```
+
+### Generated Migration File
+
+```sql
+-- prisma/migrations/20240315120000_add_user_profile/migration.sql
+-- CreateTable
+CREATE TABLE "user_profiles" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "bio" TEXT,
+    "website" TEXT,
+    "location" TEXT,
+
+    CONSTRAINT "user_profiles_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_profiles_userId_key" ON "user_profiles"("userId");
+
+-- AddForeignKey
+ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_userId_fkey"
+FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AlterTable (existing users table)
+ALTER TABLE "users" ADD COLUMN "firstName" TEXT;
+ALTER TABLE "users" ADD COLUMN "lastName" TEXT;
+ALTER TABLE "users" ADD COLUMN "phone" TEXT;
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_phone_key" ON "users"("phone");
+```
+
+---
+
+## 3. Advanced Migration Scenarios 📊
+
+### Field Type Changes (Risky Operations)
+
+```typescript
+// schema.prisma'da field type o'zgartirish
+model User {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+
+  // ❌ Xavfli: String dan Int ga o'zgartirish
+  // age      String  // Oldin
+  age      Int?     // Keyin - bu migration xavfli
+
+  // ✅ Xavfsiz: Optional qilish
+  bio      String? // NULL qo'shish har doim xavfsiz
+
+  @@map("users")
+}
+```
+
+#### Safe Type Migration Strategy
+
+```sql
+-- Step 1: Yangi column qo'shish
+ALTER TABLE users ADD COLUMN age_new INTEGER;
+
+-- Step 2: Ma'lumotni transform qilib ko'chirish
+UPDATE users
+SET age_new = CASE
+  WHEN age ~ '^[0-9]+$' THEN age::INTEGER
+  ELSE NULL
+END;
+
+-- Step 3: Eski columnni o'chirish
+ALTER TABLE users DROP COLUMN age;
+
+-- Step 4: Yangi columnni rename qilish
+ALTER TABLE users RENAME COLUMN age_new TO age;
+```
+
+#### Prisma'da Multi-step Migration
+
+```typescript
+// 1st migration: Add new column
+// prisma/schema.prisma
+model User {
+  // ... other fields
+  age     String? // Keep old field
+  ageNew  Int?    // Add new field
+}
+```
+
+```bash
+npx prisma migrate dev --name add_age_new_field
+```
+
+```typescript
+// Data migration script
+// scripts/migrate-age-data.ts
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+async function migrateAgeData() {
+  console.log('🔄 Starting age data migration...')
+
+  const users = await prisma.user.findMany({
+    where: {
+      age: { not: null },
+      ageNew: null
+    }
+  })
+
+  let migrated = 0
+  let errors = 0
+
+  for (const user of users) {
+    try {
+      const ageValue = parseInt(user.age!)
+
+      if (!isNaN(ageValue) && ageValue > 0 && ageValue < 150) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { ageNew: ageValue }
+        })
+        migrated++
+      } else {
+        console.warn(`Invalid age for user ${user.id}: ${user.age}`)
+        errors++
+      }
+    } catch (error) {
+      console.error(`Error migrating user ${user.id}:`, error)
+      errors++
+    }
+  }
+
+  console.log(`✅ Migration completed: ${migrated} migrated, ${errors} errors`)
+}
+
+migrateAgeData()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect())
+```
+
+```bash
+# Run data migration
+npx ts-node scripts/migrate-age-data.ts
+```
+
+```typescript
+// 2nd migration: Drop old column
+// prisma/schema.prisma
+model User {
+  // ... other fields
+  age  Int? // Renamed from ageNew
+}
+```
+
+```bash
+npx prisma migrate dev --name finalize_age_migration
+```
+
+### Complex Schema Restructuring
+
+```typescript
+// Scenario: Posts table restructuring
+// Before: Simple posts table
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  status    String   // "draft", "published", "archived"
+  userId    Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  @@map("posts")
+}
+
+// After: Better structured posts with categories and tags
+model Post {
+  id          Int         @id @default(autoincrement())
+  title       String
+  slug        String      @unique
+  content     String
+  excerpt     String?
+  status      PostStatus  @default(DRAFT) // Enum instead of string
+  visibility  PostVisibility @default(PUBLIC)
+
+  // SEO fields
+  metaTitle       String?
+  metaDescription String?
+
+  // Timestamps
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  authorId    Int
+  categoryId  Int?
+
+  author      User        @relation(fields: [authorId], references: [id])
+  category    Category?   @relation(fields: [categoryId], references: [id])
+  tags        PostTag[]
+  comments    Comment[]
+
+  @@map("posts")
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  SCHEDULED
+}
+
+enum PostVisibility {
+  PUBLIC
+  PRIVATE
+  PASSWORD_PROTECTED
+}
+```
+
+#### Step-by-step restructuring:
+
+```typescript
+// Migration 1: Add new fields
+// Keep old 'status' field, add new enum field
+model Post {
+  // ... existing fields
+  status      String    // Old field
+  statusNew   PostStatus @default(DRAFT) // New enum field
+  visibility  PostVisibility @default(PUBLIC)
+  slug        String?   // Initially nullable
+  excerpt     String?
+  // ...
+}
+```
+
+```sql
+-- Generated migration 1
+CREATE TYPE "PostStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED', 'SCHEDULED');
+CREATE TYPE "PostVisibility" AS ENUM ('PUBLIC', 'PRIVATE', 'PASSWORD_PROTECTED');
+
+ALTER TABLE "posts" ADD COLUMN "statusNew" "PostStatus" NOT NULL DEFAULT 'DRAFT';
+ALTER TABLE "posts" ADD COLUMN "visibility" "PostVisibility" NOT NULL DEFAULT 'PUBLIC';
+ALTER TABLE "posts" ADD COLUMN "slug" TEXT;
+ALTER TABLE "posts" ADD COLUMN "excerpt" TEXT;
+```
+
+```typescript
+// Data migration script
+async function migratePostData() {
+  const posts = await prisma.post.findMany()
+
+  for (const post of posts) {
+    // Generate slug
+    const slug = post.title.toLowerCase()
+      .replace(/[^a-z0-9 -]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim()
+
+    // Map old status to new enum
+    let newStatus: PostStatus = 'DRAFT'
+    switch (post.status?.toLowerCase()) {
+      case 'published': newStatus = 'PUBLISHED'; break
+      case 'archived': newStatus = 'ARCHIVED'; break
+      default: newStatus = 'DRAFT'
+    }
+
+    // Generate excerpt from content
+    const excerpt = post.content.substring(0, 200) + '...'
+
+    await prisma.post.update({
+      where: { id: post.id },
+      data: {
+        statusNew: newStatus,
+        slug: `${slug}-${post.id}`, // Ensure uniqueness
+        excerpt
+      }
+    })
+  }
+}
+```
+
+```typescript
+// Migration 2: Drop old fields, rename new ones
+model Post {
+  // ... other fields
+  status PostStatus @default(DRAFT) // Renamed from statusNew
+  slug   String     @unique         // Made required and unique
+  // Remove old 'status' string field
+}
+```
+
+---
+
+## 4. Production Migration Strategies 🚀
+
+### Zero-Downtime Migration Patterns
+
+#### Pattern 1: Additive Changes Only
+
+```sql
+-- ✅ SAFE: Adding nullable columns
+ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+ALTER TABLE users ADD COLUMN last_login_at TIMESTAMPTZ;
+
+-- ✅ SAFE: Adding indexes (background)
+CREATE INDEX CONCURRENTLY idx_users_last_login
+ON users(last_login_at) WHERE last_login_at IS NOT NULL;
+
+-- ✅ SAFE: Adding new tables
+CREATE TABLE user_preferences (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    theme VARCHAR(20) DEFAULT 'light',
+    notifications JSONB DEFAULT '{}'::jsonb
+);
+```
+
+#### Pattern 2: Backward Compatible Changes
+
+```typescript
+// 1. Deploy code that supports both old and new schema
+// 2. Run migrations
+// 3. Deploy code that uses new schema only
+
+// Step 1: Code supports both schemas
+export class UserService {
+  static async getUser(id: number) {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        // Handle both old and new fields
+        firstName: true,
+        lastName: true,
+        name: true, // Legacy field
+        // ... other fields
+      }
+    })
+
+    if (!user) return null
+
+    // Backward compatibility logic
+    return {
+      ...user,
+      displayName: user.firstName && user.lastName
+        ? `${user.firstName} ${user.lastName}`
+        : user.name || user.username
+    }
+  }
+}
+```
+
+#### Pattern 3: Database Migration Deployment Script
+
+```bash
+#!/bin/bash
+# scripts/deploy-migrations.sh
+
+set -e
+
+echo "🚀 Starting production migration deployment..."
+
+# 1. Backup database
+echo "📦 Creating database backup..."
+pg_dump $DATABASE_URL > "backups/pre-migration-$(date +%Y%m%d_%H%M%S).sql"
+
+# 2. Check migration status
+echo "🔍 Checking migration status..."
+npx prisma migrate status
+
+# 3. Deploy migrations
+echo "🔄 Deploying migrations..."
+npx prisma migrate deploy
+
+# 4. Validate schema
+echo "✅ Validating schema..."
+npx prisma validate
+
+# 5. Generate fresh client
+echo "🔧 Regenerating Prisma Client..."
+npx prisma generate
+
+echo "🎉 Migration deployment completed successfully!"
+```
+
+### Blue-Green Deployment with Database
+
+```typescript
+// Blue-Green deployment strategy
+class MigrationDeployment {
+  async executeBlueGreenMigration() {
+    console.log('🔵 Starting Blue-Green migration...')
+
+    // 1. Create green database (copy of blue)
+    await this.createGreenDatabase()
+
+    // 2. Apply migrations to green database
+    await this.applyMigrationsToGreen()
+
+    // 3. Sync data from blue to green (if needed)
+    await this.syncCriticalData()
+
+    // 4. Run validation tests on green
+    await this.validateGreenDatabase()
+
+    // 5. Switch traffic to green
+    await this.switchToGreen()
+
+    // 6. Keep blue for rollback
+    console.log('✅ Blue-Green migration completed')
+  }
+
+  private async createGreenDatabase() {
+    // Create new database instance
+    console.log('Creating green database...')
+  }
+
+  private async applyMigrationsToGreen() {
+    // Apply all migrations to green database
+    console.log('Applying migrations to green...')
+  }
+
+  private async validateGreenDatabase() {
+    // Run health checks and validation queries
+    console.log('Validating green database...')
+  }
+
+  private async switchToGreen() {
+    // Update connection strings, restart services
+    console.log('Switching to green database...')
+  }
+}
+```
+
+---
+
+## 5. Team Collaboration Patterns 👥
+
+### Git Workflow with Migrations
+
+```bash
+# Branch strategy for migrations
+# Feature branch workflow:
+
+# 1. Developer creates feature branch
+git checkout -b feature/user-profiles
+
+# 2. Make schema changes
+# Edit prisma/schema.prisma
+
+# 3. Generate migration
+npx prisma migrate dev --name add_user_profiles
+
+# 4. Commit migration files
+git add prisma/
+git commit -m "feat: add user profiles with bio and preferences"
+
+# 5. Push and create PR
+git push origin feature/user-profiles
+```
+
+### Migration Conflicts Resolution
+
+```bash
+# Scenario: Two developers create migrations simultaneously
+
+# Developer A: Creates migration A
+prisma/migrations/20240315120000_add_user_phone/
+
+# Developer B: Creates migration B (based on same schema state)
+prisma/migrations/20240315120001_add_user_address/
+
+# Conflict occurs during merge!
+```
+
+#### Conflict Resolution Process:
+
+```bash
+# 1. Merge/Rebase with conflicts
+git merge main  # or git rebase main
+
+# 2. Reset migration state (development only!)
+npx prisma migrate reset --force
+
+# 3. Re-generate migration with combined changes
+npx prisma migrate dev --name combined_user_fields
+
+# 4. Test the combined migration
+npm run test:db
+
+# 5. Commit resolved migration
+git add prisma/migrations/
+git commit -m "resolve: combine user phone and address migrations"
+```
+
+### Pre-commit Hooks for Migrations
+
+```json
+// package.json
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "prisma/schema.prisma": [
+      "prisma validate",
+      "prisma format"
+    ],
+    "src/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}
+```
+
+```typescript
+// scripts/validate-migration.ts
+import { PrismaClient } from '@prisma/client'
+import { exec } from 'child_process'
+import { promisify } from 'util'
+
+const execAsync = promisify(exec)
+
+async function validateMigration() {
+  try {
+    // 1. Validate schema syntax
+    await execAsync('npx prisma validate')
+    console.log('✅ Schema validation passed')
+
+    // 2. Check for dangerous operations
+    const migrationFiles = await getMigrationFiles()
+
+    for (const file of migrationFiles) {
+      await checkForUnsafeOperations(file)
+    }
+
+    // 3. Test migration on development database
+    await testMigrationSafety()
+
+    console.log('✅ Migration validation completed')
+
+  } catch (error) {
+    console.error('❌ Migration validation failed:', error)
+    process.exit(1)
+  }
+}
+
+async function checkForUnsafeOperations(migrationFile: string) {
+  const content = await fs.readFile(migrationFile, 'utf8')
+
+  const unsafeOperations = [
+    'DROP TABLE',
+    'DROP COLUMN',
+    'ALTER COLUMN .* SET NOT NULL',
+    'ALTER COLUMN .* TYPE'
+  ]
+
+  for (const operation of unsafeOperations) {
+    if (new RegExp(operation, 'i').test(content)) {
+      console.warn(`⚠️  Potentially unsafe operation detected: ${operation}`)
+      console.warn(`   File: ${migrationFile}`)
+    }
+  }
+}
+
+validateMigration()
+```
+
+---
+
+## 6. Monitoring va Error Handling ⚠️
+
+### Migration Status Monitoring
+
+```typescript
+// Migration health checker
+export class MigrationMonitor {
+  static async checkMigrationStatus() {
+    try {
+      const result = await execAsync('npx prisma migrate status --json')
+      const status = JSON.parse(result.stdout)
+
+      return {
+        database: status.database,
+        migrationsTableExists: status.migrationsTableExists,
+        pendingMigrations: status.pendingMigrations,
+        failedMigrations: status.failedMigrations,
+        appliedMigrations: status.appliedMigrations?.length || 0,
+        healthy: status.pendingMigrations.length === 0 && status.failedMigrations.length === 0
+      }
+    } catch (error) {
+      console.error('Migration status check failed:', error)
+      return {
+        healthy: false,
+        error: error.message
+      }
+    }
+  }
+
+  static async healthCheck() {
+    const migrationStatus = await this.checkMigrationStatus()
+
+    if (!migrationStatus.healthy) {
+      // Send alert notification
+      await this.sendAlert({
+        type: 'MIGRATION_ISSUE',
+        message: 'Database migration issues detected',
+        details: migrationStatus
+      })
+    }
+
+    return migrationStatus
+  }
+
+  private static async sendAlert(alert: any) {
+    // Integration with monitoring system (e.g., Slack, PagerDuty)
+    console.log('🚨 ALERT:', alert)
+  }
+}
+
+// Express middleware for migration health
+export function migrationHealthMiddleware() {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (req.path === '/health/migrations') {
+      const status = await MigrationMonitor.checkMigrationStatus()
+
+      return res.status(status.healthy ? 200 : 503).json({
+        status: status.healthy ? 'healthy' : 'unhealthy',
+        details: status
+      })
+    }
+
+    next()
+  }
+}
+```
+
+### Automatic Rollback System
+
+```typescript
+// Automatic rollback on failed deployment
+class DeploymentManager {
+  async deployWithAutoRollback() {
+    const backupId = await this.createBackup()
+
+    try {
+      console.log('🚀 Starting deployment...')
+
+      // Deploy migrations
+      await this.deployMigrations()
+
+      // Deploy application
+      await this.deployApplication()
+
+      // Health check
+      await this.performHealthCheck()
+
+      console.log('✅ Deployment successful')
+
+      // Clean up old backups
+      await this.cleanupOldBackups()
+
+    } catch (error) {
+      console.error('❌ Deployment failed:', error)
+
+      // Automatic rollback
+      await this.rollback(backupId)
+
+      throw error
+    }
+  }
+
+  private async createBackup(): Promise<string> {
+    const backupId = `backup-${Date.now()}`
+    await execAsync(`pg_dump ${process.env.DATABASE_URL} > ${backupId}.sql`)
+    return backupId
+  }
+
+  private async rollback(backupId: string) {
+    console.log(`🔄 Rolling back to backup ${backupId}...`)
+
+    try {
+      // Stop application
+      await this.stopApplication()
+
+      // Restore database
+      await execAsync(`psql ${process.env.DATABASE_URL} < ${backupId}.sql`)
+
+      // Start application with previous version
+      await this.startPreviousApplicationVersion()
+
+      console.log('✅ Rollback completed')
+
+    } catch (rollbackError) {
+      console.error('❌ Rollback failed:', rollbackError)
+      // Alert ops team for manual intervention
+      await this.alertOpsTeam('critical', 'Automated rollback failed')
+    }
+  }
+}
+```
+
+### Migration Performance Monitoring
+
+```typescript
+// Track migration performance
+class MigrationProfiler {
+  static async profileMigration(migrationName: string) {
+    const startTime = Date.now()
+    const startMemory = process.memoryUsage()
+
+    try {
+      console.log(`📊 Profiling migration: ${migrationName}`)
+
+      // Run migration
+      await execAsync(`npx prisma migrate deploy`)
+
+      const endTime = Date.now()
+      const endMemory = process.memoryUsage()
+
+      const metrics = {
+        migrationName,
+        duration: endTime - startTime,
+        memoryUsed: endMemory.heapUsed - startMemory.heapUsed,
+        timestamp: new Date()
+      }
+
+      // Store metrics
+      await this.storeMigrationMetrics(metrics)
+
+      // Alert if migration took too long
+      if (metrics.duration > 30000) { // 30 seconds
+        await this.alertSlowMigration(metrics)
+      }
+
+      console.log(`✅ Migration completed in ${metrics.duration}ms`)
+
+      return metrics
+
+    } catch (error) {
+      console.error(`❌ Migration failed: ${error}`)
+      throw error
+    }
+  }
+
+  private static async storeMigrationMetrics(metrics: any) {
+    // Store in monitoring system or database
+    await prisma.migrationMetrics.create({
+      data: metrics
+    })
+  }
+
+  private static async alertSlowMigration(metrics: any) {
+    console.warn(`⚠️  Slow migration detected: ${metrics.migrationName} (${metrics.duration}ms)`)
+  }
+}
+```
+
+---
+
+## 7. Advanced Migration Best Practices 💡
+
+### Schema Evolution Checklist
+
+```typescript
+// Pre-migration checklist
+const MIGRATION_CHECKLIST = {
+  planning: [
+    '✅ Schema changes reviewed by team',
+    '✅ Breaking changes documented',
+    '✅ Data migration strategy defined',
+    '✅ Rollback plan prepared',
+    '✅ Performance impact assessed'
+  ],
+
+  testing: [
+    '✅ Migration tested on development',
+    '✅ Migration tested on staging with production data',
+    '✅ Application compatibility verified',
+    '✅ Performance benchmarks completed',
+    '✅ Rollback tested'
+  ],
+
+  deployment: [
+    '✅ Database backup created',
+    '✅ Maintenance window scheduled',
+    '✅ Team alerted',
+    '✅ Monitoring enabled',
+    '✅ Health checks configured'
+  ]
+}
+
+// Migration safety analyzer
+class MigrationSafetyAnalyzer {
+  static async analyzeMigration(migrationPath: string) {
+    const migrationSQL = await fs.readFile(migrationPath, 'utf8')
+
+    const analysis = {
+      riskLevel: 'LOW' as 'LOW' | 'MEDIUM' | 'HIGH',
+      estimatedDowntime: '0s',
+      warnings: [] as string[],
+      recommendations: [] as string[]
+    }
+
+    // Check for high-risk operations
+    if (this.containsTableDrop(migrationSQL)) {
+      analysis.riskLevel = 'HIGH'
+      analysis.warnings.push('Contains DROP TABLE - irreversible operation')
+      analysis.recommendations.push('Ensure data is backed up')
+    }
+
+    if (this.containsColumnDrop(migrationSQL)) {
+      analysis.riskLevel = 'HIGH'
+      analysis.warnings.push('Contains DROP COLUMN - data will be lost')
+      analysis.recommendations.push('Consider archiving data first')
+    }
+
+    if (this.containsNotNullConstraint(migrationSQL)) {
+      analysis.riskLevel = 'MEDIUM'
+      analysis.warnings.push('Adding NOT NULL constraint may fail on existing data')
+      analysis.recommendations.push('Ensure all existing records have values')
+    }
+
+    if (this.containsLargeTableChange(migrationSQL)) {
+      analysis.estimatedDowntime = '5-15 minutes'
+      analysis.warnings.push('Large table modification may cause downtime')
+      analysis.recommendations.push('Consider maintenance window')
+    }
+
+    return analysis
+  }
+
+  private static containsTableDrop(sql: string): boolean {
+    return /DROP\s+TABLE/i.test(sql)
+  }
+
+  private static containsColumnDrop(sql: string): boolean {
+    return /DROP\s+COLUMN/i.test(sql)
+  }
+
+  private static containsNotNullConstraint(sql: string): boolean {
+    return /ALTER\s+COLUMN.*SET\s+NOT\s+NULL/i.test(sql)
+  }
+
+  private static containsLargeTableChange(sql: string): boolean {
+    const largeTablePattern = /(users|posts|orders|transactions|logs)/i
+    const alterPattern = /ALTER\s+TABLE/i
+    return largeTablePattern.test(sql) && alterPattern.test(sql)
+  }
+}
+```
+
+### Environment-specific Migration Strategy
+
+```typescript
+// Environment-specific migration configuration
+const migrationConfig = {
+  development: {
+    autoApply: true,
+    resetOnConflict: true,
+    seedAfterMigration: true
+  },
+
+  staging: {
+    autoApply: false,
+    requireApproval: true,
+    testWithProductionData: true
+  },
+
+  production: {
+    autoApply: false,
+    requireMultipleApprovals: true,
+    maintenanceWindow: true,
+    autoRollback: true
+  }
+}
+
+// Migration orchestrator
+class MigrationOrchestrator {
+  async executeMigration(environment: string) {
+    const config = migrationConfig[environment]
+
+    if (environment === 'production') {
+      await this.executeProductionMigration(config)
+    } else if (environment === 'staging') {
+      await this.executeStagingMigration(config)
+    } else {
+      await this.executeDevelopmentMigration(config)
+    }
+  }
+
+  private async executeProductionMigration(config: any) {
+    // 1. Pre-flight checks
+    await this.performPreFlightChecks()
+
+    // 2. Create backup
+    const backupId = await this.createDatabaseBackup()
+
+    // 3. Enable maintenance mode
+    await this.enableMaintenanceMode()
+
+    try {
+      // 4. Apply migrations
+      await this.applyMigrationsWithMonitoring()
+
+      // 5. Run health checks
+      await this.runHealthChecks()
+
+      // 6. Disable maintenance mode
+      await this.disableMaintenanceMode()
+
+    } catch (error) {
+      if (config.autoRollback) {
+        await this.rollback(backupId)
+      }
+      throw error
+    }
+  }
+}
+```
+
+---
+
+## Xulosa 🎯
+
+Bu darsda biz database migrations'ning professional qismlarini o'rgandik:
+
+✅ **Migration Fundamentals** - Schema versioning, evolution patterns
+✅ **Prisma Migration System** - Advanced commands va workflows
+✅ **Production Strategies** - Zero-downtime deployment patterns
+✅ **Team Collaboration** - Git workflows, conflict resolution
+✅ **Risk Management** - Monitoring, rollback strategies
+✅ **Best Practices** - Safety analysis, environment-specific approaches
+
+### Keyingi darsda:
+
+🛍️ **E-commerce Database Project**
+- Complete e-commerce platform database
+- Advanced relationships va business logic
+- Performance optimization
+- Real-world scenario simulation
+
+### Uyga vazifa:
+
+1. **Migration strategy** yarating - development dan production gacha
+2. **Team workflow** setup qiling - Git hooks, validation scripts
+3. **Monitoring system** implement qiling - migration health checks
+4. **Error handling** strategiyasini yozing - rollback plans
+
+### Migration best practices summary:
+
+```typescript
+// Production migration checklist:
+✅ Always backup before migrations
+✅ Test migrations on staging with production data
+✅ Use additive changes when possible
+✅ Implement monitoring and alerting
+✅ Have rollback strategy ready
+✅ Use maintenance windows for risky changes
+✅ Validate schema after deployment
+✅ Document breaking changes
+✅ Use environment-specific strategies
+✅ Monitor performance impact
+```
+
+---
+
+### Qo'shimcha resurslar:
+
+- 🔄 [Prisma Migration Guide](https://prisma.io/docs/concepts/components/prisma-migrate)
+- 🚀 [Zero-Downtime Migrations](https://blog.codeship.com/rails-migrations-zero-downtime/)
+- 📊 [Database Migration Best Practices](https://www.prisma.io/docs/guides/database/production-migrations)
+- ⚠️ [Migration Risk Assessment](https://wiki.postgresql.org/wiki/ALTER_TABLE_and_Locking)
+
+**Keyingi dars:** Complete E-commerce Database Project 🛍️

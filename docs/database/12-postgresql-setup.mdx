@@ -1,0 +1,952 @@
+---
+title: "PostgreSQL O'rnatish va Sozlash"
+description: "PostgreSQL ma'lumotlar bazasini o'rnatish, sozlash va birinchi database yaratish bo'yicha to'liq qo'llanma"
+difficulty: "Beginner"
+readTime: "30 daqiqa"
+tags: ["postgresql", "setup", "installation", "database", "configuration"]
+category: "database"
+---
+
+# PostgreSQL O'rnatish va Sozlash
+
+Salom! Bu darsda biz PostgreSQL ma'lumotlar bazasini o'rnatish va sozlashni o'rganamiz. Oxirida sizda to'liq ishlaydigan database development environment bo'ladi.
+
+## Bu darsdan nimani o'rganasiz?
+
+- 🛠️ **PostgreSQL o'rnatish** (Windows, macOS, Linux)
+- ⚙️ **Database server sozlash** va konfiguratsiya
+- 🎯 **Birinchi database yaratish** va boshqarish
+- 🔒 **Foydalanuvchi boshqaruvi** va security
+- 🖥️ **GUI tools** - pgAdmin va DBeaver
+- 💻 **Node.js bilan bog'lanish** va amaliy misollar
+
+---
+
+## 1. PostgreSQL O'rnatish 🛠️
+
+### Windows uchun
+
+**1-usul: Official Installer**
+
+```bash
+# 1. postgresql.org/download/windows saytiga boring
+# 2. PostgreSQL installer (EDB) yuklab oling
+# 3. postgresql-15.x-x-windows-x64.exe ishga tushiring
+
+🎯 O'rnatish jarayoni:
+1. "Standard installation" tanlang
+2. Password qo'ying (masalan: postgres123)
+3. Port: 5432 (standart)
+4. Locale: C
+5. Stack Builder: Skip qiling
+```
+
+**2-usul: Chocolatey**
+
+```bash
+# Chocolatey orqali o'rnatish
+choco install postgresql
+
+# Yoki Scoop bilan
+scoop install postgresql
+```
+
+### macOS uchun
+
+**1-usul: Homebrew (tavsiya etiladi)**
+
+```bash
+# Homebrew orqali o'rnatish
+brew install postgresql@15
+
+# Service sifatida ishga tushirish
+brew services start postgresql@15
+
+# PATH ga qo'shish (.zshrc yoki .bash_profile ga)
+echo 'export PATH="/usr/local/opt/postgresql@15/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**2-usul: Postgres.app**
+
+```bash
+# 1. postgresapp.com saytidan yuklab oling
+# 2. Applications papkasiga ko'chiring
+# 3. Ishga tushiring
+
+✅ Postgres.app afzalliklari:
+- GUI bilan oson boshqarish
+- Multiple versions qo'llab-quvvatlash
+- Built-in tools
+```
+
+### Ubuntu/Debian Linux uchun
+
+```bash
+# Package repository yangilash
+sudo apt update
+
+# PostgreSQL o'rnatish
+sudo apt install postgresql postgresql-contrib
+
+# Service holatini tekshirish
+sudo systemctl status postgresql
+
+# Avtomatik ishga tushirish
+sudo systemctl enable postgresql
+```
+
+### CentOS/RedHat uchun
+
+```bash
+# PostgreSQL repository qo'shish
+sudo dnf install postgresql-server postgresql-contrib
+
+# Database initialization
+sudo postgresql-setup --initdb
+
+# Service ishga tushirish
+sudo systemctl enable --now postgresql
+```
+
+---
+
+## 2. PostgreSQL Sozlash va Konfiguratsiya ⚙️
+
+### Superuser yaratish
+
+```bash
+# Linux/macOS uchun
+sudo -u postgres createuser --interactive
+
+# Windows uchun (Command Prompt admin sifatida)
+createuser --interactive -U postgres
+
+🎯 Sozlash:
+- Role name: your_username
+- Superuser: y
+- Create databases: y
+- Create roles: y
+```
+
+### Database yaratish
+
+```bash
+# Command line orqali
+createdb -U postgres myapp_dev
+
+# Yoki PostgreSQL shell ichida
+psql -U postgres
+postgres=# CREATE DATABASE myapp_dev OWNER your_username;
+postgres=# \q
+```
+
+### postgresql.conf sozlash
+
+```bash
+# Configuration file topish
+sudo -u postgres psql -c "SHOW config_file;"
+
+# # Default: /etc/postgresql/15/main/postgresql.conf
+
+# Muhim sozlamalar:
+```
+
+```sql
+# postgresql.conf faylida:
+
+# Connection taxaddi
+listen_addresses = 'localhost'      # Local development
+port = 5432                         # Default port
+max_connections = 100               # Connection limit
+
+# Memory buferlar
+shared_buffers = 128MB              # Shared memory
+work_mem = 4MB                      # Per-query memory
+maintenance_work_mem = 64MB         # Maintenance operations
+
+# Logging
+log_statement = 'all'               # Log barcha querylar (dev uchun)
+log_directory = 'log'              # Log papkasi
+log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+
+# Performance
+checkpoint_completion_target = 0.9
+wal_buffers = 16MB
+random_page_cost = 1.1             # SSD optimization
+```
+
+### pg_hba.conf - Authentication
+
+```bash
+# pg_hba.conf fayli (client authentication)
+# Default location: /etc/postgresql/15/main/pg_hba.conf
+
+# Local connections
+local   all             all                                     trust
+host    all             all             127.0.0.1/32            md5
+host    all             all             ::1/128                 md5
+
+# ✅ Development uchun trust, Production uchun md5
+# Configuration o'zgarishdan keyin restart kerak:
+sudo systemctl restart postgresql
+```
+
+---
+
+## 3. PostgreSQL bilan Ishlash Asoslari 🎯
+
+### psql - Command Line Interface
+
+```bash
+# PostgreSQL shell'ga kirish
+psql -U postgres -d postgres
+
+# Database ro'yxatini ko'rish
+\l
+
+# Database'ga ulanish
+\c myapp_dev
+
+# Jadvallar ro'yxati
+\dt
+
+# Jadval strukturasi
+\d table_name
+
+# Chiqish
+\q
+```
+
+### Birinchi Database va Jadval Yaratish
+
+```sql
+-- 1. Database yaratish
+CREATE DATABASE blog_app
+WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'en_US.UTF-8'
+    LC_CTYPE = 'en_US.UTF-8';
+
+-- 2. Database'ga ulanish
+\c blog_app
+
+-- 3. Foydalanuvchilar jadvali yaratish
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    bio TEXT,
+    avatar_url VARCHAR(500),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+    -- Validatsiya
+    CONSTRAINT email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+    CONSTRAINT username_length CHECK (char_length(username) >= 3)
+);
+
+-- 4. Index qo'shish
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_active ON users(is_active) WHERE is_active = true;
+
+-- 5. Sample ma'lumot qo'shish
+INSERT INTO users (username, email, full_name, password_hash, bio) VALUES
+('john_doe', 'john@example.com', 'John Doe', 'hashed_password_here', 'Software Developer'),
+('jane_smith', 'jane@example.com', 'Jane Smith', 'hashed_password_here', 'UI/UX Designer'),
+('alice_brown', 'alice@example.com', 'Alice Brown', 'hashed_password_here', 'Product Manager');
+
+-- 6. Ma'lumotni ko'rish
+SELECT id, username, email, full_name, created_at FROM users;
+```
+
+### Database Backup va Restore
+
+```bash
+# Database backup yaratish
+pg_dump -U postgres -h localhost blog_app > blog_app_backup.sql
+
+# Specific table backup
+pg_dump -U postgres -h localhost -t users blog_app > users_backup.sql
+
+# Database restore qilish
+psql -U postgres -h localhost blog_app < blog_app_backup.sql
+
+# CSV format backup
+psql -U postgres -d blog_app -c "\copy users TO 'users.csv' DELIMITER ',' CSV HEADER;"
+```
+
+---
+
+## 4. GUI Tools - PostgreSQL Boshqarish 🖥️
+
+### pgAdmin 4 O'rnatish
+
+**Windows/macOS:**
+
+```bash
+# pgadmin.org/download/ saytidan yuklab oling
+# Installer orqali o'rnating
+
+🎯 Birinchi setup:
+1. master password qo'ying
+2. "Add Server" tugmasini bosing
+3. Server ma'lumotlarini kiriting:
+   - Name: Local PostgreSQL
+   - Host: localhost
+   - Port: 5432
+   - Username: postgres
+   - Password: sizning parolingiz
+```
+
+**Ubuntu/Debian:**
+
+```bash
+# Repository qo'shish
+curl https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
+
+# Install
+sudo apt install pgadmin4-web
+
+# Configuration
+sudo /usr/pgadmin4/bin/setup-web.sh
+```
+
+### DBeaver - Universal Database Tool
+
+```bash
+# Download: dbeaver.io/download/
+# Yoki package manager orqali:
+
+# macOS
+brew install --cask dbeaver-community
+
+# Ubuntu
+snap install dbeaver-ce
+
+# Windows
+choco install dbeaver
+```
+
+**DBeaver bilan PostgreSQL ulanish:**
+
+```json
+{
+  "driver": "PostgreSQL",
+  "server": "localhost",
+  "port": 5432,
+  "database": "blog_app",
+  "username": "postgres",
+  "password": "your_password",
+  "showNonDefaultDB": true
+}
+```
+
+### Prisma Studio (Zamonaviy Web Interface)
+
+```bash
+# Prisma CLI o'rnatish
+npm install -g prisma
+
+# Keyingi darslarda batafsil o'rganamiz
+npx prisma studio
+```
+
+---
+
+## 5. Node.js bilan PostgreSQL Integratsiya 💻
+
+### pg library o'rnatish
+
+```bash
+# Loyiha yaratish
+mkdir blog-api && cd blog-api
+npm init -y
+
+# PostgreSQL driver o'rnatish
+npm install pg
+npm install --save-dev @types/pg
+
+# Environment variables uchun
+npm install dotenv
+```
+
+### Database Connection Setup
+
+```javascript
+// config/database.js
+const { Pool } = require('pg');
+require('dotenv').config();
+
+const pool = new Pool({
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'blog_app',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD,
+  max: 20, // maksimum connection count
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+// Connection test
+pool.on('connect', () => {
+  console.log('✅ PostgreSQL ga muvaffaqiyatli ulandi');
+});
+
+pool.on('error', (err) => {
+  console.error('❌ Database connection xatosi:', err);
+  process.exit(-1);
+});
+
+module.exports = pool;
+```
+
+### .env Configuration
+
+```bash
+# .env fayli
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=blog_app
+DB_USER=postgres
+DB_PASSWORD=your_password
+
+# Production settings
+NODE_ENV=development
+```
+
+### Birinchi Database Query
+
+```javascript
+// models/User.js
+const pool = require('../config/database');
+
+class User {
+  // Barcha foydalanuvchilarni olish
+  static async getAll() {
+    try {
+      const result = await pool.query(`
+        SELECT id, username, email, full_name, bio, created_at
+        FROM users
+        WHERE is_active = true
+        ORDER BY created_at DESC
+      `);
+      return result.rows;
+    } catch (error) {
+      throw new Error(`Foydalanuvchilarni olishda xato: ${error.message}`);
+    }
+  }
+
+  // ID bo'yicha foydalanuvchini topish
+  static async findById(id) {
+    try {
+      const result = await pool.query(`
+        SELECT id, username, email, full_name, bio, avatar_url, created_at
+        FROM users
+        WHERE id = $1 AND is_active = true
+      `, [id]);
+
+      return result.rows[0] || null;
+    } catch (error) {
+      throw new Error(`Foydalanuvchi topishda xato: ${error.message}`);
+    }
+  }
+
+  // Yangi foydalanuvchi yaratish
+  static async create(userData) {
+    const { username, email, full_name, password_hash, bio } = userData;
+
+    try {
+      const result = await pool.query(`
+        INSERT INTO users (username, email, full_name, password_hash, bio)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, username, email, full_name, created_at
+      `, [username, email, full_name, password_hash, bio]);
+
+      return result.rows[0];
+    } catch (error) {
+      if (error.code === '23505') { // Unique violation
+        throw new Error('Bunday username yoki email allaqachon mavjud');
+      }
+      throw new Error(`Foydalanuvchi yaratishda xato: ${error.message}`);
+    }
+  }
+
+  // Foydalanuvchini yangilash
+  static async updateById(id, updates) {
+    const allowedFields = ['full_name', 'bio', 'avatar_url'];
+    const fields = Object.keys(updates).filter(field => allowedFields.includes(field));
+
+    if (fields.length === 0) {
+      throw new Error('Yangilash uchun maydon topilmadi');
+    }
+
+    const setPart = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
+    const values = fields.map(field => updates[field]);
+    values.push(id); // ID oxirgi parametr
+
+    try {
+      const result = await pool.query(`
+        UPDATE users
+        SET ${setPart}, updated_at = NOW()
+        WHERE id = $${values.length} AND is_active = true
+        RETURNING id, username, email, full_name, bio, updated_at
+      `, values);
+
+      return result.rows[0] || null;
+    } catch (error) {
+      throw new Error(`Foydalanuvchi yangilashda xato: ${error.message}`);
+    }
+  }
+
+  // Foydalanuvchini o'chirish (soft delete)
+  static async deleteById(id) {
+    try {
+      const result = await pool.query(`
+        UPDATE users
+        SET is_active = false, updated_at = NOW()
+        WHERE id = $1 AND is_active = true
+        RETURNING id, username
+      `, [id]);
+
+      return result.rows[0] || null;
+    } catch (error) {
+      throw new Error(`Foydalanuvchi o'chirishda xato: ${error.message}`);
+    }
+  }
+}
+
+module.exports = User;
+```
+
+### Express API yaratish
+
+```javascript
+// server.js
+const express = require('express');
+const User = require('./models/User');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+
+// CRUD API endpoints
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await User.getAll();
+    res.json({
+      success: true,
+      data: users,
+      count: users.length
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Foydalanuvchi topilmadi'
+      });
+    }
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.post('/api/users', async (req, res) => {
+  try {
+    const user = await User.create(req.body);
+    res.status(201).json({
+      success: true,
+      data: user,
+      message: 'Foydalanuvchi muvaffaqiyatli yaratildi'
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.put('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.updateById(req.params.id, req.body);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Foydalanuvchi topilmadi yoki yangilanmadi'
+      });
+    }
+    res.json({
+      success: true,
+      data: user,
+      message: 'Foydalanuvchi muvaffaqiyatli yangilandi'
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.deleteById(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Foydalanuvchi topilmadi'
+      });
+    }
+    res.json({
+      success: true,
+      message: 'Foydalanuvchi muvaffaqiyatli o\'chirildi',
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Health check
+app.get('/health', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW() as server_time');
+    res.json({
+      status: 'OK',
+      database: 'Connected',
+      server_time: result.rows[0].server_time
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'Error',
+      database: 'Disconnected',
+      error: error.message
+    });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server ${PORT} portda ishlamoqda`);
+  console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+  console.log(`👥 Users API: http://localhost:${PORT}/api/users`);
+});
+```
+
+### API ni Sinash
+
+```bash
+# Server ishga tushirish
+node server.js
+
+# Health check
+curl http://localhost:3000/health
+
+# Foydalanuvchilar ro'yxati
+curl http://localhost:3000/api/users
+
+# Yangi foydalanuvchi yaratish
+curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "test_user",
+    "email": "test@example.com",
+    "full_name": "Test User",
+    "password_hash": "hashed_password",
+    "bio": "Test foydalanuvchi"
+  }'
+
+# Foydalanuvchini ID bo'yicha olish
+curl http://localhost:3000/api/users/1
+
+# Foydalanuvchini yangilash
+curl -X PUT http://localhost:3000/api/users/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "full_name": "Yangilangan Ism",
+    "bio": "Yangi bio ma'\''lumoti"
+  }'
+```
+
+---
+
+## 6. Database Security va Best Practices 🔒
+
+### Security Settings
+
+```sql
+-- 1. Foydalanuvchi va rolelar yaratish
+CREATE ROLE app_user LOGIN PASSWORD 'strong_password_here';
+CREATE DATABASE blog_app_prod OWNER app_user;
+
+-- 2. Minimal permissions berish
+GRANT CONNECT ON DATABASE blog_app_prod TO app_user;
+GRANT USAGE ON SCHEMA public TO app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
+
+-- 3. Superuser permissions cheklash
+-- Production'da superuser ishlatmang!
+
+-- 4. SSL ulanish talab qilish
+-- postgresql.conf da:
+ssl = on
+ssl_cert_file = 'server.crt'
+ssl_key_file = 'server.key'
+```
+
+### Connection Security
+
+```javascript
+// Secure connection options
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+
+  // SSL configuration
+  ssl: process.env.NODE_ENV === 'production' ? {
+    rejectUnauthorized: false // Cloud providers uchun
+  } : false,
+
+  // Connection limits
+  max: process.env.DB_MAX_CONNECTIONS || 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+
+  // Query timeouts
+  statement_timeout: 30000,
+  query_timeout: 30000
+});
+```
+
+### Environment-based Configuration
+
+```javascript
+// config/config.js
+const config = {
+  development: {
+    host: 'localhost',
+    port: 5432,
+    database: 'blog_app_dev',
+    user: 'postgres',
+    password: 'development_password',
+    ssl: false,
+    max: 5
+  },
+
+  test: {
+    host: 'localhost',
+    port: 5432,
+    database: 'blog_app_test',
+    user: 'postgres',
+    password: 'test_password',
+    ssl: false,
+    max: 2
+  },
+
+  production: {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    ssl: {
+      rejectUnauthorized: false
+    },
+    max: 20
+  }
+};
+
+module.exports = config[process.env.NODE_ENV || 'development'];
+```
+
+---
+
+## 7. Performance Monitoring va Optimization 📊
+
+### Basic Performance Queries
+
+```sql
+-- 1. Aktiv connectionlarni ko'rish
+SELECT pid, usename, application_name, client_addr, state, query_start, query
+FROM pg_stat_activity
+WHERE state = 'active';
+
+-- 2. Eng sekin querylarni topish
+SELECT query,
+       calls,
+       total_time,
+       mean_time,
+       stddev_time
+FROM pg_stat_statements
+ORDER BY mean_time DESC
+LIMIT 10;
+
+-- 3. Database hajmi
+SELECT pg_database.datname,
+       pg_size_pretty(pg_database_size(pg_database.datname)) AS size
+FROM pg_database
+ORDER BY pg_database_size(pg_database.datname) DESC;
+
+-- 4. Index usage statistikasi
+SELECT indexrelname as index_name,
+       idx_tup_read,
+       idx_tup_fetch,
+       pg_size_pretty(pg_relation_size(indexrelname::regclass)) as index_size
+FROM pg_stat_user_indexes
+ORDER BY idx_tup_read DESC;
+```
+
+### Monitoring Script
+
+```javascript
+// utils/monitor.js
+const pool = require('../config/database');
+
+class DatabaseMonitor {
+  static async getConnectionStats() {
+    const result = await pool.query(`
+      SELECT count(*) as total_connections,
+             count(*) filter (where state = 'active') as active_connections,
+             count(*) filter (where state = 'idle') as idle_connections
+      FROM pg_stat_activity
+      WHERE datname = current_database();
+    `);
+    return result.rows[0];
+  }
+
+  static async getDatabaseSize() {
+    const result = await pool.query(`
+      SELECT pg_size_pretty(pg_database_size(current_database())) as database_size;
+    `);
+    return result.rows[0].database_size;
+  }
+
+  static async getSlowQueries(limit = 10) {
+    const result = await pool.query(`
+      SELECT query, calls, total_time, mean_time
+      FROM pg_stat_statements
+      WHERE query NOT LIKE '%pg_stat%'
+      ORDER BY mean_time DESC
+      LIMIT $1;
+    `, [limit]);
+    return result.rows;
+  }
+
+  static async healthCheck() {
+    try {
+      const connections = await this.getConnectionStats();
+      const size = await this.getDatabaseSize();
+
+      return {
+        status: 'healthy',
+        timestamp: new Date(),
+        connections,
+        database_size: size
+      };
+    } catch (error) {
+      return {
+        status: 'unhealthy',
+        error: error.message
+      };
+    }
+  }
+}
+
+module.exports = DatabaseMonitor;
+```
+
+---
+
+## Xulosa 🎯
+
+Bu darsda biz quyidagilarni o'rgandik:
+
+✅ **PostgreSQL o'rnatish** - barcha platformalar uchun
+✅ **Database sozlash** - configuration va security
+✅ **GUI tools** - pgAdmin va DBeaver
+✅ **Node.js integratsiya** - pg library bilan professional API
+✅ **Security best practices** - production-ready setup
+✅ **Performance monitoring** - database health tracking
+
+### Keyingi darsda:
+
+📊 **SQL Fundamentals**
+- CRUD operations (SELECT, INSERT, UPDATE, DELETE)
+- JOINs va relationships
+- Aggregate functions va GROUP BY
+- Indexes va performance optimization
+
+### Uyga vazifa:
+
+1. **PostgreSQL o'rnating** va birinchi database yarating
+2. **Blog API'ni ishga tushiring** va barcha endpointlarni sinang
+3. **pgAdmin yoki DBeaver** bilan database'ni ko'rib chiqing
+4. **10 ta foydalanuvchi** va **20 ta post** ma'lumoti qo'shing
+
+### Tayyorgarlik:
+
+```sql
+-- Keyingi darsga tayyorgarlik uchun qo'shimcha jadvallar:
+CREATE TABLE categories (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) UNIQUE NOT NULL,
+  slug VARCHAR(100) UNIQUE NOT NULL,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE posts (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) UNIQUE NOT NULL,
+  content TEXT NOT NULL,
+  excerpt TEXT,
+  published_at TIMESTAMPTZ,
+  user_id INTEGER REFERENCES users(id),
+  category_id INTEGER REFERENCES categories(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
+### Qo'shimcha resurslar:
+
+- 🐘 [PostgreSQL Tutorial](https://www.postgresql.org/docs/current/tutorial.html)
+- 🛠️ [pgAdmin Documentation](https://pgadmin.org/docs/)
+- 📊 [DBeaver Guides](https://dbeaver.io/docs/)
+- 🔒 [PostgreSQL Security](https://postgresql.org/docs/current/security.html)
+
+**Keyingi dars:** SQL Fundamentals - CRUD, JOINs va Complex Queries 📊

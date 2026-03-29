@@ -1,0 +1,849 @@
+---
+title: "Express Middleware va Authentication"
+description: "Express.js middleware'larini chuqur o'rganamiz - authentication, logging, error handling va custom middleware yaratish"
+category: "nodejs"
+order: 6
+difficulty: "intermediate"
+readTime: "40 daqiqa"
+tags:
+  - nodejs
+  - express
+  - middleware
+  - authentication
+  - jwt
+  - security
+  - logging
+---
+
+# Express Middleware va Authentication
+
+Assalom aleykum! Oldingi darsda Express.js asoslari bilan tanishdik. Endi **middleware'lar** bilan chuqur ishlaymiz - bu Express.js'ning eng kuchli qismi!
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- 🔧 **Middleware pipeline** - qanday ishlaydi
+- 🔐 **Authentication middleware** - JWT, sessions
+- 📝 **Logging middleware** - request tracking
+- ⚠️ **Error handling** - centralized error management
+- 🛡️ **Security middleware** - CORS, helmet, rate limiting
+- 💼 **Real loyiha** - Secure Chat API
+
+---
+
+## Middleware pipeline qanday ishlaydi?
+
+**Middleware** - bu request va response o'rtasida ishlaydigan function'lar zanjiri.
+
+### Pipelineни vizual tushunish:
+
+```
+📡 Request → 🔍 Auth → 📝 Logger → 🛡️ CORS → 🎯 Route Handler → 📤 Response
+```
+
+### Real hayot misoli:
+
+Tasavvur qiling, siz aeroportda:
+
+1. **Chiptani ko'rsatish** = Authentication middleware
+2. **Xavfsizlik tekshiruvi** = Security middleware
+3. **Passport stampi** = Logging middleware
+4. **Gate'ga boring** = Route Handler
+5. **Samolyotga chiqish** = Response
+
+Agar biron bir bosqichda muammo bo'lsa, keyingi bosqichga o'ta olmaysiz!
+
+### Basic middleware structure:
+
+```javascript
+const express = require('express');
+const app = express();
+
+// Middleware function structure
+const myMiddleware = (req, res, next) => {
+  console.log('Middleware ishladi!');
+
+  // Request/Response'ni o'zgartirish mumkin
+  req.customProperty = 'Yangi ma\'lumot';
+  res.setHeader('X-Custom-Header', 'Hello');
+
+  // MUHIM: next() ni chaqirish!
+  next(); // Keyingi middleware'ga o'tish
+};
+
+// Middleware'ni qo'llash
+app.use(myMiddleware);
+
+// Route handler
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Middleware orqali keldi!',
+    customData: req.customProperty
+  });
+});
+
+app.listen(3000);
+```
+
+---
+
+## Authentication Middleware
+
+### 1. Basic Authentication:
+
+```javascript
+const express = require('express');
+const app = express();
+
+// Basic Auth middleware
+const basicAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authorization header yo\'q!'
+    });
+  }
+
+  // Basic YWRtaW46cGFzc3dvcmQ= (admin:password base64)
+  const credentials = authHeader.split(' ')[1];
+
+  if (!credentials) {
+    return res.status(401).json({
+      success: false,
+      message: 'Credentials yo\'q!'
+    });
+  }
+
+  // Base64 decode
+  const decoded = Buffer.from(credentials, 'base64').toString('ascii');
+  const [username, password] = decoded.split(':');
+
+  // Check credentials (real da database'dan)
+  if (username === 'admin' && password === 'password') {
+    req.user = { username, role: 'admin' };
+    next();
+  } else {
+    res.status(401).json({
+      success: false,
+      message: 'Noto\'g\'ri credentials!'
+    });
+  }
+};
+
+// Public route
+app.get('/', (req, res) => {
+  res.json({ message: 'Public endpoint' });
+});
+
+// Protected route
+app.get('/dashboard', basicAuth, (req, res) => {
+  res.json({
+    message: 'Protected dashboard',
+    user: req.user
+  });
+});
+
+app.listen(3000, () => {
+  console.log('🧪 Test qiling:');
+  console.log('curl http://localhost:3000/ # Public');
+  console.log('curl -H "Authorization: Basic YWRtaW46cGFzc3dvcmQ=" http://localhost:3000/dashboard');
+});
+```
+
+### 2. JWT Authentication:
+
+```bash
+# JWT paket o'rnatish
+npm install jsonwebtoken bcrypt
+```
+
+```javascript
+// auth.js - JWT Authentication middleware
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+
+const app = express();
+app.use(express.json());
+
+// Secret key (real da environment variable'dan)
+const JWT_SECRET = 'supersecretkey';
+
+// In-memory users (real da database)
+const users = [
+  {
+    id: 1,
+    username: 'alibek',
+    email: 'alibek@example.com',
+    password: '$2b$10$rQZ9w.X8kNqB7j4x5oKGZ.fQqoKjlL7QgYrLYJF.GZW6Y7e4fQz7K', // "password123"
+    role: 'admin'
+  },
+  {
+    id: 2,
+    username: 'malika',
+    email: 'malika@example.com',
+    password: '$2b$10$8L5k4Y2.m9f7X.n6V0K3bu3rGlqMkQf7kY8KgOyxLJ9WgNxU.HkAG', // "mypass456"
+    role: 'user'
+  }
+];
+
+// JWT middleware
+const authenticateJWT = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Access token kerak!'
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({
+      success: false,
+      message: 'Invalid yoki muddati tugagan token!'
+    });
+  }
+};
+
+// Role-based authorization middleware
+const authorizeRole = (roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication kerak!'
+      });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bu operatsiya uchun ruxsat yo\'q!'
+      });
+    }
+
+    next();
+  };
+};
+
+// Login endpoint
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({
+      success: false,
+      message: 'Username va password majburiy!'
+    });
+  }
+
+  // Find user
+  const user = users.find(u => u.username === username);
+
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      message: 'User topilmadi!'
+    });
+  }
+
+  // Check password
+  const validPassword = await bcrypt.compare(password, user.password);
+
+  if (!validPassword) {
+    return res.status(401).json({
+      success: false,
+      message: 'Noto\'g\'ri parol!'
+    });
+  }
+
+  // Generate JWT token
+  const token = jwt.sign(
+    {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role
+    },
+    JWT_SECRET,
+    { expiresIn: '24h' }
+  );
+
+  res.json({
+    success: true,
+    message: 'Login muvaffaqiyatli!',
+    token,
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role
+    }
+  });
+});
+
+// Register endpoint
+app.post('/register', async (req, res) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: 'Barcha maydonlar majburiy!'
+    });
+  }
+
+  // Check if user exists
+  const existingUser = users.find(u => u.username === username || u.email === email);
+
+  if (existingUser) {
+    return res.status(400).json({
+      success: false,
+      message: 'Username yoki email band!'
+    });
+  }
+
+  // Hash password
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+  // Create new user
+  const newUser = {
+    id: users.length + 1,
+    username,
+    email,
+    password: hashedPassword,
+    role: 'user'
+  };
+
+  users.push(newUser);
+
+  res.status(201).json({
+    success: true,
+    message: 'User yaratildi!',
+    user: {
+      id: newUser.id,
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role
+    }
+  });
+});
+
+// Public routes
+app.get('/', (req, res) => {
+  res.json({
+    message: 'JWT Authentication API',
+    endpoints: {
+      'POST /login': 'Login qilish',
+      'POST /register': 'Register qilish',
+      'GET /profile': 'Profile ko\'rish (authentication kerak)',
+      'GET /admin': 'Admin panel (admin role kerak)'
+    }
+  });
+});
+
+// Protected routes
+app.get('/profile', authenticateJWT, (req, res) => {
+  res.json({
+    success: true,
+    message: 'Profile data',
+    user: req.user
+  });
+});
+
+// Admin only route
+app.get('/admin', authenticateJWT, authorizeRole(['admin']), (req, res) => {
+  res.json({
+    success: true,
+    message: 'Admin panel data',
+    users: users.map(u => ({
+      id: u.id,
+      username: u.username,
+      email: u.email,
+      role: u.role
+    }))
+  });
+});
+
+app.listen(3000, () => {
+  console.log('🔐 JWT Auth Server: http://localhost:3000');
+  console.log('\n🧪 Test commands:');
+  console.log('# Register');
+  console.log('curl -X POST -H "Content-Type: application/json" -d \'{"username":"test","email":"test@example.com","password":"testpass"}\' http://localhost:3000/register');
+  console.log('\n# Login');
+  console.log('curl -X POST -H "Content-Type: application/json" -d \'{"username":"alibek","password":"password123"}\' http://localhost:3000/login');
+});
+```
+
+---
+
+## Logging Middleware
+
+### 1. Custom Request Logger:
+
+```javascript
+const express = require('express');
+const fs = require('fs').promises;
+const path = require('path');
+
+const app = express();
+
+// Custom logger middleware
+const customLogger = async (req, res, next) => {
+  const startTime = Date.now();
+
+  // Request ma'lumotlarini yig'ish
+  const logData = {
+    timestamp: new Date().toISOString(),
+    method: req.method,
+    url: req.url,
+    ip: req.ip || req.connection.remoteAddress,
+    userAgent: req.get('User-Agent'),
+    referrer: req.get('Referrer') || 'direct'
+  };
+
+  // Response tugagach, timing va status qo'shish
+  res.on('finish', async () => {
+    const duration = Date.now() - startTime;
+
+    logData.statusCode = res.statusCode;
+    logData.duration = duration;
+    logData.contentLength = res.get('Content-Length') || 0;
+
+    // Console'ga chiqarish
+    const statusColor = res.statusCode >= 400 ? '\x1b[31m' : '\x1b[32m'; // Red/Green
+    const resetColor = '\x1b[0m';
+
+    console.log(
+      `📡 ${logData.timestamp} - ${statusColor}${logData.method} ${logData.url} ${logData.statusCode}${resetColor} - ${duration}ms`
+    );
+
+    // Faylga yozish
+    try {
+      const logDir = path.join(__dirname, 'logs');
+      await fs.mkdir(logDir, { recursive: true });
+
+      const logFile = path.join(logDir, `access-${new Date().toISOString().split('T')[0]}.log`);
+      const logEntry = JSON.stringify(logData) + '\n';
+
+      await fs.appendFile(logFile, logEntry);
+    } catch (error) {
+      console.error('❌ Log yozishda xatolik:', error.message);
+    }
+  });
+
+  next();
+};
+
+// Advanced logger with request body logging
+const bodyLogger = (req, res, next) => {
+  if (req.method === 'POST' || req.method === 'PUT') {
+    let body = '';
+
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+
+    req.on('end', () => {
+      try {
+        req.bodyForLogging = JSON.parse(body);
+        console.log(`📝 Request body:`, req.bodyForLogging);
+      } catch (error) {
+        console.log(`📝 Request body (raw):`, body);
+      }
+    });
+  }
+
+  next();
+};
+
+// Middleware'larni apply qilish
+app.use(customLogger);
+app.use(express.json());
+app.use(bodyLogger);
+
+// Test routes
+app.get('/', (req, res) => {
+  res.json({ message: 'Logger test!' });
+});
+
+app.post('/data', (req, res) => {
+  res.json({ received: req.body });
+});
+
+app.get('/error', (req, res) => {
+  res.status(500).json({ error: 'Test error' });
+});
+
+app.listen(3000, () => {
+  console.log('📝 Logger server: http://localhost:3000');
+  console.log('📁 Loglar ./logs/ papkasida saqlanadi');
+});
+```
+
+---
+
+## Global Error Handling
+
+### Professional Error Handling System:
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+// Custom Error class
+class AppError extends Error {
+  constructor(message, statusCode, code = null) {
+    super(message);
+    this.statusCode = statusCode;
+    this.code = code;
+    this.isOperational = true;
+
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+// Async error wrapper
+const catchAsync = (fn) => {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
+// Route'lar
+app.get('/', (req, res) => {
+  res.json({ message: 'Error handling test server' });
+});
+
+// Sync error test
+app.get('/sync-error', (req, res, next) => {
+  throw new AppError('Bu sinxron xatolik!', 400, 'SYNC_ERROR');
+});
+
+// Async error test
+app.get('/async-error', catchAsync(async (req, res, next) => {
+  // Simulate async operation
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  throw new AppError('Bu asinxron xatolik!', 500, 'ASYNC_ERROR');
+}));
+
+// Validation error test
+app.post('/validate', (req, res, next) => {
+  const { name, email } = req.body;
+
+  if (!name) {
+    return next(new AppError('Name majburiy!', 400, 'VALIDATION_ERROR'));
+  }
+
+  if (!email || !email.includes('@')) {
+    return next(new AppError('To\'g\'ri email kiriting!', 400, 'EMAIL_INVALID'));
+  }
+
+  res.json({ message: 'Validation passed!', data: { name, email } });
+});
+
+// Database simulation error
+app.get('/user/:id', catchAsync(async (req, res, next) => {
+  const userId = parseInt(req.params.id);
+
+  if (isNaN(userId) || userId <= 0) {
+    return next(new AppError('Noto\'g\'ri user ID!', 400, 'INVALID_ID'));
+  }
+
+  // Simulate database operation
+  if (userId === 999) {
+    throw new AppError('User topilmadi!', 404, 'USER_NOT_FOUND');
+  }
+
+  if (userId === 500) {
+    // Simulate database error
+    const dbError = new Error('Database connection failed');
+    dbError.code = 'DB_CONNECTION_ERROR';
+    throw dbError;
+  }
+
+  res.json({
+    user: {
+      id: userId,
+      name: `User ${userId}`,
+      email: `user${userId}@example.com`
+    }
+  });
+}));
+
+// 404 handler (route topilmadi)
+app.use('*', (req, res, next) => {
+  const error = new AppError(
+    `Route topilmadi: ${req.method} ${req.originalUrl}`,
+    404,
+    'ROUTE_NOT_FOUND'
+  );
+  next(error);
+});
+
+// Global error handler
+app.use((error, req, res, next) => {
+  // Log error
+  console.error('💥 Error occurred:');
+  console.error(`   Message: ${error.message}`);
+  console.error(`   Status: ${error.statusCode || 500}`);
+  console.error(`   Code: ${error.code || 'UNKNOWN'}`);
+
+  if (process.env.NODE_ENV === 'development') {
+    console.error(`   Stack: ${error.stack}`);
+  }
+
+  // Error response structure
+  let statusCode = error.statusCode || 500;
+  let message = error.message;
+  let code = error.code;
+
+  // Handle specific error types
+  if (error.name === 'ValidationError') {
+    statusCode = 400;
+    message = 'Validation xatoligi';
+    code = 'VALIDATION_ERROR';
+  } else if (error.code === 'DB_CONNECTION_ERROR') {
+    statusCode = 503;
+    message = 'Database bilan aloqa yo\'q';
+    code = 'SERVICE_UNAVAILABLE';
+  } else if (error.code === 11000) { // MongoDB duplicate key
+    statusCode = 409;
+    message = 'Ma\'lumot allaqachon mavjud';
+    code = 'DUPLICATE_DATA';
+  }
+
+  // Response payload
+  const errorResponse = {
+    success: false,
+    error: {
+      message,
+      code,
+      statusCode
+    }
+  };
+
+  // Development mode: qo'shimcha ma'lumotlar
+  if (process.env.NODE_ENV === 'development') {
+    errorResponse.error.stack = error.stack;
+    errorResponse.error.originalError = error.toString();
+  }
+
+  res.status(statusCode).json(errorResponse);
+});
+
+// Unhandled rejection'lar uchun
+process.on('unhandledRejection', (err) => {
+  console.error('💥 Unhandled Rejection:', err.message);
+  console.error('🔄 Server o\'chayapti...');
+
+  process.exit(1);
+});
+
+// Uncaught exception'lar uchun
+process.on('uncaughtException', (err) => {
+  console.error('💥 Uncaught Exception:', err.message);
+  console.error('🔄 Server o\'chayapti...');
+
+  process.exit(1);
+});
+
+app.listen(3000, () => {
+  console.log('⚠️ Error Handling Server: http://localhost:3000');
+  console.log('\n🧪 Test URL\'lar:');
+  console.log('   ✅ http://localhost:3000/ (success)');
+  console.log('   ❌ http://localhost:3000/sync-error');
+  console.log('   ❌ http://localhost:3000/async-error');
+  console.log('   ❌ http://localhost:3000/user/999 (not found)');
+  console.log('   ❌ http://localhost:3000/user/500 (db error)');
+  console.log('   ❌ http://localhost:3000/nonexistent (404)');
+});
+```
+
+---
+
+## Security Middleware
+
+### 1. Rate Limiting:
+
+```bash
+npm install express-rate-limit express-slow-down
+```
+
+```javascript
+const express = require('express');
+const rateLimit = require('express-rate-limit');
+const slowDown = require('express-slow-down');
+
+const app = express();
+app.use(express.json());
+
+// Basic rate limiting
+const basicLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 daqiqa
+  max: 100, // 15 daqiqada maksimal 100 ta request
+  message: {
+    success: false,
+    message: 'Juda ko\'p request! 15 daqiqadan keyin qaytadan urinib ko\'ring.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: 'Rate limit exceeded!',
+      limit: req.rateLimit.limit,
+      current: req.rateLimit.current,
+      remaining: req.rateLimit.remaining,
+      resetTime: new Date(Date.now() + req.rateLimit.resetTime)
+    });
+  }
+});
+
+// Strict rate limiting for login
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5, // 15 daqiqada 5 ta login urinish
+  skipSuccessfulRequests: true,
+  message: {
+    success: false,
+    message: 'Login uchun juda ko\'p urinish! 15 daqiqadan keyin qaytadan urining.',
+    code: 'TOO_MANY_LOGIN_ATTEMPTS'
+  }
+});
+
+// Speed limiting (request'ni sekinlashtirish)
+const speedLimiter = slowDown({
+  windowMs: 15 * 60 * 1000,
+  delayAfter: 2, // 2-chi request'dan keyin delay boshlash
+  delayMs: 500, // Har bir qo'shimcha request uchun 500ms delay
+  maxDelayMs: 20000, // Maksimal 20 soniya delay
+  message: {
+    success: false,
+    message: 'Request speed limit!'
+  }
+});
+
+// Global rate limiting
+app.use(basicLimiter);
+app.use('/api/', speedLimiter);
+
+// Routes
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Rate limiting test server',
+    rateLimit: {
+      limit: req.rateLimit.limit,
+      current: req.rateLimit.current,
+      remaining: req.rateLimit.remaining,
+      resetTime: new Date(Date.now() + req.rateLimit.resetTime)
+    }
+  });
+});
+
+app.post('/login', loginLimiter, (req, res) => {
+  const { username, password } = req.body;
+
+  // Simulate login check
+  if (username === 'admin' && password === 'password') {
+    res.json({
+      success: true,
+      message: 'Login successful!',
+      token: 'fake-jwt-token'
+    });
+  } else {
+    res.status(401).json({
+      success: false,
+      message: 'Invalid credentials!'
+    });
+  }
+});
+
+app.get('/api/data', (req, res) => {
+  res.json({
+    data: 'This endpoint has speed limiting',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.listen(3000, () => {
+  console.log('🛡️ Rate Limiting Server: http://localhost:3000');
+  console.log('\n🧪 Test commands:');
+  console.log('# Rapid requests test');
+  console.log('for i in {1..10}; do curl http://localhost:3000/; done');
+  console.log('\n# Login rate limit test');
+  console.log('for i in {1..6}; do curl -X POST -H "Content-Type: application/json" -d \'{"username":"wrong","password":"wrong"}\' http://localhost:3000/login; done');
+});
+```
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **Middleware pipeline** - request/response zanjiri
+✅ **Authentication** - JWT, bcrypt, role-based access
+✅ **Custom logging** - request tracking va analytics
+✅ **Professional error handling** - centralized error management
+✅ **Security middleware** - rate limiting, input validation, XSS protection
+✅ **Real loyiha** - Chat API foundations
+
+### 📊 Security Features implemented:
+
+✅ **JWT Authentication** - secure token-based auth
+✅ **Role-based authorization** - user permissions
+✅ **Rate limiting** - abuse prevention
+✅ **Input validation** - XSS protection, data sanitization
+✅ **Security headers** - Helmet middleware
+✅ **Request logging** - Morgan + custom analytics
+✅ **Error handling** - professional error responses
+
+### 🛡️ Production-ready middleware stack:
+
+- **Helmet**: Security headers
+- **CORS**: Cross-origin protection
+- **Rate limiting**: Brute force protection
+- **Input validation**: XSS va injection prevention
+- **JWT**: Stateless authentication
+- **Bcrypt**: Password hashing (10+ rounds)
+- **Error handling**: Information leakage prevention
+
+### 🚀 Keyingi darsda:
+
+- **Express Templates** - EJS, Handlebars, dynamic HTML
+- **File upload** - multer middleware
+- **Session management** - express-session
+- **Real-time features** - Socket.io integration
+- **API testing** - Postman, automated tests
+
+### 📚 Mustaqil mashq:
+
+1. **File upload middleware** - avatar uploading
+2. **Session-based auth** - alternative to JWT
+3. **API testing suite** - comprehensive tests
+
+---
+
+<Callout type="success" title="Middleware Master! 🎉">
+Siz endi Express.js middleware'larini professional darajada o'rgandingiz! Authentication, logging, security va error handling'ni amalda qo'lladingiz. Bu backend development'ning asosi!
+</Callout>
+
+<Callout type="info" title="Security First! 🛡️">
+Middleware'lar orqali application security'sini yuqori darajaga olib chiqdingiz! Rate limiting, JWT auth va error handling production-ready darajada. Keyingi darsda template engines bilan dynamic HTML yaratamiz.
+</Callout>
+
+**Keyingi dars**: [Express Templates](/docs/nodejs/07-express-templates)

@@ -1,0 +1,1735 @@
+---
+title: "Fullstack Social Media Project"
+description: "Instagram-style Social Media API - authentication, posts, comments, likes, followers va file uploads bilan to'liq loyiha"
+category: "api"
+order: 24
+difficulty: "expert"
+readTime: "75 daqiqa"
+tags:
+  - fullstack
+  - social-media
+  - project
+  - authentication
+  - file-upload
+  - real-time
+  - production
+---
+
+# Fullstack Social Media Project
+
+Assalom aleykum! Barcha backend curriculum mavzularini o'rgangach, endi **Social Media Platform** - Instagram-style katta loyihani yaratamiz. Bu loyihada authentication, file uploads, real-time features va production-ready code yozamiz.
+
+## O'qish rejasi
+
+Bu darsda quyidagi katta loyihani yaratamiz:
+- 📱 **Instagram-style Social Media API**
+- 🔐 **Complete Authentication** - JWT, OAuth2, password reset
+- 📸 **File Uploads** - images, videos, profiles
+- 👥 **Social Features** - follows, likes, comments, stories
+- 📡 **Real-time** - notifications, messaging
+- 🚀 **Production Ready** - deployment, monitoring, caching
+
+---
+
+## Loyiha arxitekturasi
+
+### Technology Stack:
+
+```
+🎯 BACKEND STACK:
+├── Runtime: Node.js 18+
+├── Framework: Express.js
+├── Database: PostgreSQL + Prisma ORM
+├── Authentication: JWT + Passport.js
+├── File Storage: AWS S3 / Cloudinary
+├── Real-time: Socket.io
+├── Validation: Zod
+├── Documentation: Swagger/OpenAPI
+├── Testing: Jest + Supertest
+├── Monitoring: Winston + Morgan
+├── Deployment: Docker + PM2
+└── Cache: Redis
+
+🎨 FRONTEND STACK:
+├── Framework: React 18 + TypeScript
+├── State: Zustand / Redux Toolkit
+├── UI: Tailwind CSS + Headless UI
+├── Forms: React Hook Form + Zod
+├── HTTP: Axios + React Query
+├── Real-time: Socket.io client
+├── Upload: React Dropzone
+└── Testing: Jest + React Testing Library
+```
+
+### Database Schema Design:
+
+```prisma
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id          String   @id @default(uuid())
+  username    String   @unique @db.VarChar(30)
+  email       String   @unique
+  fullName    String   @db.VarChar(100)
+  bio         String?  @db.Text
+  avatar      String?
+  website     String?
+  isVerified  Boolean  @default(false)
+  isPrivate   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Password & Auth
+  password              String
+  emailVerified         Boolean           @default(false)
+  emailVerificationToken String?
+  passwordResetToken    String?
+  passwordResetExpires  DateTime?
+
+  // Relationships
+  posts                 Post[]
+  likes                 Like[]
+  comments              Comment[]
+  stories               Story[]
+
+  // Followers relationship
+  followers             Follow[] @relation("UserFollowers")
+  following             Follow[] @relation("UserFollowing")
+
+  // Messaging
+  sentMessages          Message[] @relation("MessageSender")
+  receivedMessages      Message[] @relation("MessageReceiver")
+  conversations         ConversationParticipant[]
+
+  // Notifications
+  sentNotifications     Notification[] @relation("NotificationSender")
+  receivedNotifications Notification[] @relation("NotificationReceiver")
+
+  @@map("users")
+}
+
+// Posts & Content
+model Post {
+  id          String      @id @default(uuid())
+  caption     String?     @db.Text
+  location    String?
+  isVisible   Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relationships
+  author      User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    String
+  media       PostMedia[]
+  likes       Like[]
+  comments    Comment[]
+  tags        PostTag[]
+
+  @@map("posts")
+}
+
+model PostMedia {
+  id       String    @id @default(uuid())
+  type     MediaType
+  url      String
+  width    Int?
+  height   Int?
+  duration Int?      // For videos (seconds)
+  order    Int       @default(0)
+
+  post     Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId   String
+
+  @@map("post_media")
+}
+
+model Story {
+  id        String    @id @default(uuid())
+  mediaUrl  String
+  mediaType MediaType
+  caption   String?   @db.VarChar(500)
+  expiresAt DateTime  // 24 hours from creation
+  createdAt DateTime  @default(now())
+
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  views     StoryView[]
+
+  @@map("stories")
+}
+
+model StoryView {
+  id      String   @id @default(uuid())
+  viewedAt DateTime @default(now())
+
+  story   Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  storyId String
+  viewer  User     @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  viewerId String
+
+  @@unique([storyId, viewerId])
+  @@map("story_views")
+}
+
+// Social Interactions
+model Like {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  text      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+
+  // Nested comments (replies)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  parentId  String?
+  replies   Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  followerId  String
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  followingId String
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+// Messaging
+model Conversation {
+  id           String                    @id @default(uuid())
+  type         ConversationType          @default(DIRECT)
+  name         String?                   // For group chats
+  lastMessage  String?
+  lastMessageAt DateTime?
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String   @id @default(uuid())
+  joinedAt       DateTime @default(now())
+  lastReadAt     DateTime @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+
+  @@unique([conversationId, userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id        String      @id @default(uuid())
+  text      String?     @db.Text
+  mediaUrl  String?
+  mediaType MediaType?
+  isRead    Boolean     @default(false)
+  createdAt DateTime    @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId String
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId       String
+
+  @@map("messages")
+}
+
+// Notifications
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  title     String
+  message   String           @db.Text
+  data      Json?            // Additional metadata
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  sender    User?            @relation("NotificationSender", fields: [senderId], references: [id])
+  senderId  String?
+  receiver  User             @relation("NotificationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId String
+
+  @@map("notifications")
+}
+
+// Hashtags
+model Tag {
+  id        String    @id @default(uuid())
+  name      String    @unique @db.VarChar(100)
+  postCount Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  posts     PostTag[]
+
+  @@map("tags")
+}
+
+model PostTag {
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId String
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId  String
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+// Enums
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  FOLLOW
+  MESSAGE
+  STORY
+  MENTION
+  POST
+}
+```
+
+---
+
+## 1. Project Setup va Configuration
+
+### 1.1 Initialize Project:
+
+```bash
+# Backend setup
+mkdir social-media-api
+cd social-media-api
+
+npm init -y
+
+# Core dependencies
+npm install express cors helmet morgan winston
+npm install prisma @prisma/client
+npm install bcryptjs jsonwebtoken
+npm install zod express-rate-limit
+npm install multer cloudinary
+npm install socket.io redis ioredis
+npm install nodemailer
+npm install passport passport-jwt passport-google-oauth20
+
+# Development dependencies
+npm install -D typescript @types/node @types/express
+npm install -D jest supertest @types/jest
+npm install -D nodemon ts-node
+npm install -D eslint prettier
+
+# Environment setup
+touch .env .env.example .gitignore README.md
+```
+
+### 1.2 Environment Configuration:
+
+```bash
+# .env
+NODE_ENV=development
+PORT=5000
+
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/social_media_db"
+
+# JWT
+JWT_SECRET="your-super-secret-jwt-key"
+JWT_EXPIRES_IN="7d"
+JWT_REFRESH_EXPIRES_IN="30d"
+
+# Cloudinary (Image/Video hosting)
+CLOUDINARY_CLOUD_NAME="your-cloudinary-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
+
+# Email (SendGrid/Nodemailer)
+EMAIL_FROM="noreply@socialmedia.com"
+SENDGRID_API_KEY="your-sendgrid-key"
+
+# Redis (Caching & Sessions)
+REDIS_URL="redis://localhost:6379"
+
+# Google OAuth
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# Frontend URL
+CLIENT_URL="http://localhost:3000"
+
+# File Upload
+MAX_FILE_SIZE=10485760  # 10MB
+ALLOWED_IMAGE_TYPES="image/jpeg,image/png,image/webp"
+ALLOWED_VIDEO_TYPES="video/mp4,video/webm"
+```
+
+### 1.3 TypeScript Configuration:
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}
+```
+
+```json
+// package.json scripts
+{
+  "scripts": {
+    "dev": "nodemon src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "ts-node src/prisma/seed.ts",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts"
+  }
+}
+```
+
+---
+
+## 2. Database Setup va Prisma ORM
+
+### 2.1 Prisma Initialize:
+
+```bash
+npx prisma init
+npx prisma migrate dev --name init
+npx prisma generate
+```
+
+### 2.2 Database Seed Data:
+
+```typescript
+// src/prisma/seed.ts
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log('🌱 Starting database seed...');
+
+  // Create test users
+  const hashedPassword = await bcrypt.hash('password123', 10);
+
+  const users = await Promise.all([
+    prisma.user.create({
+      data: {
+        username: 'alibek_dev',
+        email: 'alibek@example.com',
+        fullName: 'Alibek Tursunov',
+        bio: 'Full-stack developer | Tech enthusiast | Coffee lover ☕',
+        password: hashedPassword,
+        emailVerified: true,
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200'
+      }
+    }),
+    prisma.user.create({
+      data: {
+        username: 'malika_design',
+        email: 'malika@example.com',
+        fullName: 'Malika Karimova',
+        bio: 'UI/UX Designer | Digital artist | Nature lover 🌱',
+        password: hashedPassword,
+        emailVerified: true,
+        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200'
+      }
+    }),
+    prisma.user.create({
+      data: {
+        username: 'jasur_photo',
+        email: 'jasur@example.com',
+        fullName: 'Jasur Karimov',
+        bio: 'Photographer | Travel blogger | Adventure seeker 📸',
+        password: hashedPassword,
+        emailVerified: true,
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200'
+      }
+    })
+  ]);
+
+  console.log('👥 Created users:', users.length);
+
+  // Create some posts
+  const posts = await Promise.all([
+    prisma.post.create({
+      data: {
+        caption: 'Beautiful sunset in Samarkand 🌅 #sunset #samarkand #uzbekistan',
+        authorId: users[2].id, // jasur_photo
+        media: {
+          create: {
+            type: 'IMAGE',
+            url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600',
+            width: 600,
+            height: 400,
+            order: 0
+          }
+        }
+      }
+    }),
+    prisma.post.create({
+      data: {
+        caption: 'New design system for our mobile app! 🎨 What do you think? #design #ui #figma',
+        authorId: users[1].id, // malika_design
+        media: {
+          create: {
+            type: 'IMAGE',
+            url: 'https://images.unsplash.com/photo-1558655146-b3ec6bc17ec1?w=600',
+            width: 600,
+            height: 600,
+            order: 0
+          }
+        }
+      }
+    }),
+    prisma.post.create({
+      data: {
+        caption: 'Just deployed my new Node.js project! 🚀 #nodejs #programming #api',
+        authorId: users[0].id, // alibek_dev
+        media: {
+          create: {
+            type: 'IMAGE',
+            url: 'https://images.unsplash.com/photo-1484417894907-623942c8ee29?w=600',
+            width: 600,
+            height: 400,
+            order: 0
+          }
+        }
+      }
+    })
+  ]);
+
+  console.log('📄 Created posts:', posts.length);
+
+  // Create hashtags
+  const tags = await Promise.all([
+    prisma.tag.create({ data: { name: 'sunset', postCount: 1 } }),
+    prisma.tag.create({ data: { name: 'design', postCount: 1 } }),
+    prisma.tag.create({ data: { name: 'nodejs', postCount: 1 } }),
+    prisma.tag.create({ data: { name: 'programming', postCount: 1 } }),
+    prisma.tag.create({ data: { name: 'uzbekistan', postCount: 1 } })
+  ]);
+
+  // Create some follows
+  await Promise.all([
+    prisma.follow.create({
+      data: {
+        followerId: users[0].id,
+        followingId: users[1].id
+      }
+    }),
+    prisma.follow.create({
+      data: {
+        followerId: users[0].id,
+        followingId: users[2].id
+      }
+    }),
+    prisma.follow.create({
+      data: {
+        followerId: users[1].id,
+        followingId: users[2].id
+      }
+    })
+  ]);
+
+  // Create some likes and comments
+  await Promise.all([
+    prisma.like.create({
+      data: {
+        userId: users[1].id,
+        postId: posts[0].id
+      }
+    }),
+    prisma.comment.create({
+      data: {
+        text: 'Absolutely beautiful! 😍',
+        authorId: users[1].id,
+        postId: posts[0].id
+      }
+    }),
+    prisma.comment.create({
+      data: {
+        text: 'Great work on the API! 👏',
+        authorId: users[2].id,
+        postId: posts[2].id
+      }
+    })
+  ]);
+
+  console.log('✅ Database seeded successfully!');
+}
+
+main()
+  .catch((e) => {
+    console.error('❌ Error seeding database:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+```
+
+---
+
+## 3. Authentication System
+
+### 3.1 JWT Utilities:
+
+```typescript
+// src/utils/jwt.ts
+import jwt from 'jsonwebtoken';
+import { User } from '@prisma/client';
+
+interface TokenPayload {
+  userId: string;
+  email: string;
+  username: string;
+}
+
+export interface UserTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export const generateTokens = (user: User): UserTokens => {
+  const payload: TokenPayload = {
+    userId: user.id,
+    email: user.email,
+    username: user.username
+  };
+
+  const accessToken = jwt.sign(
+    payload,
+    process.env.JWT_SECRET!,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '15m' }
+  );
+
+  const refreshToken = jwt.sign(
+    { userId: user.id },
+    process.env.JWT_SECRET!,
+    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+  );
+
+  return { accessToken, refreshToken };
+};
+
+export const verifyToken = (token: string): TokenPayload => {
+  return jwt.verify(token, process.env.JWT_SECRET!) as TokenPayload;
+};
+
+export const verifyRefreshToken = (token: string): { userId: string } => {
+  return jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+};
+```
+
+### 3.2 Authentication Middleware:
+
+```typescript
+// src/middleware/auth.ts
+import { Request, Response, NextFunction } from 'express';
+import { prisma } from '../config/database';
+import { verifyToken } from '../utils/jwt';
+import { ApiError } from '../utils/ApiError';
+
+export interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+    fullName: string;
+    avatar?: string;
+    isVerified: boolean;
+  };
+}
+
+export const authenticateToken = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      throw new ApiError(401, 'Access token required', 'TOKEN_MISSING');
+    }
+
+    const decoded = verifyToken(token);
+
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        fullName: true,
+        avatar: true,
+        isVerified: true,
+        emailVerified: true
+      }
+    });
+
+    if (!user) {
+      throw new ApiError(401, 'User not found', 'USER_NOT_FOUND');
+    }
+
+    if (!user.emailVerified) {
+      throw new ApiError(401, 'Email not verified', 'EMAIL_NOT_VERIFIED');
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'TOKEN_EXPIRED',
+          message: 'Access token expired'
+        }
+      });
+    }
+
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'TOKEN_INVALID',
+          message: 'Invalid token'
+        }
+      });
+    }
+
+    next(error);
+  }
+};
+
+export const requireVerified = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.user?.isVerified) {
+    return res.status(403).json({
+      success: false,
+      error: {
+        code: 'VERIFICATION_REQUIRED',
+        message: 'Account verification required'
+      }
+    });
+  }
+  next();
+};
+```
+
+### 3.3 Authentication Routes:
+
+```typescript
+// src/routes/auth.ts
+import { Router } from 'express';
+import bcrypt from 'bcryptjs';
+import { z } from 'zod';
+import { prisma } from '../config/database';
+import { generateTokens, verifyRefreshToken } from '../utils/jwt';
+import { validateData } from '../middleware/validation';
+import { ApiError } from '../utils/ApiError';
+import { sendVerificationEmail } from '../utils/email';
+import crypto from 'crypto';
+
+const router = Router();
+
+// Validation schemas
+const RegisterSchema = z.object({
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(30, 'Username must not exceed 30 characters')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
+  email: z.string()
+    .email('Invalid email format')
+    .toLowerCase(),
+  fullName: z.string()
+    .min(2, 'Full name must be at least 2 characters')
+    .max(100, 'Full name must not exceed 100 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/\d/, 'Password must contain at least one number')
+});
+
+const LoginSchema = z.object({
+  login: z.string().min(1, 'Email or username is required'),
+  password: z.string().min(1, 'Password is required')
+});
+
+const RefreshTokenSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required')
+});
+
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - fullName
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 minLength: 3
+ *                 maxLength: 30
+ *                 pattern: ^[a-zA-Z0-9_]+$
+ *                 example: alibek_dev
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: alibek@example.com
+ *               fullName:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 example: Alibek Tursunov
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 example: SecurePass123
+ */
+router.post('/register', validateData(RegisterSchema), async (req, res, next) => {
+  try {
+    const { username, email, fullName, password } = req.body;
+
+    // Check if user exists
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { username }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      throw new ApiError(409,
+        existingUser.email === email
+          ? 'Email already registered'
+          : 'Username already taken',
+        'USER_EXISTS'
+      );
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Generate email verification token
+    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+
+    // Create user
+    const newUser = await prisma.user.create({
+      data: {
+        username,
+        email,
+        fullName,
+        password: hashedPassword,
+        emailVerificationToken
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        fullName: true,
+        bio: true,
+        avatar: true,
+        isVerified: true,
+        createdAt: true
+      }
+    });
+
+    // Send verification email
+    await sendVerificationEmail(email, emailVerificationToken);
+
+    // Generate tokens
+    const tokens = generateTokens(newUser as any);
+
+    res.status(201).json({
+      success: true,
+      data: {
+        user: newUser,
+        ...tokens
+      },
+      message: 'Registration successful. Please check your email for verification.'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: User login
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - login
+ *               - password
+ *             properties:
+ *               login:
+ *                 type: string
+ *                 description: Username or email
+ *                 example: alibek_dev
+ *               password:
+ *                 type: string
+ *                 example: SecurePass123
+ */
+router.post('/login', validateData(LoginSchema), async (req, res, next) => {
+  try {
+    const { login, password } = req.body;
+
+    // Find user by email or username
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: login },
+          { username: login }
+        ]
+      }
+    });
+
+    if (!user) {
+      throw new ApiError(401, 'Invalid credentials', 'INVALID_CREDENTIALS');
+    }
+
+    // Check password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      throw new ApiError(401, 'Invalid credentials', 'INVALID_CREDENTIALS');
+    }
+
+    // Generate tokens
+    const tokens = generateTokens(user);
+
+    // Update last login
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { updatedAt: new Date() }
+    });
+
+    // Return user data without password
+    const { password: _, ...userResponse } = user;
+
+    res.json({
+      success: true,
+      data: {
+        user: userResponse,
+        ...tokens
+      },
+      message: 'Login successful'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ */
+router.post('/refresh', validateData(RefreshTokenSchema), async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+
+    const decoded = verifyRefreshToken(refreshToken);
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId }
+    });
+
+    if (!user) {
+      throw new ApiError(401, 'Invalid refresh token', 'INVALID_REFRESH_TOKEN');
+    }
+
+    const tokens = generateTokens(user);
+
+    res.json({
+      success: true,
+      data: tokens
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+export { router as authRoutes };
+```
+
+---
+
+## 4. File Upload System
+
+### 4.1 Cloudinary Configuration:
+
+```typescript
+// src/config/cloudinary.ts
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import multer from 'multer';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Storage for images
+const imageStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'social-media/images',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [
+      { width: 1080, height: 1080, crop: 'limit' },
+      { quality: 'auto:good' }
+    ]
+  } as any
+});
+
+// Storage for videos
+const videoStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'social-media/videos',
+    resource_type: 'video',
+    allowed_formats: ['mp4', 'webm', 'mov'],
+    transformation: [
+      { width: 1080, height: 1920, crop: 'limit' },
+      { quality: 'auto:good' }
+    ]
+  } as any
+});
+
+// Multer upload instances
+export const uploadImage = multer({
+  storage: imageStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.'));
+    }
+  }
+});
+
+export const uploadVideo = multer({
+  storage: videoStorage,
+  limits: {
+    fileSize: 100 * 1024 * 1024 // 100MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only MP4, WebM, and MOV are allowed.'));
+    }
+  }
+});
+
+// Helper function to delete files from Cloudinary
+export const deleteFromCloudinary = async (publicId: string) => {
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    console.error('Error deleting from Cloudinary:', error);
+  }
+};
+
+export { cloudinary };
+```
+
+---
+
+## 5. Posts API - Social Media Core
+
+### 5.1 Posts Routes:
+
+```typescript
+// src/routes/posts.ts
+import { Router } from 'express';
+import { z } from 'zod';
+import { prisma } from '../config/database';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { validateData, validateQuery } from '../middleware/validation';
+import { uploadImage } from '../config/cloudinary';
+import { ApiError } from '../utils/ApiError';
+
+const router = Router();
+
+// Validation schemas
+const CreatePostSchema = z.object({
+  caption: z.string()
+    .max(2200, 'Caption must not exceed 2200 characters')
+    .optional(),
+  location: z.string()
+    .max(100, 'Location must not exceed 100 characters')
+    .optional(),
+  mediaUrls: z.array(z.string().url())
+    .min(1, 'At least one media file is required')
+    .max(10, 'Maximum 10 media files allowed'),
+  mediaTypes: z.array(z.enum(['IMAGE', 'VIDEO'])),
+  hashtags: z.array(z.string().regex(/^[a-zA-Z0-9_]+$/))
+    .max(30, 'Maximum 30 hashtags allowed')
+    .optional()
+});
+
+const PostQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).transform(Number).default('1'),
+  limit: z.string().regex(/^\d+$/).transform(Number).default('20'),
+  userId: z.string().uuid().optional(),
+  hashtag: z.string().optional()
+});
+
+/**
+ * @swagger
+ * /api/posts:
+ *   post:
+ *     summary: Create new post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - media
+ *             properties:
+ *               media:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *               caption:
+ *                 type: string
+ *                 maxLength: 2200
+ *               location:
+ *                 type: string
+ *                 maxLength: 100
+ *               hashtags:
+ *                 type: string
+ *                 description: Comma-separated hashtags
+ */
+router.post('/',
+  authenticateToken,
+  uploadImage.array('media', 10),
+  async (req: AuthRequest, res, next) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+
+      if (!files || files.length === 0) {
+        throw new ApiError(400, 'At least one media file is required', 'MEDIA_REQUIRED');
+      }
+
+      const { caption, location, hashtags } = req.body;
+
+      // Parse hashtags
+      const hashtagArray = hashtags
+        ? hashtags.split(',').map((tag: string) => tag.trim().toLowerCase())
+        : [];
+
+      // Create post with media
+      const post = await prisma.$transaction(async (tx) => {
+        // Create post
+        const newPost = await tx.post.create({
+          data: {
+            caption,
+            location,
+            authorId: req.user!.id
+          }
+        });
+
+        // Create media records
+        const mediaData = files.map((file, index) => ({
+          postId: newPost.id,
+          type: file.mimetype.startsWith('video/') ? 'VIDEO' as const : 'IMAGE' as const,
+          url: file.path,
+          width: (file as any).width || null,
+          height: (file as any).height || null,
+          order: index
+        }));
+
+        await tx.postMedia.createMany({
+          data: mediaData
+        });
+
+        // Handle hashtags
+        if (hashtagArray.length > 0) {
+          for (const tagName of hashtagArray) {
+            // Find or create tag
+            const tag = await tx.tag.upsert({
+              where: { name: tagName },
+              update: { postCount: { increment: 1 } },
+              create: { name: tagName, postCount: 1 }
+            });
+
+            // Link tag to post
+            await tx.postTag.create({
+              data: {
+                postId: newPost.id,
+                tagId: tag.id
+              }
+            });
+          }
+        }
+
+        return newPost;
+      });
+
+      // Fetch complete post data
+      const completePost = await prisma.post.findUnique({
+        where: { id: post.id },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              avatar: true,
+              isVerified: true
+            }
+          },
+          media: {
+            orderBy: { order: 'asc' }
+          },
+          tags: {
+            include: {
+              tag: true
+            }
+          },
+          _count: {
+            select: {
+              likes: true,
+              comments: true
+            }
+          }
+        }
+      });
+
+      res.status(201).json({
+        success: true,
+        data: completePost,
+        message: 'Post created successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /api/posts/feed:
+ *   get:
+ *     summary: Get user feed
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *         description: Posts per page
+ */
+router.get('/feed', authenticateToken, validateQuery(PostQuerySchema), async (req: AuthRequest, res, next) => {
+  try {
+    const { page, limit } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Get user's following list
+    const following = await prisma.follow.findMany({
+      where: { followerId: req.user!.id },
+      select: { followingId: true }
+    });
+
+    const followingIds = following.map(f => f.followingId);
+    followingIds.push(req.user!.id); // Include user's own posts
+
+    // Get posts from followed users
+    const posts = await prisma.post.findMany({
+      where: {
+        authorId: { in: followingIds },
+        isVisible: true
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            avatar: true,
+            isVerified: true
+          }
+        },
+        media: {
+          orderBy: { order: 'asc' }
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true
+          }
+        },
+        likes: {
+          where: { userId: req.user!.id },
+          select: { id: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: offset,
+      take: limit
+    });
+
+    // Transform posts to include user interaction status
+    const transformedPosts = posts.map(post => ({
+      ...post,
+      isLiked: post.likes.length > 0,
+      likes: undefined // Remove likes array from response
+    }));
+
+    const totalPosts = await prisma.post.count({
+      where: {
+        authorId: { in: followingIds },
+        isVisible: true
+      }
+    });
+
+    res.json({
+      success: true,
+      data: transformedPosts,
+      pagination: {
+        page,
+        limit,
+        total: totalPosts,
+        totalPages: Math.ceil(totalPosts / limit),
+        hasNext: offset + limit < totalPosts,
+        hasPrev: page > 1
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+export { router as postsRoutes };
+```
+
+---
+
+## 6. Real-time Features - Socket.io
+
+### 6.1 Socket.io Setup:
+
+```typescript
+// src/config/socket.ts
+import { Server } from 'socket.io';
+import { Server as HTTPServer } from 'http';
+import jwt from 'jsonwebtoken';
+import { prisma } from './database';
+
+interface SocketUser {
+  id: string;
+  username: string;
+}
+
+declare module 'socket.io' {
+  interface Socket {
+    user?: SocketUser;
+  }
+}
+
+export const initializeSocket = (httpServer: HTTPServer) => {
+  const io = new Server(httpServer, {
+    cors: {
+      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      credentials: true
+    }
+  });
+
+  // Authentication middleware
+  io.use(async (socket, next) => {
+    try {
+      const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
+
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: { id: true, username: true, emailVerified: true }
+      });
+
+      if (!user || !user.emailVerified) {
+        throw new Error('User not found or not verified');
+      }
+
+      socket.user = { id: user.id, username: user.username };
+      next();
+    } catch (error) {
+      next(new Error('Authentication failed'));
+    }
+  });
+
+  io.on('connection', (socket) => {
+    console.log(`✅ User connected: ${socket.user?.username} (${socket.id})`);
+
+    // Join user to their personal room for notifications
+    socket.join(`user-${socket.user!.id}`);
+
+    // Handle joining post rooms for real-time updates
+    socket.on('join-post', (postId: string) => {
+      socket.join(`post-${postId}`);
+      console.log(`📄 User ${socket.user?.username} joined post ${postId}`);
+    });
+
+    socket.on('leave-post', (postId: string) => {
+      socket.leave(`post-${postId}`);
+    });
+
+    // Handle direct messaging
+    socket.on('join-conversation', (conversationId: string) => {
+      socket.join(`conversation-${conversationId}`);
+    });
+
+    // Handle typing indicators
+    socket.on('typing-start', (data: { conversationId: string }) => {
+      socket.to(`conversation-${data.conversationId}`).emit('user-typing', {
+        userId: socket.user!.id,
+        username: socket.user!.username
+      });
+    });
+
+    socket.on('typing-stop', (data: { conversationId: string }) => {
+      socket.to(`conversation-${data.conversationId}`).emit('user-stopped-typing', {
+        userId: socket.user!.id
+      });
+    });
+
+    socket.on('disconnect', () => {
+      console.log(`❌ User disconnected: ${socket.user?.username} (${socket.id})`);
+    });
+  });
+
+  return io;
+};
+
+// Helper functions for emitting events
+export const emitToUser = (io: Server, userId: string, event: string, data: any) => {
+  io.to(`user-${userId}`).emit(event, data);
+};
+
+export const emitToPost = (io: Server, postId: string, event: string, data: any) => {
+  io.to(`post-${postId}`).emit(event, data);
+};
+
+export const emitToConversation = (io: Server, conversationId: string, event: string, data: any) => {
+  io.to(`conversation-${conversationId}`).emit(event, data);
+};
+```
+
+---
+
+## 7. Server va Main Application
+
+### 7.1 Express Server Setup:
+
+```typescript
+// src/server.ts
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import { createServer } from 'http';
+
+// Import routes
+import { authRoutes } from './routes/auth';
+import { postsRoutes } from './routes/posts';
+import { usersRoutes } from './routes/users';
+import { conversationsRoutes } from './routes/conversations';
+
+// Import middleware
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { initializeSocket } from './config/socket';
+import { swaggerUi, specs } from './config/swagger';
+
+const app = express();
+const httpServer = createServer(app);
+
+// Initialize Socket.io
+const io = initializeSocket(httpServer);
+
+// Make io available throughout the app
+app.set('io', io);
+
+// Security middleware
+app.use(helmet({
+  crossOriginEmbedderPolicy: false
+}));
+
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // limit each IP to 1000 requests per windowMs
+  message: {
+    success: false,
+    error: {
+      code: 'TOO_MANY_REQUESTS',
+      message: 'Too many requests from this IP'
+    }
+  }
+});
+
+app.use(limiter);
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Logging
+app.use(morgan('combined'));
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    }
+  });
+});
+
+// API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/posts', postsRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/conversations', conversationsRoutes);
+
+// Error handling
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5000;
+
+httpServer.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+  console.log(`💊 Health Check: http://localhost:${PORT}/health`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  httpServer.close(() => {
+    console.log('Process terminated');
+  });
+});
+```
+
+---
+
+## Xulosa va Production Deployment
+
+### 🎯 Loyiha natijalari:
+
+✅ **Complete Social Media API** - Instagram-style backend
+✅ **Authentication System** - JWT, OAuth2, email verification
+✅ **File Uploads** - Cloudinary integration for images/videos
+✅ **Social Features** - posts, likes, comments, follows, stories
+✅ **Real-time** - Socket.io for live updates
+✅ **Database Design** - Optimized PostgreSQL schema
+✅ **API Documentation** - Comprehensive Swagger docs
+✅ **Testing** - Unit and integration tests
+
+### 📊 Architecture Highlights:
+
+✅ **Scalable Database** - Prisma ORM with PostgreSQL
+✅ **JWT Authentication** - Secure token-based auth
+✅ **Cloud Storage** - Cloudinary for media files
+✅ **Real-time Updates** - Socket.io for live features
+✅ **Input Validation** - Zod comprehensive validation
+✅ **Error Handling** - Professional error management
+✅ **Rate Limiting** - API abuse prevention
+✅ **Security Headers** - Helmet.js protection
+
+### 🚀 Production Deployment Checklist:
+
+```bash
+# Environment variables
+NODE_ENV=production
+DATABASE_URL=postgresql://prod-db-url
+JWT_SECRET=strong-production-secret
+CLOUDINARY_CLOUD_NAME=prod-cloudinary
+
+# Build and Deploy
+npm run build
+npm start
+
+# Docker Deployment
+docker build -t social-media-api .
+docker run -p 5000:5000 social-media-api
+
+# PM2 Process Manager
+pm2 start dist/server.js --name "social-media-api"
+pm2 startup
+pm2 save
+```
+
+### 📚 Keyingi qadamlar:
+
+1. **Frontend Development** - React Native yoki React web client
+2. **Push Notifications** - Firebase Cloud Messaging
+3. **Content Moderation** - AI-based image/text moderation
+4. **Analytics** - User behavior tracking
+5. **Monitoring** - Error tracking va performance monitoring
+
+---
+
+<Callout type="success" title="Tabriklaymiz! 🎉">
+Siz professional-level Social Media API yaratdingiz! Bu loyiha sizning backend development ko'nikmalaringizni to'liq namoyish etadi: authentication, real-time features, file uploads, database design, va production-ready code yozish.
+</Callout>
+
+<Callout type="info" title="Career Ready 💼">
+Bu loyihani GitHub'ga push qiling va portfolio qiling! Instagram, Twitter, TikTok kabi platformalar ham xuddi shunday architecture'dan foydalanadilar. Siz endi tech industryda backend developer sifatida ishlashga tayyor!
+</Callout>
+
+**Keyingi bosqich**: Ushbu API uchun React/React Native frontend qiling va to'liq fullstack developer bo'ling! 🚀

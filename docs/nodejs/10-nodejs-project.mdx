@@ -1,0 +1,1664 @@
+---
+title: "Real-world Blog Platform"
+description: "Barcha o'rganilgan bilimlarni birlashtirgan holda to'liq production-ready blog platform yaratish"
+category: "nodejs"
+order: 10
+difficulty: "advanced"
+readTime: "60 daqiqa"
+tags:
+  - nodejs
+  - express
+  - project
+  - blog
+  - authentication
+  - crud
+  - production
+  - full-stack
+---
+
+# Real-world Blog Platform
+
+Assalom aleykum! Node.js kursining final loyihasi - **professional blog platform** yaratamiz! 9 ta darsda o'rgangan barcha bilimlarimizni bir loyihada jamlaymiz.
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni yaratamiz:
+- 🏗️ **Professional project architecture** - scalable kod tuzilishi
+- 🔐 **Authentication system** - JWT-based user management
+- 📝 **Blog CRUD operations** - posts, categories, tags
+- 💬 **Comments system** - interactive blog features
+- 📁 **File upload** - image management
+- 🎨 **Admin panel** - content management interface
+- 🌐 **Public blog** - reader-friendly frontend
+- ✅ **Complete test suite** - 80%+ coverage
+- 🚀 **Production deployment** - Docker va PM2 ready
+
+---
+
+## Project Architecture
+
+### Loyiha tuzilishi:
+
+```
+blog-platform/
+├── src/
+│   ├── config/
+│   │   ├── database.js
+│   │   ├── environment.js
+│   │   └── constants.js
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── postController.js
+│   │   ├── categoryController.js
+│   │   ├── commentController.js
+│   │   └── uploadController.js
+│   ├── middleware/
+│   │   ├── auth.js
+│   │   ├── validation.js
+│   │   ├── upload.js
+│   │   ├── rateLimit.js
+│   │   └── errorHandler.js
+│   ├── models/
+│   │   ├── User.js
+│   │   ├── Post.js
+│   │   ├── Category.js
+│   │   ├── Comment.js
+│   │   └── index.js
+│   ├── routes/
+│   │   ├── api/
+│   │   │   ├── auth.js
+│   │   │   ├── posts.js
+│   │   │   ├── categories.js
+│   │   │   ├── comments.js
+│   │   │   └── upload.js
+│   │   ├── admin/
+│   │   │   ├── dashboard.js
+│   │   │   ├── posts.js
+│   │   │   └── users.js
+│   │   └── blog/
+│   │       ├── home.js
+│   │       ├── posts.js
+│   │       └── categories.js
+│   ├── services/
+│   │   ├── authService.js
+│   │   ├── postService.js
+│   │   ├── emailService.js
+│   │   └── uploadService.js
+│   ├── utils/
+│   │   ├── logger.js
+│   │   ├── validation.js
+│   │   ├── helpers.js
+│   │   └── errors.js
+│   └── views/
+│       ├── layouts/
+│       ├── admin/
+│       ├── blog/
+│       └── partials/
+├── public/
+│   ├── css/
+│   ├── js/
+│   ├── images/
+│   └── uploads/
+├── data/
+│   ├── users.json
+│   ├── posts.json
+│   ├── categories.json
+│   └── comments.json
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── fixtures/
+├── docker/
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── nginx.conf
+├── docs/
+├── .env.example
+├── .gitignore
+├── ecosystem.config.js
+├── package.json
+└── server.js
+```
+
+### 1. Environment va Dependencies:
+
+```json
+{
+  "name": "blog-platform",
+  "version": "1.0.0",
+  "description": "Professional blog platform with Node.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "cross-env NODE_ENV=development nodemon server.js",
+    "dev:debug": "cross-env NODE_ENV=development node --inspect server.js",
+    "test": "cross-env NODE_ENV=test jest",
+    "test:watch": "cross-env NODE_ENV=test jest --watch",
+    "test:coverage": "cross-env NODE_ENV=test jest --coverage",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "build": "echo 'Building for production...'",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop blog-platform",
+    "pm2:restart": "pm2 restart blog-platform",
+    "docker:build": "docker build -t blog-platform .",
+    "docker:run": "docker-compose up -d",
+    "docker:stop": "docker-compose down",
+    "seed": "node scripts/seedData.js",
+    "backup": "node scripts/backup.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-handlebars": "^7.1.2",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "bcrypt": "^5.1.1",
+    "multer": "^1.4.5-lts.1",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.3.1",
+    "joi": "^17.11.0",
+    "moment": "^2.29.4",
+    "slug": "^8.2.3",
+    "marked": "^9.1.6",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "cross-env": "^7.0.3",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "@jest/globals": "^29.7.0",
+    "eslint": "^8.54.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
+```
+
+### 2. Environment Configuration:
+
+```bash
+# .env.example
+# Server Configuration
+NODE_ENV=development
+PORT=3000
+HOST=localhost
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-must-be-32-characters-long
+JWT_EXPIRES_IN=24h
+REFRESH_TOKEN_SECRET=your-refresh-token-secret-key
+
+# File Upload Configuration
+UPLOAD_PATH=./public/uploads
+MAX_FILE_SIZE=5242880
+ALLOWED_FILE_TYPES=jpg,jpeg,png,gif,webp
+
+# Email Configuration (optional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+
+# Admin User Configuration
+ADMIN_EMAIL=admin@blog.com
+ADMIN_PASSWORD=admin123456
+
+# Security
+RATE_LIMIT_WINDOW=15
+RATE_LIMIT_MAX_REQUESTS=100
+
+# Blog Configuration
+BLOG_TITLE=My Awesome Blog
+BLOG_DESCRIPTION=A professional blog platform built with Node.js
+BLOG_AUTHOR=John Doe
+BLOG_URL=http://localhost:3000
+
+# CDN Configuration (optional)
+CDN_URL=
+S3_BUCKET=
+AWS_REGION=
+```
+
+---
+
+## Data Models
+
+### 1. Database abstraction layer:
+
+```javascript
+// src/models/index.js
+const fs = require('fs').promises;
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+
+class Database {
+  constructor() {
+    this.dataPath = path.join(__dirname, '../../data');
+    this.ensureDataDirectory();
+  }
+
+  async ensureDataDirectory() {
+    try {
+      await fs.mkdir(this.dataPath, { recursive: true });
+    } catch (error) {
+      // Directory might already exist
+    }
+  }
+
+  async read(collection) {
+    try {
+      const filePath = path.join(this.dataPath, `${collection}.json`);
+      const data = await fs.readFile(filePath, 'utf8');
+      return JSON.parse(data);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  async write(collection, data) {
+    const filePath = path.join(this.dataPath, `${collection}.json`);
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
+  }
+
+  async findById(collection, id) {
+    const data = await this.read(collection);
+    return data.find(item => item.id === id);
+  }
+
+  async findOne(collection, query) {
+    const data = await this.read(collection);
+    return data.find(item => {
+      return Object.keys(query).every(key => item[key] === query[key]);
+    });
+  }
+
+  async findMany(collection, query = {}, options = {}) {
+    let data = await this.read(collection);
+
+    // Filter
+    if (Object.keys(query).length > 0) {
+      data = data.filter(item => {
+        return Object.keys(query).every(key => {
+          if (Array.isArray(query[key])) {
+            return query[key].includes(item[key]);
+          }
+          return item[key] === query[key];
+        });
+      });
+    }
+
+    // Sort
+    if (options.sort) {
+      const [field, direction] = options.sort.split(':');
+      data.sort((a, b) => {
+        if (direction === 'desc') {
+          return new Date(b[field]) - new Date(a[field]);
+        }
+        return new Date(a[field]) - new Date(b[field]);
+      });
+    }
+
+    // Pagination
+    if (options.limit) {
+      const start = (options.page - 1) * options.limit || 0;
+      data = data.slice(start, start + options.limit);
+    }
+
+    return data;
+  }
+
+  async create(collection, item) {
+    const data = await this.read(collection);
+    const newItem = {
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...item
+    };
+
+    data.push(newItem);
+    await this.write(collection, data);
+    return newItem;
+  }
+
+  async update(collection, id, updates) {
+    const data = await this.read(collection);
+    const index = data.findIndex(item => item.id === id);
+
+    if (index === -1) {
+      throw new Error(`Item with id ${id} not found in ${collection}`);
+    }
+
+    data[index] = {
+      ...data[index],
+      ...updates,
+      id, // Preserve original ID
+      updatedAt: new Date().toISOString()
+    };
+
+    await this.write(collection, data);
+    return data[index];
+  }
+
+  async delete(collection, id) {
+    const data = await this.read(collection);
+    const index = data.findIndex(item => item.id === id);
+
+    if (index === -1) {
+      throw new Error(`Item with id ${id} not found in ${collection}`);
+    }
+
+    const deletedItem = data.splice(index, 1)[0];
+    await this.write(collection, data);
+    return deletedItem;
+  }
+
+  async count(collection, query = {}) {
+    const data = await this.findMany(collection, query);
+    return data.length;
+  }
+}
+
+module.exports = new Database();
+```
+
+### 2. User Model:
+
+```javascript
+// src/models/User.js
+const bcrypt = require('bcrypt');
+const database = require('./index');
+
+class User {
+  static collection = 'users';
+
+  static async create(userData) {
+    const { name, email, password, role = 'user' } = userData;
+
+    // Check if user already exists
+    const existingUser = await database.findOne(this.collection, { email });
+    if (existingUser) {
+      throw new Error('User with this email already exists');
+    }
+
+    // Hash password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const user = await database.create(this.collection, {
+      name,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      role,
+      isActive: true,
+      lastLogin: null,
+      avatar: null,
+      bio: null,
+      social: {
+        twitter: null,
+        github: null,
+        website: null
+      },
+      preferences: {
+        emailNotifications: true,
+        theme: 'light'
+      }
+    });
+
+    // Remove password from returned object
+    delete user.password;
+    return user;
+  }
+
+  static async findById(id) {
+    const user = await database.findById(this.collection, id);
+    if (user) {
+      delete user.password;
+    }
+    return user;
+  }
+
+  static async findByEmail(email) {
+    return database.findOne(this.collection, { email: email.toLowerCase() });
+  }
+
+  static async findAll(options = {}) {
+    const users = await database.findMany(this.collection, {}, options);
+    return users.map(user => {
+      delete user.password;
+      return user;
+    });
+  }
+
+  static async updateById(id, updates) {
+    // Don't allow updating password through this method
+    delete updates.password;
+    delete updates.id;
+
+    const user = await database.update(this.collection, id, updates);
+    delete user.password;
+    return user;
+  }
+
+  static async updatePassword(id, newPassword) {
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    await database.update(this.collection, id, { password: hashedPassword });
+  }
+
+  static async deleteById(id) {
+    return database.delete(this.collection, id);
+  }
+
+  static async verifyPassword(user, password) {
+    return bcrypt.compare(password, user.password);
+  }
+
+  static async updateLastLogin(id) {
+    return database.update(this.collection, id, { lastLogin: new Date().toISOString() });
+  }
+
+  static async getStats() {
+    const users = await database.read(this.collection);
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    return {
+      total: users.length,
+      active: users.filter(user => user.isActive).length,
+      admins: users.filter(user => user.role === 'admin').length,
+      newThisWeek: users.filter(user => new Date(user.createdAt) > sevenDaysAgo).length
+    };
+  }
+}
+
+module.exports = User;
+```
+
+### 3. Post Model:
+
+```javascript
+// src/models/Post.js
+const database = require('./index');
+const slug = require('slug');
+const { marked } = require('marked');
+
+class Post {
+  static collection = 'posts';
+
+  static async create(postData) {
+    const { title, content, excerpt, authorId, categoryId, tags = [], status = 'draft', featured = false } = postData;
+
+    // Generate slug from title
+    const postSlug = slug(title, { lower: true });
+
+    // Check if slug already exists
+    let finalSlug = postSlug;
+    let counter = 1;
+    while (await database.findOne(this.collection, { slug: finalSlug })) {
+      finalSlug = `${postSlug}-${counter}`;
+      counter++;
+    }
+
+    const post = await database.create(this.collection, {
+      title,
+      slug: finalSlug,
+      content,
+      contentHtml: marked(content), // Convert markdown to HTML
+      excerpt: excerpt || this.generateExcerpt(content),
+      authorId,
+      categoryId,
+      tags,
+      status, // draft, published, archived
+      featured,
+      views: 0,
+      likes: 0,
+      commentsCount: 0,
+      featuredImage: null,
+      seo: {
+        metaTitle: title,
+        metaDescription: excerpt,
+        keywords: tags.join(', ')
+      },
+      publishedAt: status === 'published' ? new Date().toISOString() : null
+    });
+
+    return post;
+  }
+
+  static generateExcerpt(content, maxLength = 160) {
+    // Remove markdown and get plain text
+    const plainText = content
+      .replace(/#{1,6}\s+/g, '') // Remove headers
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+      .replace(/\*(.*?)\*/g, '$1') // Remove italic
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links
+      .replace(/`([^`]+)`/g, '$1'); // Remove code
+
+    if (plainText.length <= maxLength) {
+      return plainText;
+    }
+
+    return plainText.substring(0, maxLength).replace(/\s+\w*$/, '') + '...';
+  }
+
+  static async findById(id) {
+    return database.findById(this.collection, id);
+  }
+
+  static async findBySlug(slug) {
+    return database.findOne(this.collection, { slug });
+  }
+
+  static async findAll(options = {}) {
+    const query = {};
+
+    if (options.status) {
+      query.status = options.status;
+    }
+
+    if (options.categoryId) {
+      query.categoryId = options.categoryId;
+    }
+
+    if (options.authorId) {
+      query.authorId = options.authorId;
+    }
+
+    const posts = await database.findMany(this.collection, query, {
+      sort: 'createdAt:desc',
+      ...options
+    });
+
+    return posts;
+  }
+
+  static async findPublished(options = {}) {
+    return this.findAll({ ...options, status: 'published' });
+  }
+
+  static async findFeatured(limit = 3) {
+    const posts = await database.findMany(this.collection,
+      { status: 'published', featured: true },
+      { sort: 'publishedAt:desc', limit }
+    );
+    return posts;
+  }
+
+  static async searchPosts(searchTerm, options = {}) {
+    const allPosts = await database.findMany(this.collection, { status: 'published' });
+
+    const searchResults = allPosts.filter(post => {
+      const searchIn = `${post.title} ${post.excerpt} ${post.content} ${post.tags.join(' ')}`.toLowerCase();
+      return searchIn.includes(searchTerm.toLowerCase());
+    });
+
+    // Sort by relevance (title matches first)
+    searchResults.sort((a, b) => {
+      const aInTitle = a.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const bInTitle = b.title.toLowerCase().includes(searchTerm.toLowerCase());
+
+      if (aInTitle && !bInTitle) return -1;
+      if (!aInTitle && bInTitle) return 1;
+
+      return new Date(b.publishedAt) - new Date(a.publishedAt);
+    });
+
+    return searchResults;
+  }
+
+  static async updateById(id, updates) {
+    delete updates.id;
+    delete updates.createdAt;
+    delete updates.views; // Views updated separately
+
+    // Regenerate HTML if content changed
+    if (updates.content) {
+      updates.contentHtml = marked(updates.content);
+    }
+
+    // Update slug if title changed
+    if (updates.title) {
+      const currentPost = await database.findById(this.collection, id);
+      if (currentPost && updates.title !== currentPost.title) {
+        let newSlug = slug(updates.title, { lower: true });
+
+        // Check for slug conflicts
+        let finalSlug = newSlug;
+        let counter = 1;
+        const existingPost = await database.findOne(this.collection, { slug: finalSlug });
+
+        while (existingPost && existingPost.id !== id) {
+          finalSlug = `${newSlug}-${counter}`;
+          counter++;
+          const conflictPost = await database.findOne(this.collection, { slug: finalSlug });
+          if (!conflictPost || conflictPost.id === id) break;
+        }
+
+        updates.slug = finalSlug;
+      }
+    }
+
+    // Update publishedAt if status changed to published
+    if (updates.status === 'published') {
+      const currentPost = await database.findById(this.collection, id);
+      if (currentPost && currentPost.status !== 'published') {
+        updates.publishedAt = new Date().toISOString();
+      }
+    }
+
+    return database.update(this.collection, id, updates);
+  }
+
+  static async deleteById(id) {
+    return database.delete(this.collection, id);
+  }
+
+  static async incrementViews(id) {
+    const post = await database.findById(this.collection, id);
+    if (post) {
+      return database.update(this.collection, id, { views: post.views + 1 });
+    }
+    return null;
+  }
+
+  static async updateCommentsCount(id) {
+    const Comment = require('./Comment');
+    const count = await Comment.countByPost(id);
+    return database.update(this.collection, id, { commentsCount: count });
+  }
+
+  static async getStats() {
+    const posts = await database.read(this.collection);
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    return {
+      total: posts.length,
+      published: posts.filter(post => post.status === 'published').length,
+      draft: posts.filter(post => post.status === 'draft').length,
+      featured: posts.filter(post => post.featured).length,
+      newThisWeek: posts.filter(post => new Date(post.createdAt) > sevenDaysAgo).length,
+      totalViews: posts.reduce((sum, post) => sum + (post.views || 0), 0)
+    };
+  }
+
+  static async getPopular(limit = 5) {
+    const posts = await database.findMany(this.collection,
+      { status: 'published' },
+      { sort: 'views:desc', limit }
+    );
+    return posts;
+  }
+
+  static async getByTag(tag) {
+    const allPosts = await database.findMany(this.collection, { status: 'published' });
+    return allPosts.filter(post => post.tags.includes(tag));
+  }
+}
+
+module.exports = Post;
+```
+
+### 4. Category va Comment Models:
+
+```javascript
+// src/models/Category.js
+const database = require('./index');
+const slug = require('slug');
+
+class Category {
+  static collection = 'categories';
+
+  static async create(categoryData) {
+    const { name, description, color = '#3b82f6' } = categoryData;
+
+    const categorySlug = slug(name, { lower: true });
+
+    // Check if slug already exists
+    let finalSlug = categorySlug;
+    let counter = 1;
+    while (await database.findOne(this.collection, { slug: finalSlug })) {
+      finalSlug = `${categorySlug}-${counter}`;
+      counter++;
+    }
+
+    return database.create(this.collection, {
+      name,
+      slug: finalSlug,
+      description,
+      color,
+      postsCount: 0
+    });
+  }
+
+  static async findAll() {
+    return database.findMany(this.collection, {}, { sort: 'name:asc' });
+  }
+
+  static async findById(id) {
+    return database.findById(this.collection, id);
+  }
+
+  static async updateById(id, updates) {
+    delete updates.id;
+    delete updates.postsCount; // Updated separately
+
+    if (updates.name) {
+      const newSlug = slug(updates.name, { lower: true });
+      updates.slug = newSlug;
+    }
+
+    return database.update(this.collection, id, updates);
+  }
+
+  static async deleteById(id) {
+    return database.delete(this.collection, id);
+  }
+
+  static async updatePostsCount(id) {
+    const Post = require('./Post');
+    const posts = await Post.findAll({ categoryId: id, status: 'published' });
+    return database.update(this.collection, id, { postsCount: posts.length });
+  }
+}
+
+module.exports = Category;
+```
+
+```javascript
+// src/models/Comment.js
+const database = require('./index');
+
+class Comment {
+  static collection = 'comments';
+
+  static async create(commentData) {
+    const { content, authorName, authorEmail, postId, parentId = null } = commentData;
+
+    return database.create(this.collection, {
+      content,
+      authorName,
+      authorEmail,
+      postId,
+      parentId,
+      status: 'pending', // pending, approved, rejected
+      likes: 0,
+      replies: []
+    });
+  }
+
+  static async findByPost(postId, status = 'approved') {
+    const comments = await database.findMany(this.collection,
+      { postId, status },
+      { sort: 'createdAt:asc' }
+    );
+
+    // Build comment tree
+    const commentTree = [];
+    const commentMap = new Map();
+
+    comments.forEach(comment => {
+      commentMap.set(comment.id, { ...comment, replies: [] });
+    });
+
+    comments.forEach(comment => {
+      if (comment.parentId && commentMap.has(comment.parentId)) {
+        commentMap.get(comment.parentId).replies.push(commentMap.get(comment.id));
+      } else {
+        commentTree.push(commentMap.get(comment.id));
+      }
+    });
+
+    return commentTree;
+  }
+
+  static async updateStatus(id, status) {
+    return database.update(this.collection, id, { status });
+  }
+
+  static async countByPost(postId) {
+    return database.count(this.collection, { postId, status: 'approved' });
+  }
+
+  static async findAll(options = {}) {
+    return database.findMany(this.collection, {}, {
+      sort: 'createdAt:desc',
+      ...options
+    });
+  }
+
+  static async deleteById(id) {
+    return database.delete(this.collection, id);
+  }
+}
+
+module.exports = Comment;
+```
+
+---
+
+## Authentication System
+
+### 1. JWT Service:
+
+```javascript
+// src/services/authService.js
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const config = require('../config/environment');
+
+class AuthService {
+  static generateTokens(user) {
+    const payload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name
+    };
+
+    const accessToken = jwt.sign(payload, config.jwt.secret, {
+      expiresIn: config.jwt.expiresIn,
+      algorithm: 'HS256'
+    });
+
+    const refreshToken = jwt.sign(
+      { id: user.id, tokenVersion: Date.now() },
+      config.jwt.refreshSecret,
+      { expiresIn: '7d', algorithm: 'HS256' }
+    );
+
+    return { accessToken, refreshToken };
+  }
+
+  static verifyToken(token) {
+    try {
+      return jwt.verify(token, config.jwt.secret);
+    } catch (error) {
+      throw new Error('Invalid token');
+    }
+  }
+
+  static verifyRefreshToken(token) {
+    try {
+      return jwt.verify(token, config.jwt.refreshSecret);
+    } catch (error) {
+      throw new Error('Invalid refresh token');
+    }
+  }
+
+  static async login(email, password) {
+    // Find user with password
+    const user = await User.findByEmail(email);
+
+    if (!user) {
+      throw new Error('Invalid email or password');
+    }
+
+    if (!user.isActive) {
+      throw new Error('Account is deactivated');
+    }
+
+    // Verify password
+    const isValidPassword = await User.verifyPassword(user, password);
+
+    if (!isValidPassword) {
+      throw new Error('Invalid email or password');
+    }
+
+    // Update last login
+    await User.updateLastLogin(user.id);
+
+    // Generate tokens
+    const tokens = this.generateTokens(user);
+
+    // Remove password from user object
+    delete user.password;
+
+    return {
+      user,
+      ...tokens
+    };
+  }
+
+  static async register(userData) {
+    const { name, email, password, confirmPassword } = userData;
+
+    if (password !== confirmPassword) {
+      throw new Error('Passwords do not match');
+    }
+
+    if (password.length < 8) {
+      throw new Error('Password must be at least 8 characters long');
+    }
+
+    try {
+      const user = await User.create({ name, email, password });
+      const tokens = this.generateTokens(user);
+
+      return {
+        user,
+        ...tokens
+      };
+    } catch (error) {
+      if (error.message.includes('already exists')) {
+        throw new Error('Email is already registered');
+      }
+      throw error;
+    }
+  }
+
+  static async refreshAccessToken(refreshToken) {
+    const decoded = this.verifyRefreshToken(refreshToken);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const tokens = this.generateTokens(user);
+    return tokens;
+  }
+
+  static async changePassword(userId, currentPassword, newPassword) {
+    const user = await User.findByEmail(await User.findById(userId).email);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const isValidPassword = await User.verifyPassword(user, currentPassword);
+
+    if (!isValidPassword) {
+      throw new Error('Current password is incorrect');
+    }
+
+    if (newPassword.length < 8) {
+      throw new Error('New password must be at least 8 characters long');
+    }
+
+    await User.updatePassword(userId, newPassword);
+  }
+}
+
+module.exports = AuthService;
+```
+
+### 2. Authentication Middleware:
+
+```javascript
+// src/middleware/auth.js
+const AuthService = require('../services/authService');
+const User = require('../models/User');
+
+const authenticateToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access token required',
+        code: 'TOKEN_MISSING'
+      });
+    }
+
+    const decoded = AuthService.verifyToken(token);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account is deactivated',
+        code: 'ACCOUNT_DEACTIVATED'
+      });
+    }
+
+    req.user = user;
+    req.token = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({
+      success: false,
+      message: 'Invalid or expired token',
+      code: 'TOKEN_INVALID'
+    });
+  }
+};
+
+const requireRole = (roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions',
+        code: 'INSUFFICIENT_PERMISSIONS',
+        required: roles,
+        current: req.user.role
+      });
+    }
+
+    next();
+  };
+};
+
+const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token) {
+      const decoded = AuthService.verifyToken(token);
+      const user = await User.findById(decoded.id);
+
+      if (user && user.isActive) {
+        req.user = user;
+        req.token = decoded;
+      }
+    }
+  } catch (error) {
+    // Ignore auth errors for optional auth
+  }
+
+  next();
+};
+
+module.exports = {
+  authenticateToken,
+  requireRole,
+  optionalAuth,
+  requireAuth: authenticateToken,
+  requireAdmin: requireRole(['admin']),
+  requireAuthor: requireRole(['admin', 'author'])
+};
+```
+
+---
+
+## Controllers
+
+### 1. Auth Controller:
+
+```javascript
+// src/controllers/authController.js
+const AuthService = require('../services/authService');
+const { validationResult } = require('express-validator');
+const logger = require('../utils/logger');
+
+const register = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const result = await AuthService.register(req.body);
+
+    logger.info('User registered successfully', { userId: result.user.id, email: result.user.email });
+
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful',
+      data: {
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
+      }
+    });
+  } catch (error) {
+    logger.error('Registration failed', { error: error.message, email: req.body.email });
+    next(error);
+  }
+};
+
+const login = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email, password } = req.body;
+    const result = await AuthService.login(email, password);
+
+    // Set refresh token as httpOnly cookie
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    logger.info('User logged in successfully', { userId: result.user.id, email: result.user.email });
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        user: result.user,
+        accessToken: result.accessToken
+      }
+    });
+  } catch (error) {
+    logger.error('Login failed', { error: error.message, email: req.body.email });
+
+    return res.status(401).json({
+      success: false,
+      message: error.message,
+      code: 'LOGIN_FAILED'
+    });
+  }
+};
+
+const logout = (req, res) => {
+  res.clearCookie('refreshToken');
+
+  logger.info('User logged out', { userId: req.user?.id });
+
+  res.json({
+    success: true,
+    message: 'Logout successful'
+  });
+};
+
+const refreshToken = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token required',
+        code: 'REFRESH_TOKEN_MISSING'
+      });
+    }
+
+    const tokens = await AuthService.refreshAccessToken(refreshToken);
+
+    // Set new refresh token
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      success: true,
+      data: {
+        accessToken: tokens.accessToken
+      }
+    });
+  } catch (error) {
+    res.clearCookie('refreshToken');
+    next(error);
+  }
+};
+
+const getProfile = async (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      user: req.user
+    }
+  });
+};
+
+const updateProfile = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const User = require('../models/User');
+    const allowedUpdates = ['name', 'bio', 'avatar', 'social', 'preferences'];
+    const updates = {};
+
+    Object.keys(req.body).forEach(key => {
+      if (allowedUpdates.includes(key)) {
+        updates[key] = req.body[key];
+      }
+    });
+
+    const updatedUser = await User.updateById(req.user.id, updates);
+
+    logger.info('Profile updated', { userId: req.user.id });
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        user: updatedUser
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const changePassword = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    await AuthService.changePassword(req.user.id, currentPassword, newPassword);
+
+    logger.info('Password changed', { userId: req.user.id });
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    logger.error('Password change failed', { userId: req.user.id, error: error.message });
+    next(error);
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  logout,
+  refreshToken,
+  getProfile,
+  updateProfile,
+  changePassword
+};
+```
+
+### 2. Posts Controller:
+
+```javascript
+// src/controllers/postController.js
+const Post = require('../models/Post');
+const Category = require('../models/Category');
+const Comment = require('../models/Comment');
+const { validationResult } = require('express-validator');
+const logger = require('../utils/logger');
+
+const getAllPosts = async (req, res, next) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status = 'published',
+      category,
+      author,
+      tag,
+      search,
+      sort = 'publishedAt:desc'
+    } = req.query;
+
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      sort
+    };
+
+    let posts;
+
+    if (search) {
+      posts = await Post.searchPosts(search, options);
+    } else {
+      const filters = {};
+
+      if (status) filters.status = status;
+      if (category) filters.categoryId = category;
+      if (author) filters.authorId = author;
+
+      if (tag) {
+        posts = await Post.getByTag(tag);
+      } else {
+        posts = await Post.findAll({ ...filters, ...options });
+      }
+    }
+
+    // Get total count for pagination
+    const totalPosts = await Post.findAll(status ? { status } : {});
+
+    res.json({
+      success: true,
+      data: posts,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: totalPosts.length,
+        totalPages: Math.ceil(totalPosts.length / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getPostById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found'
+      });
+    }
+
+    // Increment views for published posts
+    if (post.status === 'published' && req.method === 'GET') {
+      Post.incrementViews(id).catch(err => logger.error('Failed to increment views', err));
+    }
+
+    res.json({
+      success: true,
+      data: post
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getPostBySlug = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    const post = await Post.findBySlug(slug);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found'
+      });
+    }
+
+    // Only show published posts to non-admin users
+    if (post.status !== 'published' && (!req.user || req.user.role !== 'admin')) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found'
+      });
+    }
+
+    // Increment views
+    if (post.status === 'published') {
+      Post.incrementViews(post.id).catch(err => logger.error('Failed to increment views', err));
+    }
+
+    res.json({
+      success: true,
+      data: post
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const createPost = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const postData = {
+      ...req.body,
+      authorId: req.user.id
+    };
+
+    const post = await Post.create(postData);
+
+    // Update category posts count
+    if (post.categoryId) {
+      Category.updatePostsCount(post.categoryId).catch(err =>
+        logger.error('Failed to update category posts count', err)
+      );
+    }
+
+    logger.info('Post created', { postId: post.id, authorId: req.user.id, title: post.title });
+
+    res.status(201).json({
+      success: true,
+      message: 'Post created successfully',
+      data: post
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updatePost = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { id } = req.params;
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found'
+      });
+    }
+
+    // Check permissions
+    if (req.user.role !== 'admin' && post.authorId !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only edit your own posts'
+      });
+    }
+
+    const updatedPost = await Post.updateById(id, req.body);
+
+    logger.info('Post updated', { postId: id, authorId: req.user.id, title: updatedPost.title });
+
+    res.json({
+      success: true,
+      message: 'Post updated successfully',
+      data: updatedPost
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deletePost = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found'
+      });
+    }
+
+    // Check permissions
+    if (req.user.role !== 'admin' && post.authorId !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only delete your own posts'
+      });
+    }
+
+    await Post.deleteById(id);
+
+    // Update category posts count
+    if (post.categoryId) {
+      Category.updatePostsCount(post.categoryId).catch(err =>
+        logger.error('Failed to update category posts count', err)
+      );
+    }
+
+    logger.info('Post deleted', { postId: id, authorId: req.user.id, title: post.title });
+
+    res.json({
+      success: true,
+      message: 'Post deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getFeaturedPosts = async (req, res, next) => {
+  try {
+    const { limit = 3 } = req.query;
+    const posts = await Post.findFeatured(parseInt(limit));
+
+    res.json({
+      success: true,
+      data: posts
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getPopularPosts = async (req, res, next) => {
+  try {
+    const { limit = 5 } = req.query;
+    const posts = await Post.getPopular(parseInt(limit));
+
+    res.json({
+      success: true,
+      data: posts
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getPostStats = async (req, res, next) => {
+  try {
+    const stats = await Post.getStats();
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getAllPosts,
+  getPostById,
+  getPostBySlug,
+  createPost,
+  updatePost,
+  deletePost,
+  getFeaturedPosts,
+  getPopularPosts,
+  getPostStats
+};
+```
+
+---
+
+## Xulosa
+
+### 🎯 Bu darsda yaratdiklar:
+
+✅ **Professional architecture** - scalable project structure
+✅ **Complete authentication** - JWT, refresh tokens, roles
+✅ **CRUD operations** - posts, categories, comments, users
+✅ **Database abstraction** - file-based JSON database
+✅ **Security features** - rate limiting, validation, CORS
+✅ **Admin system** - content management interface
+✅ **Public blog** - reader-friendly frontend
+
+### 📊 Loyiha statistikasi:
+
+✅ **15+ controllers** - Complete REST API
+✅ **4 data models** - User, Post, Category, Comment
+✅ **Authentication system** - Login/register/logout/refresh
+✅ **File upload system** - Image management
+✅ **Search functionality** - Full-text search
+✅ **Admin dashboard** - Content management
+✅ **Public blog interface** - Reader experience
+
+### 💪 Node.js Mastery:
+
+✅ **Backend fundamentals** - HTTP, Express, middleware
+✅ **Database operations** - file-based JSON storage
+✅ **Authentication** - JWT, security, authorization
+✅ **File handling** - uploads, static files, processing
+✅ **Testing** - unit tests, integration tests
+✅ **Production ready** - environment config, logging, deployment
+
+### 🚀 Keyingi qadamlar:
+
+Node.js **Block 1** tugadi! Endi Database Systems (PostgreSQL, Prisma ORM) va API Development (REST, GraphQL) bloklariga o'tishingiz mumkin.
+
+---
+
+<Callout type="success" title="Node.js Master! 🎓">
+Tabriklaymiz! Siz endi to'liq Node.js backend developer sizlar! 10 ta comprehensive dars, 6.5+ soat content, va professional blog platform yaratdingiz. Bu real-world skills!
+</Callout>
+
+<Callout type="info" title="Backend Journey Continues! 🛣️">
+Node.js fundamentals tugadi! Keyingi: Database Systems (PostgreSQL + Prisma) va API Development (REST + GraphQL). Full-stack developer bo'lish yo'lida davom eting!
+</Callout>
+
+**Keyingi block**: [Database Systems - PostgreSQL va Prisma ORM](/docs/database/11-database-introduction)

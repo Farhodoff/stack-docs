@@ -1,0 +1,1447 @@
+---
+title: "HTTP Server Asoslari"
+description: "Node.js built-in HTTP moduli bilan web serverlar yaratish, request/response handling va routing asoslarini o'rganamiz"
+category: "nodejs"
+order: 4
+difficulty: "intermediate"
+readTime: "40 daqiqa"
+tags:
+  - nodejs
+  - http
+  - server
+  - web
+  - request
+  - response
+  - routing
+---
+
+# HTTP Server Asoslari
+
+Assalom aleykum! Oldingi darslarda Node.js asoslari, modullar va file system bilan ishladik. Endi eng qiziq qismga o'tamiz - **web serverlar** yaratish!
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- 🌐 **HTTP protokoli** - internet'ning asosi
+- 🚀 **HTTP Server** - Node.js bilan web server yaratish
+- 📡 **Request/Response** - so'rov va javob cycle
+- 🛣️ **Basic Routing** - URL'lar bo'yicha navigatsiya
+- 🎯 **HTTP Methods** - GET, POST, PUT, DELETE
+- 💼 **Real loyiha** - RESTful Blog API
+
+---
+
+## HTTP protokoli nima?
+
+**HTTP** (HyperText Transfer Protocol) - internetdagi barcha web serverlar va browser'lar o'rtasida ma'lumot almashish uchun protocol.
+
+### Real hayot misoli:
+
+Tasavvur qiling, siz restoranda xarid qilyapsiz:
+
+1. **Siz** = Client (Browser)
+2. **Ofitsiant** = HTTP Protocol
+3. **Oshpaz** = Server (Node.js)
+4. **Menyu** = URL (web manzil)
+5. **Buyurtma** = HTTP Request
+6. **Ovqat** = HTTP Response
+
+```
+👤 Mijoz: "Iltimos, osh buyurtma qilaman" (GET /osh)
+📋 Ofitsiant: Oshxonaga buyurtma yetkazadi
+🍲 Oshpaz: Osh tayyorlaydi
+📋 Ofitsiant: Ovqatni mijozga yetkazadi
+👤 Mijoz: Ovqatni oladi va yeydi
+```
+
+### HTTP'ning asosiy qismlari:
+
+```javascript
+// HTTP Request (Mijozdan server'ga)
+GET /api/users HTTP/1.1
+Host: example.com
+User-Agent: Mozilla/5.0
+Accept: application/json
+
+// HTTP Response (Server'dan mijozga)
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 150
+
+{"users": [...]}
+```
+
+---
+
+## Node.js HTTP moduli
+
+Node.js'da web server yaratish uchun **built-in HTTP moduli** ishlatiladi.
+
+### Eng oddiy server:
+
+```javascript
+const http = require('http');
+
+// Server yaratish
+const server = http.createServer((req, res) => {
+  // Har bir request uchun bu function ishlaydi
+  console.log('📡 Yangi request keldi!');
+
+  // Response header'larini o'rnatish
+  res.statusCode = 200; // Success
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+
+  // Response body'ni yuborish
+  res.end(`
+    <html>
+      <head><title>Birinchi Server</title></head>
+      <body>
+        <h1>🎉 Salom, Node.js Server!</h1>
+        <p>Vaqt: ${new Date().toLocaleString('uz-UZ')}</p>
+      </body>
+    </html>
+  `);
+});
+
+// Server'ni port'da tinglash
+const PORT = 3000;
+const HOSTNAME = 'localhost';
+
+server.listen(PORT, HOSTNAME, () => {
+  console.log(`✅ Server ishga tushdi: http://${HOSTNAME}:${PORT}`);
+});
+```
+
+```bash
+# Ishga tushirish:
+node server.js
+
+# Browser'da: http://localhost:3000
+```
+
+---
+
+## Request va Response obyektlari
+
+### Request (req) obyekti:
+
+```javascript
+const http = require('http');
+const url = require('url');
+
+const server = http.createServer((req, res) => {
+  // Request ma'lumotlarini o'qish
+  console.log('📡 REQUEST MA\'LUMOTLARI:');
+  console.log(`🛣️  URL: ${req.url}`);
+  console.log(`🎯 Method: ${req.method}`);
+  console.log(`🌐 Host: ${req.headers.host}`);
+  console.log(`👤 User-Agent: ${req.headers['user-agent']}`);
+  console.log(`🔗 Referer: ${req.headers.referer || 'Yo\'q'}`);
+
+  // URL'ni parse qilish
+  const parsedUrl = url.parse(req.url, true);
+  console.log(`📍 Pathname: ${parsedUrl.pathname}`);
+  console.log(`❓ Query: ${JSON.stringify(parsedUrl.query)}`);
+
+  // Response yuborish
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  const responseData = {
+    timestamp: new Date().toISOString(),
+    url: req.url,
+    method: req.method,
+    userAgent: req.headers['user-agent'],
+    pathname: parsedUrl.pathname,
+    query: parsedUrl.query
+  };
+
+  res.end(JSON.stringify(responseData, null, 2));
+});
+
+server.listen(3000, () => {
+  console.log('✅ Server: http://localhost:3000');
+  console.log('🧪 Test: http://localhost:3000/users?age=25&city=Tashkent');
+});
+```
+
+### Response (res) obyekti:
+
+```javascript
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+
+  // 1. Status code'lar
+  if (req.url === '/success') {
+    res.statusCode = 200; // OK
+  } else if (req.url === '/notfound') {
+    res.statusCode = 404; // Not Found
+  } else if (req.url === '/error') {
+    res.statusCode = 500; // Internal Server Error
+  } else {
+    res.statusCode = 200;
+  }
+
+  // 2. Header'larni o'rnatish
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('X-Custom-Header', 'Node.js Server');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // CORS
+
+  // 3. Multiple header'lar
+  res.writeHead(res.statusCode, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'X-Powered-By': 'Node.js',
+    'Cache-Control': 'no-cache'
+  });
+
+  // 4. Response data
+  const response = {
+    path: req.url,
+    status: res.statusCode,
+    message: getMessageByStatus(res.statusCode),
+    timestamp: new Date().toISOString()
+  };
+
+  // 5. Response yuborish
+  res.end(JSON.stringify(response, null, 2));
+});
+
+function getMessageByStatus(statusCode) {
+  const messages = {
+    200: 'Muvaffaqiyatli',
+    404: 'Sahifa topilmadi',
+    500: 'Server xatoligi'
+  };
+  return messages[statusCode] || 'Noma\'lum status';
+}
+
+server.listen(3000, () => {
+  console.log('🧪 Test URL\'lar:');
+  console.log('✅ http://localhost:3000/success');
+  console.log('❌ http://localhost:3000/notfound');
+  console.log('💥 http://localhost:3000/error');
+});
+```
+
+---
+
+## Basic Routing tizimi
+
+**Routing** - URL'lar bo'yicha turli sahifalarni ko'rsatish.
+
+### Oddiy routing:
+
+```javascript
+const http = require('http');
+const url = require('url');
+
+const server = http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  const pathname = parsedUrl.pathname;
+
+  // Response helper function
+  const sendResponse = (statusCode, contentType, data) => {
+    res.statusCode = statusCode;
+    res.setHeader('Content-Type', contentType);
+    res.end(data);
+  };
+
+  // 🏠 Home page
+  if (pathname === '/' || pathname === '/home') {
+    sendResponse(200, 'text/html; charset=utf-8', `
+      <h1>🏠 Bosh sahifa</h1>
+      <nav>
+        <a href="/about">📋 Biz haqimizda</a> |
+        <a href="/contact">📞 Aloqa</a> |
+        <a href="/api/users">👥 Users API</a>
+      </nav>
+    `);
+
+  }
+  // 📋 About page
+  else if (pathname === '/about') {
+    sendResponse(200, 'text/html; charset=utf-8', `
+      <h1>📋 Biz haqimizda</h1>
+      <p>Bu Node.js bilan yaratilgan web server</p>
+      <a href="/">🔙 Bosh sahifaga qaytish</a>
+    `);
+
+  }
+  // 📞 Contact page
+  else if (pathname === '/contact') {
+    sendResponse(200, 'text/html; charset=utf-8', `
+      <h1>📞 Aloqa ma'lumotlari</h1>
+      <ul>
+        <li>📧 Email: info@example.com</li>
+        <li>📱 Telefon: +998 90 123 45 67</li>
+        <li>📍 Manzil: Toshkent, O'zbekiston</li>
+      </ul>
+      <a href="/">🔙 Bosh sahifaga qaytish</a>
+    `);
+
+  }
+  // 👥 API endpoint
+  else if (pathname === '/api/users') {
+    const users = [
+      { id: 1, name: 'Alibek', age: 25, city: 'Toshkent' },
+      { id: 2, name: 'Malika', age: 22, city: 'Samarqand' },
+      { id: 3, name: 'Jasur', age: 28, city: 'Buxoro' }
+    ];
+
+    sendResponse(200, 'application/json', JSON.stringify({
+      success: true,
+      count: users.length,
+      data: users
+    }, null, 2));
+
+  }
+  // ❌ 404 Not Found
+  else {
+    sendResponse(404, 'text/html; charset=utf-8', `
+      <h1>❌ 404 - Sahifa topilmadi</h1>
+      <p>Siz qidirayotgan sahifa mavjud emas.</p>
+      <a href="/">🔙 Bosh sahifaga qaytish</a>
+    `);
+  }
+});
+
+server.listen(3000, () => {
+  console.log('✅ Multi-route server: http://localhost:3000');
+  console.log('🧪 Available routes:');
+  console.log('   🏠 http://localhost:3000/');
+  console.log('   📋 http://localhost:3000/about');
+  console.log('   📞 http://localhost:3000/contact');
+  console.log('   👥 http://localhost:3000/api/users');
+});
+```
+
+---
+
+## HTTP Methods (GET, POST, PUT, DELETE)
+
+Real web API'larda turli operatsiyalar uchun turli HTTP methodlari ishlatiladi:
+
+- **GET** - Ma'lumot olish 📖
+- **POST** - Yangi ma'lumot yaratish ➕
+- **PUT** - Mavjud ma'lumotni yangilash ✏️
+- **DELETE** - Ma'lumotni o'chirish 🗑️
+
+### RESTful API misoli:
+
+```javascript
+const http = require('http');
+const url = require('url');
+
+// In-memory ma'lumotlar bazasi
+let users = [
+  { id: 1, name: 'Alibek Tursunov', email: 'alibek@example.com', age: 25 },
+  { id: 2, name: 'Malika Karimova', email: 'malika@example.com', age: 22 },
+  { id: 3, name: 'Jasur Nazarov', email: 'jasur@example.com', age: 28 }
+];
+
+let nextId = 4;
+
+const server = http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  const pathname = parsedUrl.pathname;
+  const method = req.method;
+
+  // CORS headers qo'shish
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Preflight requests uchun
+  if (method === 'OPTIONS') {
+    res.statusCode = 200;
+    res.end();
+    return;
+  }
+
+  // Response helper
+  const sendJSON = (statusCode, data) => {
+    res.statusCode = statusCode;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.end(JSON.stringify(data, null, 2));
+  };
+
+  // POST ma'lumotlarini o'qish helper
+  const getRequestBody = (callback) => {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        callback(null, data);
+      } catch (error) {
+        callback(error);
+      }
+    });
+  };
+
+  // 🏠 Home - API documentation
+  if (pathname === '/' && method === 'GET') {
+    sendJSON(200, {
+      message: 'Users API',
+      endpoints: {
+        'GET /api/users': 'Barcha foydalanuvchilarni olish',
+        'GET /api/users/:id': 'Bitta foydalanuvchini olish',
+        'POST /api/users': 'Yangi foydalanuvchi yaratish',
+        'PUT /api/users/:id': 'Foydalanuvchini yangilash',
+        'DELETE /api/users/:id': 'Foydalanuvchini o\'chirish'
+      }
+    });
+  }
+
+  // 📖 GET /api/users - Barcha users
+  else if (pathname === '/api/users' && method === 'GET') {
+    console.log('📖 GET /api/users');
+    sendJSON(200, {
+      success: true,
+      count: users.length,
+      data: users
+    });
+  }
+
+  // 📖 GET /api/users/:id - Bitta user
+  else if (pathname.startsWith('/api/users/') && method === 'GET') {
+    const userId = parseInt(pathname.split('/')[3]);
+    const user = users.find(u => u.id === userId);
+
+    if (user) {
+      console.log(`📖 GET /api/users/${userId} - Topildi`);
+      sendJSON(200, {
+        success: true,
+        data: user
+      });
+    } else {
+      console.log(`❌ GET /api/users/${userId} - Topilmadi`);
+      sendJSON(404, {
+        success: false,
+        message: 'Foydalanuvchi topilmadi'
+      });
+    }
+  }
+
+  // ➕ POST /api/users - Yangi user yaratish
+  else if (pathname === '/api/users' && method === 'POST') {
+    getRequestBody((err, data) => {
+      if (err) {
+        console.log('❌ POST /api/users - JSON error');
+        sendJSON(400, {
+          success: false,
+          message: 'Noto\'g\'ri JSON format'
+        });
+        return;
+      }
+
+      // Validation
+      if (!data.name || !data.email) {
+        sendJSON(400, {
+          success: false,
+          message: 'Name va email majburiy!'
+        });
+        return;
+      }
+
+      // Email unique ekanligini tekshirish
+      const existingUser = users.find(u => u.email === data.email);
+      if (existingUser) {
+        sendJSON(400, {
+          success: false,
+          message: 'Bu email allaqachon band!'
+        });
+        return;
+      }
+
+      // Yangi user yaratish
+      const newUser = {
+        id: nextId++,
+        name: data.name,
+        email: data.email,
+        age: data.age || null
+      };
+
+      users.push(newUser);
+
+      console.log(`➕ POST /api/users - Yaratildi: ${newUser.name}`);
+      sendJSON(201, {
+        success: true,
+        message: 'Foydalanuvchi yaratildi',
+        data: newUser
+      });
+    });
+  }
+
+  // ✏️ PUT /api/users/:id - User yangilash
+  else if (pathname.startsWith('/api/users/') && method === 'PUT') {
+    const userId = parseInt(pathname.split('/')[3]);
+    const userIndex = users.findIndex(u => u.id === userId);
+
+    if (userIndex === -1) {
+      sendJSON(404, {
+        success: false,
+        message: 'Foydalanuvchi topilmadi'
+      });
+      return;
+    }
+
+    getRequestBody((err, data) => {
+      if (err) {
+        sendJSON(400, {
+          success: false,
+          message: 'Noto\'g\'ri JSON format'
+        });
+        return;
+      }
+
+      // Email unique ekanligini tekshirish (boshqa userlar uchun)
+      if (data.email) {
+        const existingUser = users.find(u => u.email === data.email && u.id !== userId);
+        if (existingUser) {
+          sendJSON(400, {
+            success: false,
+            message: 'Bu email allaqachon band!'
+          });
+          return;
+        }
+      }
+
+      // Ma'lumotni yangilash
+      users[userIndex] = {
+        ...users[userIndex],
+        ...data,
+        id: userId // ID o'zgartirilmasin
+      };
+
+      console.log(`✏️ PUT /api/users/${userId} - Yangilandi`);
+      sendJSON(200, {
+        success: true,
+        message: 'Foydalanuvchi yangilandi',
+        data: users[userIndex]
+      });
+    });
+  }
+
+  // 🗑️ DELETE /api/users/:id - User o'chirish
+  else if (pathname.startsWith('/api/users/') && method === 'DELETE') {
+    const userId = parseInt(pathname.split('/')[3]);
+    const userIndex = users.findIndex(u => u.id === userId);
+
+    if (userIndex === -1) {
+      sendJSON(404, {
+        success: false,
+        message: 'Foydalanuvchi topilmadi'
+      });
+      return;
+    }
+
+    const deletedUser = users[userIndex];
+    users.splice(userIndex, 1);
+
+    console.log(`🗑️ DELETE /api/users/${userId} - O'chirildi: ${deletedUser.name}`);
+    sendJSON(200, {
+      success: true,
+      message: 'Foydalanuvchi o\'chirildi',
+      data: deletedUser
+    });
+  }
+
+  // ❌ 404 - Route topilmadi
+  else {
+    sendJSON(404, {
+      success: false,
+      message: 'API endpoint topilmadi'
+    });
+  }
+});
+
+server.listen(3000, () => {
+  console.log('✅ RESTful API Server: http://localhost:3000');
+  console.log('\n🧪 API Test'lari:');
+  console.log('curl http://localhost:3000/api/users');
+  console.log('curl -X POST -H "Content-Type: application/json" -d \'{"name":"Test User","email":"test@example.com","age":30}\' http://localhost:3000/api/users');
+});
+```
+
+---
+
+## Error Handling va Logging
+
+### Professional error handling:
+
+```javascript
+const http = require('http');
+const fs = require('fs').promises;
+const path = require('path');
+
+// Error logger
+async function logError(error, req) {
+  const timestamp = new Date().toISOString();
+  const logEntry = {
+    timestamp,
+    error: error.message,
+    stack: error.stack,
+    url: req.url,
+    method: req.method,
+    userAgent: req.headers['user-agent']
+  };
+
+  try {
+    const logDir = path.join(__dirname, 'logs');
+    await fs.mkdir(logDir, { recursive: true });
+
+    const logFile = path.join(logDir, `error-${new Date().toISOString().split('T')[0]}.log`);
+    await fs.appendFile(logFile, JSON.stringify(logEntry) + '\n');
+  } catch (logErr) {
+    console.error('❌ Logging xatoligi:', logErr.message);
+  }
+}
+
+const server = http.createServer(async (req, res) => {
+  try {
+    // Request logging
+    console.log(`📡 ${req.method} ${req.url} - ${new Date().toLocaleTimeString()}`);
+
+    // Response helper with error handling
+    const sendResponse = (statusCode, data, contentType = 'application/json') => {
+      try {
+        res.statusCode = statusCode;
+        res.setHeader('Content-Type', contentType + '; charset=utf-8');
+
+        const response = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        res.end(response);
+
+        // Success logging
+        console.log(`✅ ${statusCode} - ${req.url}`);
+      } catch (error) {
+        console.error('❌ Response yuborishda xatolik:', error.message);
+      }
+    };
+
+    // URL parsing and routing
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const pathname = url.pathname;
+
+    if (pathname === '/') {
+      sendResponse(200, {
+        message: 'Server ishlayapti',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+      });
+
+    } else if (pathname === '/error-test') {
+      // Error test uchun
+      throw new Error('Bu test xatoligi!');
+
+    } else if (pathname === '/timeout-test') {
+      // Timeout test uchun
+      setTimeout(() => {
+        sendResponse(200, { message: 'Timeout testi' });
+      }, 5000);
+
+    } else {
+      sendResponse(404, {
+        success: false,
+        message: 'Endpoint topilmadi',
+        path: pathname
+      });
+    }
+
+  } catch (error) {
+    // Error handling
+    console.error('❌ Server error:', error.message);
+
+    // Error'ni log qilish
+    await logError(error, req);
+
+    // Client'ga error response yuborish
+    try {
+      if (!res.headersSent) {
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify({
+          success: false,
+          message: 'Server xatoligi',
+          error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        }));
+      }
+    } catch (resError) {
+      console.error('❌ Error response yuborishda xatolik:', resError.message);
+    }
+  }
+});
+
+// Server error handling
+server.on('error', (error) => {
+  console.error('💥 Server error:', error.message);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received, shutting down gracefully...');
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('\n🛑 SIGINT received, shutting down gracefully...');
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`✅ Error-handled server: http://localhost:${PORT}`);
+  console.log('🧪 Test endpoints:');
+  console.log(`   ✅ http://localhost:${PORT}/`);
+  console.log(`   ❌ http://localhost:${PORT}/error-test`);
+  console.log(`   ⏰ http://localhost:${PORT}/timeout-test`);
+});
+```
+
+---
+
+## Static File Server
+
+Web serverda static fayllar (HTML, CSS, JS, images) serve qilish:
+
+```javascript
+const http = require('http');
+const fs = require('fs').promises;
+const path = require('path');
+
+// MIME types
+const mimeTypes = {
+  '.html': 'text/html',
+  '.css': 'text/css',
+  '.js': 'text/javascript',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.txt': 'text/plain',
+  '.pdf': 'application/pdf'
+};
+
+const server = http.createServer(async (req, res) => {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    let pathname = url.pathname;
+
+    // Default file
+    if (pathname === '/') {
+      pathname = '/index.html';
+    }
+
+    // Security: path traversal hujumlarini oldini olish
+    const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
+    const filePath = path.join(__dirname, 'public', safePath);
+
+    // Faylning mavjudligini tekshirish
+    try {
+      const stats = await fs.stat(filePath);
+
+      if (stats.isFile()) {
+        // Fayl serve qilish
+        const ext = path.extname(filePath);
+        const mimeType = mimeTypes[ext] || 'application/octet-stream';
+
+        const fileContent = await fs.readFile(filePath);
+
+        res.statusCode = 200;
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Length', stats.size);
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 soat cache
+        res.end(fileContent);
+
+        console.log(`✅ ${pathname} served (${stats.size} bytes)`);
+
+      } else if (stats.isDirectory()) {
+        // Directory listing (development uchun)
+        const dirContents = await fs.readdir(filePath);
+
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Directory: ${pathname}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; }
+              .file { padding: 5px 0; }
+              .dir { color: blue; }
+              .file-name { text-decoration: none; }
+            </style>
+          </head>
+          <body>
+            <h1>📁 Directory: ${pathname}</h1>
+            <div class="file">
+              <a href="${path.dirname(pathname)}" class="file-name">📁 .. (Parent Directory)</a>
+            </div>
+            ${dirContents.map(item => {
+              const itemPath = path.join(pathname, item);
+              return `<div class="file">
+                <a href="${itemPath}" class="file-name">
+                  📄 ${item}
+                </a>
+              </div>`;
+            }).join('')}
+          </body>
+          </html>
+        `;
+
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.end(htmlContent);
+
+        console.log(`📁 Directory listing: ${pathname}`);
+      }
+
+    } catch (fileError) {
+      // 404 - File not found
+      res.statusCode = 404;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.end(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>404 - Not Found</title></head>
+        <body>
+          <h1>❌ 404 - Fayl topilmadi</h1>
+          <p>Siz qidirayotgan fayl mavjud emas: <code>${pathname}</code></p>
+        </body>
+        </html>
+      `);
+
+      console.log(`❌ 404 - ${pathname}`);
+    }
+
+  } catch (error) {
+    // 500 - Server error
+    console.error('💥 Server error:', error.message);
+
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.end(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>500 - Server Error</title></head>
+      <body>
+        <h1>💥 500 - Server xatoligi</h1>
+        <p>Server'da xatolik yuz berdi.</p>
+      </body>
+      </html>
+    `);
+  }
+});
+
+// Public papkasini yaratish
+const publicDir = path.join(__dirname, 'public');
+fs.mkdir(publicDir, { recursive: true }).then(() => {
+  // Sample HTML fayl yaratish
+  const indexHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Node.js Static Server</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .feature { background: #f4f4f4; padding: 20px; margin: 10px 0; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌐 Node.js Static File Server</h1>
+
+    <div class="feature">
+      <h3>✅ Xususiyatlar:</h3>
+      <ul>
+        <li>📄 HTML, CSS, JS fayllarni serve qilish</li>
+        <li>🖼️ Rasm fayllarni ko'rsatish</li>
+        <li>📁 Directory listing</li>
+        <li>🛡️ Security (PATH traversal protection)</li>
+        <li>💾 Caching support</li>
+      </ul>
+    </div>
+
+    <div class="feature">
+      <h3>🧪 Test qilish uchun:</h3>
+      <p>public/ papkasiga turli fayllar qo'ying va browser'da oching!</p>
+    </div>
+
+    <script>
+      console.log('👋 Salom! Bu static fayl Node.js server'dan keldi!');
+    </script>
+  </div>
+</body>
+</html>
+  `;
+
+  return fs.writeFile(path.join(publicDir, 'index.html'), indexHtml);
+}).catch(err => {
+  console.error('❌ Public setup error:', err.message);
+});
+
+server.listen(3000, () => {
+  console.log('✅ Static File Server: http://localhost:3000');
+  console.log('📁 Public directory: ./public/');
+});
+```
+
+---
+
+## Amaliy loyiha: Blog API Server
+
+Keling, to'liq Blog API yaratamiz!
+
+### Loyiha strukturasi:
+
+```
+blog-api/
+├── data/
+│   ├── posts.json
+│   └── comments.json
+├── public/
+│   └── index.html
+├── src/
+│   ├── controllers/
+│   │   ├── postsController.js
+│   │   └── commentsController.js
+│   ├── models/
+│   │   ├── Post.js
+│   │   └── Comment.js
+│   └── utils/
+│       ├── logger.js
+│       └── helpers.js
+├── package.json
+└── server.js
+```
+
+### 1. Post modeli:
+
+```javascript
+// src/models/Post.js
+const fs = require('fs').promises;
+const path = require('path');
+
+class Post {
+  constructor(data) {
+    this.id = data.id || Date.now();
+    this.title = data.title;
+    this.content = data.content;
+    this.author = data.author;
+    this.tags = data.tags || [];
+    this.createdAt = data.createdAt || new Date().toISOString();
+    this.updatedAt = data.updatedAt || new Date().toISOString();
+    this.views = data.views || 0;
+    this.published = data.published !== undefined ? data.published : true;
+  }
+
+  static get dataFile() {
+    return path.join(__dirname, '../../data/posts.json');
+  }
+
+  static async ensureDataDir() {
+    const dataDir = path.dirname(this.dataFile);
+    await fs.mkdir(dataDir, { recursive: true });
+  }
+
+  static async getAll() {
+    try {
+      await this.ensureDataDir();
+      const data = await fs.readFile(this.dataFile, 'utf8');
+      return JSON.parse(data).map(postData => new Post(postData));
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  static async findById(id) {
+    const posts = await this.getAll();
+    return posts.find(post => post.id === parseInt(id));
+  }
+
+  static async save(posts) {
+    await this.ensureDataDir();
+    const data = posts.map(post => ({ ...post }));
+    await fs.writeFile(this.dataFile, JSON.stringify(data, null, 2));
+  }
+
+  async create() {
+    const posts = await Post.getAll();
+    posts.push(this);
+    await Post.save(posts);
+    return this;
+  }
+
+  async update(updateData) {
+    const posts = await Post.getAll();
+    const index = posts.findIndex(post => post.id === this.id);
+
+    if (index === -1) {
+      throw new Error('Post topilmadi');
+    }
+
+    posts[index] = {
+      ...posts[index],
+      ...updateData,
+      id: this.id,
+      updatedAt: new Date().toISOString()
+    };
+
+    await Post.save(posts);
+    return posts[index];
+  }
+
+  async delete() {
+    const posts = await Post.getAll();
+    const index = posts.findIndex(post => post.id === this.id);
+
+    if (index === -1) {
+      throw new Error('Post topilmadi');
+    }
+
+    posts.splice(index, 1);
+    await Post.save(posts);
+    return true;
+  }
+
+  async incrementViews() {
+    this.views++;
+    return this.update({ views: this.views });
+  }
+
+  static async search(query) {
+    const posts = await this.getAll();
+    const searchTerm = query.toLowerCase();
+
+    return posts.filter(post =>
+      post.title.toLowerCase().includes(searchTerm) ||
+      post.content.toLowerCase().includes(searchTerm) ||
+      post.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+    );
+  }
+}
+
+module.exports = Post;
+```
+
+### 2. Posts Controller:
+
+```javascript
+// src/controllers/postsController.js
+const Post = require('../models/Post');
+const { parseRequestBody, sendJSON } = require('../utils/helpers');
+
+class PostsController {
+  static async getAll(req, res) {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const query = url.searchParams.get('q');
+      const limit = parseInt(url.searchParams.get('limit')) || 10;
+      const page = parseInt(url.searchParams.get('page')) || 1;
+
+      let posts = query ? await Post.search(query) : await Post.getAll();
+
+      // Pagination
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedPosts = posts.slice(startIndex, endIndex);
+
+      sendJSON(res, 200, {
+        success: true,
+        data: paginatedPosts,
+        pagination: {
+          page,
+          limit,
+          total: posts.length,
+          totalPages: Math.ceil(posts.length / limit)
+        }
+      });
+    } catch (error) {
+      sendJSON(res, 500, {
+        success: false,
+        message: 'Postlarni olishda xatolik',
+        error: error.message
+      });
+    }
+  }
+
+  static async getById(req, res, postId) {
+    try {
+      const post = await Post.findById(postId);
+
+      if (!post) {
+        sendJSON(res, 404, {
+          success: false,
+          message: 'Post topilmadi'
+        });
+        return;
+      }
+
+      // View counter increment
+      await post.incrementViews();
+
+      sendJSON(res, 200, {
+        success: true,
+        data: post
+      });
+    } catch (error) {
+      sendJSON(res, 500, {
+        success: false,
+        message: 'Post olishda xatolik',
+        error: error.message
+      });
+    }
+  }
+
+  static async create(req, res) {
+    try {
+      const data = await parseRequestBody(req);
+
+      // Validation
+      if (!data.title || !data.content || !data.author) {
+        sendJSON(res, 400, {
+          success: false,
+          message: 'Title, content va author majburiy!'
+        });
+        return;
+      }
+
+      const post = new Post(data);
+      await post.create();
+
+      sendJSON(res, 201, {
+        success: true,
+        message: 'Post yaratildi',
+        data: post
+      });
+    } catch (error) {
+      sendJSON(res, 500, {
+        success: false,
+        message: 'Post yaratishda xatolik',
+        error: error.message
+      });
+    }
+  }
+
+  static async update(req, res, postId) {
+    try {
+      const post = await Post.findById(postId);
+
+      if (!post) {
+        sendJSON(res, 404, {
+          success: false,
+          message: 'Post topilmadi'
+        });
+        return;
+      }
+
+      const updateData = await parseRequestBody(req);
+      const updatedPost = await post.update(updateData);
+
+      sendJSON(res, 200, {
+        success: true,
+        message: 'Post yangilandi',
+        data: updatedPost
+      });
+    } catch (error) {
+      sendJSON(res, 500, {
+        success: false,
+        message: 'Post yangilashda xatolik',
+        error: error.message
+      });
+    }
+  }
+
+  static async delete(req, res, postId) {
+    try {
+      const post = await Post.findById(postId);
+
+      if (!post) {
+        sendJSON(res, 404, {
+          success: false,
+          message: 'Post topilmadi'
+        });
+        return;
+      }
+
+      await post.delete();
+
+      sendJSON(res, 200, {
+        success: true,
+        message: 'Post o\'chirildi',
+        data: post
+      });
+    } catch (error) {
+      sendJSON(res, 500, {
+        success: false,
+        message: 'Post o\'chirishda xatolik',
+        error: error.message
+      });
+    }
+  }
+}
+
+module.exports = PostsController;
+```
+
+### 3. Helper utilities:
+
+```javascript
+// src/utils/helpers.js
+function parseRequestBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        resolve(data);
+      } catch (error) {
+        reject(new Error('Invalid JSON'));
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+function sendJSON(res, statusCode, data) {
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.end(JSON.stringify(data, null, 2));
+}
+
+function parsePath(url) {
+  const urlObj = new URL(url, 'http://localhost');
+  const pathSegments = urlObj.pathname.split('/').filter(segment => segment);
+  return {
+    pathname: urlObj.pathname,
+    segments: pathSegments,
+    query: Object.fromEntries(urlObj.searchParams)
+  };
+}
+
+module.exports = {
+  parseRequestBody,
+  sendJSON,
+  parsePath
+};
+```
+
+### 4. Asosiy server:
+
+```javascript
+// server.js
+const http = require('http');
+const PostsController = require('./src/controllers/postsController');
+const { sendJSON, parsePath } = require('./src/utils/helpers');
+
+const server = http.createServer(async (req, res) => {
+  const { pathname, segments } = parsePath(req.url);
+  const method = req.method;
+
+  console.log(`📡 ${method} ${pathname}`);
+
+  // CORS preflight
+  if (method === 'OPTIONS') {
+    res.statusCode = 200;
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.end();
+    return;
+  }
+
+  try {
+    // 🏠 API Documentation
+    if (pathname === '/' && method === 'GET') {
+      sendJSON(res, 200, {
+        name: 'Blog API',
+        version: '1.0.0',
+        endpoints: {
+          'GET /api/posts': 'Barcha postlarni olish',
+          'GET /api/posts?q=search&page=1&limit=10': 'Qidirish va pagination',
+          'GET /api/posts/:id': 'Bitta postni olish',
+          'POST /api/posts': 'Yangi post yaratish',
+          'PUT /api/posts/:id': 'Postni yangilash',
+          'DELETE /api/posts/:id': 'Postni o\'chirish'
+        },
+        sampleData: {
+          title: 'Mening birinchi postim',
+          content: 'Bu yerda post matni yoziladi...',
+          author: 'Ismingiz',
+          tags: ['nodejs', 'javascript', 'backend'],
+          published: true
+        }
+      });
+    }
+
+    // 📝 Posts endpoints
+    else if (pathname === '/api/posts' && method === 'GET') {
+      await PostsController.getAll(req, res);
+    }
+    else if (pathname === '/api/posts' && method === 'POST') {
+      await PostsController.create(req, res);
+    }
+    else if (pathname.startsWith('/api/posts/') && segments.length === 3) {
+      const postId = parseInt(segments[2]);
+
+      if (method === 'GET') {
+        await PostsController.getById(req, res, postId);
+      } else if (method === 'PUT') {
+        await PostsController.update(req, res, postId);
+      } else if (method === 'DELETE') {
+        await PostsController.delete(req, res, postId);
+      } else {
+        sendJSON(res, 405, {
+          success: false,
+          message: 'Method not allowed'
+        });
+      }
+    }
+
+    // ❌ 404 Not Found
+    else {
+      sendJSON(res, 404, {
+        success: false,
+        message: 'Endpoint topilmadi',
+        path: pathname
+      });
+    }
+
+  } catch (error) {
+    console.error('💥 Server error:', error.message);
+    sendJSON(res, 500, {
+      success: false,
+      message: 'Server xatoligi',
+      error: error.message
+    });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`✅ Blog API Server: http://localhost:${PORT}`);
+  console.log('\n🧪 API Test'lari:');
+  console.log(`curl http://localhost:${PORT}/api/posts`);
+  console.log(`curl -X POST -H "Content-Type: application/json" -d '{"title":"Test Post","content":"Test content","author":"Test Author","tags":["test"]}' http://localhost:${PORT}/api/posts`);
+});
+```
+
+### 5. Sample data yaratish:
+
+```javascript
+// Bir marta ishga tushirib, sample data yaratish
+const Post = require('./src/models/Post');
+
+async function createSampleData() {
+  const samplePosts = [
+    {
+      title: 'Node.js bilan web server yaratish',
+      content: 'Bu maqolada Node.js bilan oddiy web server yaratishni o\'rganamiz...',
+      author: 'Alibek Tursunov',
+      tags: ['nodejs', 'javascript', 'backend'],
+      published: true
+    },
+    {
+      title: 'JavaScript ES6 yangiliklari',
+      content: 'ES6 bilan JavaScript'ga qo\'shilgan yangi xususiyatlarni ko\'rib chiqamiz...',
+      author: 'Malika Karimova',
+      tags: ['javascript', 'es6', 'frontend'],
+      published: true
+    },
+    {
+      title: 'React Hook'lar bilan ishlash',
+      content: 'React Hook\'lari qanday ishlatish va nega kerakligini tushuntiramiz...',
+      author: 'Jasur Nazarov',
+      tags: ['react', 'hooks', 'frontend'],
+      published: false
+    }
+  ];
+
+  for (const postData of samplePosts) {
+    const post = new Post(postData);
+    await post.create();
+  }
+
+  console.log('✅ Sample data yaratildi!');
+}
+
+// Faqat sample data uchun ishga tushirganda
+if (require.main === module) {
+  createSampleData().catch(console.error);
+}
+
+module.exports = { createSampleData };
+```
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **HTTP protokoli** - internet'ning asosi
+✅ **Node.js HTTP moduli** - built-in web server yaratish
+✅ **Request/Response** - to'liq lifecycle
+✅ **Basic Routing** - URL'lar bo'yicha navigatsiya
+✅ **HTTP Methods** - RESTful API patterns
+✅ **Error Handling** - professional xatoliklar boshqaruvi
+✅ **Static Files** - HTML, CSS, JS serve qilish
+✅ **Real loyiha** - Blog API Server
+
+### 📊 Blog API xususiyatlari:
+
+✅ **RESTful Design** - industry standards
+✅ **MVC Pattern** - Model-View-Controller structure
+✅ **File-based Database** - JSON storage
+✅ **Search & Pagination** - advanced querying
+✅ **View Counter** - post analytics
+✅ **CORS Support** - frontend integration ready
+✅ **Error Logging** - production-ready
+✅ **Validation** - data integrity
+
+### 🚀 Keyingi darsda:
+
+- **Express.js** - web framework bilan tanishuv
+- **Middleware** - request/response processing
+- **Advanced routing** - parameters, wildcards
+- **Template engines** - dynamic HTML generation
+- **Blog API'ni Express'ga porting** - framework migration
+
+### 📚 Mustaqil mashq:
+
+1. **Weather API** - weather data serve qilish
+2. **File sharing API** - fayl upload/download
+3. **Authentication system** - login/register API
+
+---
+
+<Callout type="success" title="Zo'r! 🎉">
+Siz endi Node.js bilan professional web serverlar yaratishni o'rgandingiz! HTTP protokoli, RESTful API design va real loyiha experience oldingiz. Bu backend development'ning asosi!
+</Callout>
+
+<Callout type="info" title="Express.js'ga tayyor! 🚀">
+Keyingi darsda Express.js framework'ni o'rganib, bir xil ishlarni ancha oson va tez qilishni ko'ramiz. Built-in HTTP moduli bilimi Express'ni chuqur tushunish uchun juda muhim!
+</Callout>
+
+**Keyingi dars**: [Express.js Introduction](/docs/nodejs/05-express-introduction)

@@ -1,0 +1,470 @@
+// Stack Docs Platform - Database Schema
+// Documentation/Learning Platform Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER MANAGEMENT & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  password  String?  // nullable for OAuth users
+
+  // Profile
+  firstName String?
+  lastName  String?
+  avatar    String?
+  bio       String?
+
+  // Preferences
+  theme        UserTheme @default(SYSTEM)
+  language     String @default("uz")
+  timezone     String @default("Asia/Tashkent")
+
+  // Account status
+  isActive     Boolean @default(true)
+  isVerified   Boolean @default(false)
+  lastLoginAt  DateTime?
+
+  // OAuth providers
+  providers    UserProvider[]
+
+  // Learning progress
+  progress     LessonProgress[]
+  bookmarks    UserBookmark[]
+  notes        UserNote[]
+
+  // Community features
+  comments     Comment[]
+  likes        CommentLike[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum UserTheme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+model UserProvider {
+  id           String @id @default(cuid())
+  userId       String
+  provider     String // "github", "google", "discord"
+  providerId   String
+  accessToken  String?
+  refreshToken String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@map("user_providers")
+}
+
+// ============================================================================
+// CONTENT MANAGEMENT SYSTEM
+// ============================================================================
+
+model Course {
+  id          String @id @default(cuid())
+  name        String @unique // "React", "JavaScript", "Node.js"
+  slug        String @unique // "react", "javascript", "nodejs"
+
+  // Content
+  title       String // "React Fundamentals"
+  description String?
+  icon        String? // "⚛️", "🟨", "🟢"
+  color       String? // "#61dafb", "#f7df1e", "#339933"
+
+  // Course metadata
+  difficulty  CourseDifficulty
+  estimatedHours Int?
+
+  // Status and ordering
+  status      CourseStatus @default(DRAFT)
+  sortOrder   Int @default(0)
+  isPublished Boolean @default(false)
+  isFeatured  Boolean @default(false)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  // Structure
+  categories  Category[]
+  lessons     Lesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("courses")
+}
+
+enum CourseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Category {
+  id       String @id @default(cuid())
+  courseId String
+
+  // Basic info
+  name     String // "Core Concepts", "Advanced Topics"
+  slug     String // "core-concepts", "advanced-topics"
+
+  // Hierarchy support
+  parentId String?
+  parent   Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+
+  // Display
+  icon        String? // "📚", "🔧", "⚡"
+  description String?
+  sortOrder   Int @default(0)
+
+  // Status
+  isPublished Boolean @default(true)
+
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons  Lesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, slug])
+  @@map("categories")
+}
+
+model Lesson {
+  id         String @id @default(cuid())
+  courseId   String
+  categoryId String?
+
+  // Basic info
+  title      String // "JSX Asoslari va Sintaksis"
+  slug       String // "jsx-asoslari-sintaksis"
+
+  // Content
+  content    String // MDX content
+  excerpt    String? // Short description
+
+  // Metadata
+  difficulty   LessonDifficulty
+  readTime     Int // minutes
+  tags         String[] // ["jsx", "react", "javascript"]
+
+  // Lesson ordering
+  lessonNumber Int // 1, 2, 3, etc.
+  sortOrder    Int @default(0)
+
+  // Status
+  status       LessonStatus @default(DRAFT)
+  isPublished  Boolean @default(false)
+  isFree       Boolean @default(true)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  // Table of contents (extracted from content)
+  tableOfContents Json? // [{"level": 2, "text": "What is JSX?", "anchor": "what-is-jsx"}]
+
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id])
+
+  // User interactions
+  progress  LessonProgress[]
+  bookmarks UserBookmark[]
+  comments  Comment[]
+  notes     UserNote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, slug])
+  @@unique([courseId, lessonNumber])
+  @@map("lessons")
+}
+
+enum LessonDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum LessonStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+// ============================================================================
+// USER PROGRESS & LEARNING ANALYTICS
+// ============================================================================
+
+model LessonProgress {
+  id       String @id @default(cuid())
+  userId   String
+  lessonId String
+
+  // Progress tracking
+  status        ProgressStatus @default(NOT_STARTED)
+  progressPercent Int @default(0) // 0-100
+  timeSpent      Int @default(0) // seconds
+
+  // Milestones
+  startedAt   DateTime?
+  completedAt DateTime?
+  lastViewedAt DateTime @default(now())
+
+  // Reading position (for resume functionality)
+  scrollPosition Float @default(0) // 0.0 to 1.0
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+  @@map("lesson_progress")
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model UserBookmark {
+  id       String @id @default(cuid())
+  userId   String
+  lessonId String
+
+  note     String? // User's personal note for this bookmark
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, lessonId])
+  @@map("user_bookmarks")
+}
+
+model UserNote {
+  id       String @id @default(cuid())
+  userId   String
+  lessonId String
+
+  // Note content
+  content  String
+
+  // Position in lesson (for contextual notes)
+  anchor   String? // Section anchor where note was made
+  quote    String? // Text selection that triggered the note
+
+  // Organization
+  isPrivate Boolean @default(true)
+  tags      String[]
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_notes")
+}
+
+// ============================================================================
+// COMMUNITY FEATURES
+// ============================================================================
+
+model Comment {
+  id       String @id @default(cuid())
+  lessonId String
+  userId   String?
+
+  // Comment content
+  content  String
+
+  // Threading support
+  parentId String?
+  parent   Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentReplies")
+
+  // Position in lesson
+  anchor   String? // Section where comment was made
+  quote    String? // Referenced text
+
+  // Moderation
+  status   CommentStatus @default(PENDING)
+
+  // Engagement
+  likesCount Int @default(0)
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  likes  CommentLike[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("comments")
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SPAM
+}
+
+model CommentLike {
+  id        String @id @default(cuid())
+  commentId String
+  userId    String
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId])
+  @@map("comment_likes")
+}
+
+// ============================================================================
+// SEARCH & ANALYTICS
+// ============================================================================
+
+model SearchQuery {
+  id        String @id @default(cuid())
+  query     String
+  userId    String?
+
+  // Results
+  resultsCount Int
+  clickedResultId String? // Which lesson was clicked
+
+  // Context
+  courseId  String?
+  source    String? // "global", "course", "lesson"
+
+  // Metadata
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@map("search_queries")
+}
+
+model LessonView {
+  id       String @id @default(cuid())
+  lessonId String
+  userId   String?
+
+  // View context
+  source    String? // "search", "navigation", "direct"
+  referer   String?
+
+  // Engagement metrics
+  timeSpent Int @default(0) // seconds
+  scrollDepth Float @default(0) // 0.0 to 1.0
+
+  // Metadata
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@map("lesson_views")
+}
+
+// ============================================================================
+// CONTENT VERSIONING & HISTORY
+// ============================================================================
+
+model ContentVersion {
+  id        String @id @default(cuid())
+  lessonId  String
+
+  // Version info
+  version   String // "1.0.0", "1.1.0"
+  title     String
+  content   String
+
+  // Change info
+  changeNote String?
+  authorId   String? // Admin who made the change
+
+  // Status
+  isPublished Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@map("content_versions")
+}
+
+// ============================================================================
+// SITE CONFIGURATION
+// ============================================================================
+
+model SiteConfig {
+  id    String @id @default("site")
+
+  // Basic site info
+  siteName        String @default("Stack Docs")
+  tagline         String?
+  description     String?
+  logo            String?
+
+  // Features
+  allowComments   Boolean @default(true)
+  allowRegistration Boolean @default(true)
+  maintenanceMode Boolean @default(false)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  // Social links
+  socialLinks     Json? // {"github": "...", "twitter": "..."}
+
+  // Analytics
+  googleAnalyticsId String?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("site_config")
+}
+
+// ============================================================================
+// INDEXES FOR PERFORMANCE
+// ============================================================================
+
+// Performance indexes will be created during migration:

@@ -1,0 +1,1107 @@
+---
+title: "Environment Configuration va Deploy"
+description: "Environment variables, .env files, config management va production-ready Node.js application yaratish"
+category: "nodejs"
+order: 8
+difficulty: "advanced"
+readTime: "30 daqiqa"
+tags:
+  - nodejs
+  - environment
+  - config
+  - production
+  - security
+  - deployment
+---
+
+# Environment Configuration va Deploy
+
+Assalom aleykum! Node.js dasturlarimizni yaratishda oxirgi bosqich - **production**ga deploy qilish. Bu darsda environment variables, konfigurasiya va xavfsizlik asoslarini o'rganamiz.
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- 🌍 **Environment Variables** - muhit o'zgaruvchilari
+- 🔒 **Security** - maxfiy ma'lumotlarni yashirish
+- ⚙️ **Configuration management** - turli muhitlar uchun config
+- 🚀 **Production deployment** - real deploy jarayoni
+- 📁 **Project structure** - professional loyiha tuzilishi
+- 💼 **Real misol** - Production-ready News API
+
+---
+
+## Environment Variables nima va nega kerak?
+
+**Environment Variables** - operatsion tizim darajasida saqlanuvchi o'zgaruvchilar. Database parollar, API keys, va boshqa maxfiy ma'lumotlarni koddan alohida saqlash uchun ishlatiladi.
+
+### Muammo: Hard-coded values
+
+**YOMON yondashuv:**
+```javascript
+// ❌ HECH QACHON BUNDAY QILMANG!
+const app = express();
+
+const config = {
+  port: 3000,
+  databaseUrl: 'postgresql://username:password123@localhost:5432/mydb', // 😱 Parol kodda!
+  jwtSecret: 'supersecretkey123',  // 😱 Secret kodda!
+  apiKey: 'sk-1234567890abcdef',   // 😱 API key kodda!
+  emailPassword: 'myemail@pass'     // 😱 Email parol kodda!
+};
+
+// Bu kod GitHub'ga push qilinsa, BARCHA MAXFIY ma'lumotlar ochiq bo'ladi!
+```
+
+### Yechim: Environment Variables
+
+**YAXSHI yondashuv:**
+```javascript
+// ✅ MAXFIY ma'lumotlar environment variables'da
+const config = {
+  port: process.env.PORT || 3000,
+  databaseUrl: process.env.DATABASE_URL,
+  jwtSecret: process.env.JWT_SECRET,
+  apiKey: process.env.API_KEY,
+  emailPassword: process.env.EMAIL_PASSWORD
+};
+
+// Maxfiy ma'lumotlar kodda yo'q! 🔒
+```
+
+---
+
+## .env fayllari bilan ishlash
+
+### 1. dotenv package o'rnatish:
+
+```bash
+npm install dotenv
+npm install -D cross-env
+```
+
+### 2. .env fayl yaratish:
+
+```bash
+# .env fayl (loyiha root directory'da)
+# DIQQAT: Bu faylni .gitignore'ga qo'shish MAJBURIY!
+
+# Server configuration
+NODE_ENV=development
+PORT=3000
+HOST=localhost
+
+# Database
+DATABASE_URL=postgresql://username:password@localhost:5432/blogdb
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=blogdb
+DB_USER=username
+DB_PASSWORD=password123
+
+# Authentication
+JWT_SECRET=your-super-secret-jwt-key-here
+JWT_EXPIRES_IN=24h
+REFRESH_TOKEN_SECRET=your-refresh-token-secret
+
+# External APIs
+OPENAI_API_KEY=sk-your-openai-api-key
+STRIPE_SECRET_KEY=sk_test_your-stripe-secret
+SENDGRID_API_KEY=SG.your-sendgrid-api-key
+
+# File uploads
+UPLOAD_PATH=./uploads
+MAX_FILE_SIZE=5242880
+ALLOWED_FILE_TYPES=jpg,jpeg,png,gif
+
+# Redis (caching)
+REDIS_URL=redis://localhost:6379
+REDIS_PASSWORD=
+
+# External services
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-google-oauth-secret
+GITHUB_CLIENT_ID=your-github-oauth-client-id
+GITHUB_CLIENT_SECRET=your-github-oauth-secret
+
+# Monitoring
+SENTRY_DSN=https://your-sentry-dsn
+LOG_LEVEL=info
+```
+
+### 3. .env ni load qilish:
+
+```javascript
+// config/index.js
+require('dotenv').config();
+
+const config = {
+  // Server
+  env: process.env.NODE_ENV || 'development',
+  port: parseInt(process.env.PORT) || 3000,
+  host: process.env.HOST || 'localhost',
+
+  // Database
+  database: {
+    url: process.env.DATABASE_URL,
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT) || 5432,
+    name: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD
+  },
+
+  // JWT
+  jwt: {
+    secret: process.env.JWT_SECRET,
+    expiresIn: process.env.JWT_EXPIRES_IN || '24h',
+    refreshSecret: process.env.REFRESH_TOKEN_SECRET
+  },
+
+  // External APIs
+  apis: {
+    openai: process.env.OPENAI_API_KEY,
+    stripe: process.env.STRIPE_SECRET_KEY,
+    sendgrid: process.env.SENDGRID_API_KEY
+  },
+
+  // File uploads
+  upload: {
+    path: process.env.UPLOAD_PATH || './uploads',
+    maxSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024, // 5MB
+    allowedTypes: process.env.ALLOWED_FILE_TYPES?.split(',') || ['jpg', 'png']
+  },
+
+  // Redis
+  redis: {
+    url: process.env.REDIS_URL,
+    password: process.env.REDIS_PASSWORD
+  },
+
+  // OAuth
+  oauth: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET
+    },
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET
+    }
+  },
+
+  // Monitoring
+  sentry: {
+    dsn: process.env.SENTRY_DSN
+  },
+
+  logLevel: process.env.LOG_LEVEL || 'info'
+};
+
+// Validation: Majburiy environment variables
+const requiredEnvVars = [
+  'DATABASE_URL',
+  'JWT_SECRET'
+];
+
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ Quyidagi environment variables yo\'q:');
+  missingEnvVars.forEach(envVar => {
+    console.error(`   - ${envVar}`);
+  });
+  console.error('✅ .env faylni yarating va bu o\'zgaruvchilarni qo\'shing!');
+  process.exit(1);
+}
+
+module.exports = config;
+```
+
+### 4. Turli muhitlar uchun config:
+
+```javascript
+// config/environments.js
+const baseConfig = require('./index');
+
+const environments = {
+  development: {
+    ...baseConfig,
+    // Development-specific settings
+    logLevel: 'debug',
+    database: {
+      ...baseConfig.database,
+      logging: true // SQL queries ni console'da ko'rsatish
+    },
+    cors: {
+      origin: ['http://localhost:3000', 'http://localhost:5173'],
+      credentials: true
+    }
+  },
+
+  test: {
+    ...baseConfig,
+    port: 0, // Random port
+    database: {
+      ...baseConfig.database,
+      name: 'test_database' // Test database
+    },
+    logLevel: 'silent'
+  },
+
+  staging: {
+    ...baseConfig,
+    // Staging-specific settings
+    logLevel: 'warn',
+    cors: {
+      origin: ['https://staging.myapp.com'],
+      credentials: true
+    }
+  },
+
+  production: {
+    ...baseConfig,
+    // Production-specific settings
+    logLevel: 'error',
+    cors: {
+      origin: ['https://myapp.com', 'https://www.myapp.com'],
+      credentials: true
+    },
+    rateLimit: {
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100 // requests per windowMs
+    }
+  }
+};
+
+const currentEnv = process.env.NODE_ENV || 'development';
+
+if (!environments[currentEnv]) {
+  throw new Error(`Environment '${currentEnv}' not supported`);
+}
+
+module.exports = environments[currentEnv];
+```
+
+---
+
+## Security va Best Practices
+
+### 1. .gitignore setup:
+
+```gitignore
+# .gitignore
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Cache
+.cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Uploads
+uploads/
+temp/
+```
+
+### 2. .env.example fayl:
+
+```bash
+# .env.example - GitHub'ga push qilinadigan template
+# Haqiqiy .env fayl yaratish uchun:
+# cp .env.example .env
+
+# Server configuration
+NODE_ENV=development
+PORT=3000
+HOST=localhost
+
+# Database (o'z ma'lumotlaringizni kiriting)
+DATABASE_URL=postgresql://username:password@localhost:5432/database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=your_database_name
+DB_USER=your_username
+DB_PASSWORD=your_password
+
+# Authentication (kuchli secret'lar yarating)
+JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
+JWT_EXPIRES_IN=24h
+REFRESH_TOKEN_SECRET=your-refresh-token-secret-minimum-32-characters
+
+# External APIs (o'z key'laringizni oling)
+OPENAI_API_KEY=sk-your-openai-api-key
+STRIPE_SECRET_KEY=sk_test_your-stripe-secret
+SENDGRID_API_KEY=SG.your-sendgrid-api-key
+
+# File uploads
+UPLOAD_PATH=./uploads
+MAX_FILE_SIZE=5242880
+ALLOWED_FILE_TYPES=jpg,jpeg,png,gif
+
+# Redis (optional)
+REDIS_URL=redis://localhost:6379
+REDIS_PASSWORD=
+
+# OAuth (optional)
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-google-oauth-secret
+
+# Monitoring (optional)
+SENTRY_DSN=https://your-sentry-dsn
+LOG_LEVEL=info
+```
+
+### 3. Environment validation:
+
+```javascript
+// utils/validateEnv.js
+const joi = require('joi');
+
+const envSchema = joi.object({
+  NODE_ENV: joi.string()
+    .valid('development', 'test', 'staging', 'production')
+    .default('development'),
+
+  PORT: joi.number()
+    .port()
+    .default(3000),
+
+  DATABASE_URL: joi.string()
+    .uri()
+    .required(),
+
+  JWT_SECRET: joi.string()
+    .min(32)
+    .required()
+    .messages({
+      'string.min': 'JWT_SECRET kamida 32 ta belgi bo\'lishi kerak'
+    }),
+
+  JWT_EXPIRES_IN: joi.string()
+    .default('24h'),
+
+  // API keys validation
+  OPENAI_API_KEY: joi.string()
+    .pattern(/^sk-[a-zA-Z0-9]{48}$/)
+    .when('NODE_ENV', {
+      is: 'production',
+      then: joi.required(),
+      otherwise: joi.optional()
+    }),
+
+  // File upload validation
+  MAX_FILE_SIZE: joi.number()
+    .max(10 * 1024 * 1024) // 10MB max
+    .default(5 * 1024 * 1024),
+
+  ALLOWED_FILE_TYPES: joi.string()
+    .default('jpg,jpeg,png,gif')
+
+}).unknown(); // Allow additional env vars
+
+function validateEnv() {
+  const { error, value } = envSchema.validate(process.env);
+
+  if (error) {
+    console.error('❌ Environment validation xatolik:');
+    console.error(error.details.map(detail => `   - ${detail.message}`).join('\n'));
+    process.exit(1);
+  }
+
+  return value;
+}
+
+module.exports = validateEnv;
+```
+
+---
+
+## Praktik: Production-ready News API
+
+### Loyiha strukturasi:
+
+```
+news-api/
+├── config/
+│   ├── index.js           # Main config
+│   ├── database.js        # DB config
+│   └── environments.js    # Environment-specific
+├── middleware/
+│   ├── auth.js
+│   ├── validation.js
+│   ├── rateLimit.js
+│   └── logger.js
+├── routes/
+│   ├── auth.js
+│   ├── articles.js
+│   └── categories.js
+├── models/
+│   └── Article.js
+├── utils/
+│   ├── validateEnv.js
+│   ├── logger.js
+│   └── database.js
+├── .env.example
+├── .gitignore
+├── package.json
+└── server.js
+```
+
+### 1. Package.json with scripts:
+
+```json
+{
+  "name": "news-api",
+  "version": "1.0.0",
+  "description": "Production-ready News API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "cross-env NODE_ENV=development nodemon server.js",
+    "test": "cross-env NODE_ENV=test jest",
+    "prod": "cross-env NODE_ENV=production node server.js",
+    "build": "echo 'Building for production...'",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prestart": "npm run validate:env",
+    "validate:env": "node utils/validateEnv.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "joi": "^17.11.0",
+    "helmet": "^7.0.0",
+    "cors": "^2.8.5",
+    "express-rate-limit": "^7.1.5",
+    "morgan": "^1.10.0",
+    "compression": "^1.7.4",
+    "jsonwebtoken": "^9.0.2",
+    "bcrypt": "^5.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "cross-env": "^7.0.3",
+    "jest": "^29.7.0",
+    "eslint": "^8.54.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}
+```
+
+### 2. Main configuration:
+
+```javascript
+// config/index.js
+require('dotenv').config();
+const validateEnv = require('../utils/validateEnv');
+
+// Environment validation
+const env = validateEnv();
+
+const config = {
+  // App
+  env: env.NODE_ENV,
+  isProd: env.NODE_ENV === 'production',
+  isDev: env.NODE_ENV === 'development',
+  isTest: env.NODE_ENV === 'test',
+
+  // Server
+  port: env.PORT,
+  host: env.HOST || 'localhost',
+
+  // Security
+  jwt: {
+    secret: env.JWT_SECRET,
+    expiresIn: env.JWT_EXPIRES_IN,
+    algorithm: 'HS256'
+  },
+
+  // Database
+  database: {
+    url: env.DATABASE_URL,
+    pool: {
+      master: {
+        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 30000,
+        max: 10
+      }
+    }
+  },
+
+  // Rate limiting
+  rateLimit: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: env.NODE_ENV === 'production' ? 100 : 1000
+  },
+
+  // CORS
+  cors: {
+    origin: env.NODE_ENV === 'production'
+      ? ['https://mynewsapp.com']
+      : ['http://localhost:3000', 'http://localhost:5173'],
+    credentials: true
+  },
+
+  // File uploads
+  upload: {
+    path: env.UPLOAD_PATH || './uploads',
+    maxSize: parseInt(env.MAX_FILE_SIZE) || 5 * 1024 * 1024,
+    allowedTypes: env.ALLOWED_FILE_TYPES?.split(',') || ['jpg', 'png', 'gif']
+  },
+
+  // External APIs
+  apis: {
+    newsApi: {
+      key: env.NEWS_API_KEY,
+      baseUrl: 'https://newsapi.org/v2'
+    },
+    openai: {
+      key: env.OPENAI_API_KEY,
+      model: 'gpt-3.5-turbo'
+    }
+  },
+
+  // Logging
+  logging: {
+    level: env.LOG_LEVEL || 'info',
+    file: {
+      enabled: env.NODE_ENV === 'production',
+      path: './logs'
+    }
+  }
+};
+
+// Additional validation
+if (config.isProd) {
+  const requiredProdVars = [
+    'DATABASE_URL',
+    'JWT_SECRET'
+  ];
+
+  const missingVars = requiredProdVars.filter(varName => !env[varName]);
+
+  if (missingVars.length > 0) {
+    throw new Error(`Production'da quyidagi environment variables majburiy: ${missingVars.join(', ')}`);
+  }
+}
+
+module.exports = config;
+```
+
+### 3. Logger setup:
+
+```javascript
+// utils/logger.js
+const path = require('path');
+const fs = require('fs');
+const config = require('../config');
+
+class Logger {
+  constructor() {
+    this.logLevels = {
+      error: 0,
+      warn: 1,
+      info: 2,
+      debug: 3
+    };
+
+    this.currentLevel = this.logLevels[config.logging.level] || 2;
+
+    if (config.logging.file.enabled) {
+      this.ensureLogDirectory();
+    }
+  }
+
+  ensureLogDirectory() {
+    if (!fs.existsSync(config.logging.file.path)) {
+      fs.mkdirSync(config.logging.file.path, { recursive: true });
+    }
+  }
+
+  shouldLog(level) {
+    return this.logLevels[level] <= this.currentLevel;
+  }
+
+  format(level, message, meta = {}) {
+    const timestamp = new Date().toISOString();
+    return {
+      timestamp,
+      level: level.toUpperCase(),
+      message,
+      ...meta,
+      environment: config.env,
+      pid: process.pid
+    };
+  }
+
+  writeToFile(logEntry) {
+    if (!config.logging.file.enabled) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const logFile = path.join(config.logging.file.path, `app-${today}.log`);
+    const logLine = JSON.stringify(logEntry) + '\n';
+
+    fs.appendFileSync(logFile, logLine);
+  }
+
+  writeToConsole(logEntry) {
+    const colors = {
+      ERROR: '\x1b[31m',   // Red
+      WARN: '\x1b[33m',    // Yellow
+      INFO: '\x1b[36m',    // Cyan
+      DEBUG: '\x1b[37m'    // White
+    };
+
+    const resetColor = '\x1b[0m';
+    const color = colors[logEntry.level] || colors.INFO;
+
+    console.log(
+      `${color}[${logEntry.timestamp}] ${logEntry.level}:${resetColor} ${logEntry.message}`
+    );
+
+    if (Object.keys(logEntry).length > 4) {
+      console.log('  Meta:', { ...logEntry, timestamp: undefined, level: undefined, message: undefined });
+    }
+  }
+
+  log(level, message, meta = {}) {
+    if (!this.shouldLog(level)) return;
+
+    const logEntry = this.format(level, message, meta);
+
+    this.writeToConsole(logEntry);
+    this.writeToFile(logEntry);
+  }
+
+  error(message, meta = {}) {
+    this.log('error', message, meta);
+  }
+
+  warn(message, meta = {}) {
+    this.log('warn', message, meta);
+  }
+
+  info(message, meta = {}) {
+    this.log('info', message, meta);
+  }
+
+  debug(message, meta = {}) {
+    this.log('debug', message, meta);
+  }
+}
+
+module.exports = new Logger();
+```
+
+### 4. Environment-specific middleware:
+
+```javascript
+// middleware/environment.js
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const cors = require('cors');
+const compression = require('compression');
+const morgan = require('morgan');
+const config = require('../config');
+const logger = require('../utils/logger');
+
+function setupMiddleware(app) {
+  // Security headers
+  app.use(helmet({
+    contentSecurityPolicy: config.isProd,
+    crossOriginEmbedderPolicy: config.isProd
+  }));
+
+  // CORS
+  app.use(cors(config.cors));
+
+  // Compression (production only)
+  if (config.isProd) {
+    app.use(compression());
+  }
+
+  // Rate limiting
+  const limiter = rateLimit({
+    windowMs: config.rateLimit.windowMs,
+    max: config.rateLimit.max,
+    message: {
+      error: 'Juda ko\'p request! Biroz kutib turing.',
+      retryAfter: Math.ceil(config.rateLimit.windowMs / 1000)
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+
+  app.use('/api/', limiter);
+
+  // Request logging
+  if (config.isDev) {
+    app.use(morgan('dev'));
+  } else if (config.isProd) {
+    app.use(morgan('combined', {
+      stream: {
+        write: (message) => logger.info(message.trim())
+      }
+    }));
+  }
+
+  // Request ID middleware
+  app.use((req, res, next) => {
+    req.id = Math.random().toString(36).substr(2, 9);
+    res.setHeader('X-Request-ID', req.id);
+    next();
+  });
+
+  // Response time tracking
+  app.use((req, res, next) => {
+    const start = Date.now();
+
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      logger.info(`${req.method} ${req.url}`, {
+        requestId: req.id,
+        statusCode: res.statusCode,
+        duration: `${duration}ms`,
+        userAgent: req.get('User-Agent'),
+        ip: req.ip
+      });
+    });
+
+    next();
+  });
+}
+
+module.exports = setupMiddleware;
+```
+
+### 5. Main server file:
+
+```javascript
+// server.js
+const express = require('express');
+const config = require('./config');
+const logger = require('./utils/logger');
+const setupMiddleware = require('./middleware/environment');
+
+// Routes
+const authRoutes = require('./routes/auth');
+const articleRoutes = require('./routes/articles');
+
+const app = express();
+
+// Middleware setup
+setupMiddleware(app);
+
+// Body parsing
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: config.env,
+    version: process.env.npm_package_version || '1.0.0',
+    memory: process.memoryUsage()
+  });
+});
+
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/articles', articleRoutes);
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Endpoint topilmadi',
+    path: req.originalUrl,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Global error handler
+app.use((error, req, res, next) => {
+  logger.error('Unhandled error', {
+    error: error.message,
+    stack: error.stack,
+    requestId: req.id,
+    url: req.url,
+    method: req.method
+  });
+
+  const statusCode = error.statusCode || 500;
+  const message = config.isProd ? 'Server xatoligi' : error.message;
+
+  res.status(statusCode).json({
+    error: message,
+    requestId: req.id,
+    timestamp: new Date().toISOString(),
+    ...(config.isDev && { stack: error.stack })
+  });
+});
+
+// Graceful shutdown
+const server = app.listen(config.port, config.host, () => {
+  logger.info(`🚀 News API server started`, {
+    port: config.port,
+    host: config.host,
+    environment: config.env,
+    nodeVersion: process.version,
+    pid: process.pid
+  });
+});
+
+// Handle shutdown signals
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    logger.info('Process terminated');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  server.close(() => {
+    logger.info('Process terminated');
+    process.exit(0);
+  });
+});
+
+// Unhandled promise rejection
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection', {
+    reason: reason.toString(),
+    promise: promise.toString()
+  });
+  process.exit(1);
+});
+
+// Uncaught exception
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception', {
+    error: error.message,
+    stack: error.stack
+  });
+  process.exit(1);
+});
+
+module.exports = app;
+```
+
+---
+
+## Production Deployment checklist
+
+### 1. Environment setup:
+
+```bash
+# Production .env fayl
+NODE_ENV=production
+PORT=80
+
+# Database (production URL)
+DATABASE_URL=postgresql://user:pass@prod-server:5432/news_prod
+
+# Strong secrets (32+ characters)
+JWT_SECRET=production-super-long-and-secure-secret-key-32plus-characters
+REFRESH_TOKEN_SECRET=another-long-secure-refresh-secret
+
+# External service keys
+NEWS_API_KEY=your-production-api-key
+SENDGRID_API_KEY=your-production-sendgrid-key
+
+# Logging
+LOG_LEVEL=error
+SENTRY_DSN=https://your-production-sentry-url
+
+# Security
+CORS_ORIGINS=https://mynewsapp.com,https://www.mynewsapp.com
+```
+
+### 2. Package.json production scripts:
+
+```json
+{
+  "scripts": {
+    "start": "node server.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop news-api",
+    "pm2:restart": "pm2 restart news-api",
+    "pm2:logs": "pm2 logs news-api",
+    "docker:build": "docker build -t news-api .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env news-api"
+  }
+}
+```
+
+### 3. PM2 ecosystem.config.js:
+
+```javascript
+// ecosystem.config.js
+module.exports = {
+  apps: [{
+    name: 'news-api',
+    script: 'server.js',
+    instances: 'max', // CPU count
+    exec_mode: 'cluster',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3000
+    },
+    error_file: './logs/pm2-error.log',
+    out_file: './logs/pm2-out.log',
+    log_file: './logs/pm2-combined.log',
+    time: true,
+    max_memory_restart: '1G',
+    node_args: '--max-old-space-size=1024'
+  }]
+};
+```
+
+### 4. Docker setup:
+
+```dockerfile
+# Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY . .
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodejs -u 1001
+
+# Change ownership
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node healthcheck.js
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+```
+
+```javascript
+// healthcheck.js
+const http = require('http');
+
+const options = {
+  host: 'localhost',
+  port: process.env.PORT || 3000,
+  path: '/health',
+  timeout: 2000
+};
+
+const request = http.request(options, (res) => {
+  console.log(`STATUS: ${res.statusCode}`);
+  if (res.statusCode === 200) {
+    process.exit(0);
+  } else {
+    process.exit(1);
+  }
+});
+
+request.on('error', function(err) {
+  console.log('ERROR');
+  process.exit(1);
+});
+
+request.end();
+```
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **Environment Variables** - maxfiy ma'lumotlarni himoya qilish
+✅ **Configuration management** - turli muhitlar uchun setup
+✅ **Security best practices** - production-ready xavfsizlik
+✅ **Logging system** - professional logging va monitoring
+✅ **Production deployment** - PM2, Docker, health checks
+✅ **Real loyiha** - News API production konfiguratsiya
+
+### 🔒 Security checklist:
+
+✅ **Environment variables** - maxfiy ma'lumotlar kodda yo'q
+✅ **.gitignore** - .env fayllar GitHub'ga push qilinmaydi
+✅ **Validation** - environment variables validation
+✅ **Strong secrets** - 32+ character JWT secrets
+✅ **CORS configuration** - faqat ruxsat berilgan domain'lar
+✅ **Rate limiting** - abuse protection
+✅ **Security headers** - helmet middleware
+
+### 📊 Production features:
+
+✅ **Environment-specific configs** - dev/staging/prod
+✅ **Professional logging** - file va console logging
+✅ **Health checks** - server monitoring
+✅ **Graceful shutdown** - clean process termination
+✅ **Error handling** - unhandled rejection recovery
+✅ **Performance monitoring** - request tracking
+✅ **Docker support** - containerization ready
+
+### 🚀 Keyingi darsda:
+
+- **Debugging & Testing** - unit tests, integration tests
+- **Performance optimization** - caching, monitoring
+- **Advanced error handling** - Sentry integration
+- **API documentation** - Swagger/OpenAPI
+
+### 📚 Mustaqil mashq:
+
+1. **Environment validation** - custom validation rules
+2. **Multi-environment setup** - staging server
+3. **Docker deployment** - container orchestration
+
+---
+
+<Callout type="success" title="Production Ready! 🚀">
+Siz endi Node.js dasturingizni production'ga deploy qilishga tayyor! Environment configuration, security va monitoring bilan professional backend developer bo'ldingiz.
+</Callout>
+
+<Callout type="info" title="DevOps Skills! 💪">
+Environment management - bu backend developer'ning eng muhim ko'nikmalari orasida. Real companylar'da bu bilimlar juda qadirlanadi. Keyingi darsda testing va debugging'ni o'rganamiz!
+</Callout>
+
+**Keyingi dars**: [Debugging va Testing](/docs/nodejs/09-debugging-testing)

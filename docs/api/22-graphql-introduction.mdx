@@ -1,0 +1,1111 @@
+---
+title: "GraphQL bilan tanishuv"
+description: "GraphQL vs REST, Apollo Server, Schema design va zamonaviy API query tilini professional darajada o'rganamiz"
+category: "api"
+order: 22
+difficulty: "advanced"
+readTime: "45 daqiqa"
+tags:
+  - graphql
+  - apollo
+  - schema
+  - queries
+  - mutations
+  - subscriptions
+---
+
+# GraphQL bilan tanishuv
+
+Assalom aleykum! API validation'ni o'rgangach, endi **GraphQL** - zamonaviy API query tilini o'rganamiz. Bu darsda GraphQL asoslari, Apollo Server va REST bilan farqlarni professional darajada o'zlashtiramiz.
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- 🆚 **GraphQL vs REST** - farqlar va afzalliklar
+- 📋 **Schema Design** - type system va resolvers
+- 🚀 **Apollo Server** - GraphQL server setup
+- 🔍 **Queries va Mutations** - ma'lumot olish va o'zgartirish
+- 📡 **Subscriptions** - real-time updates
+- 💼 **Real loyiha** - Blog Platform GraphQL API
+
+---
+
+## GraphQL nima?
+
+### GraphQL ta'rifi:
+
+**GraphQL** - ma'lumotlar uchun query tili va server-side runtime hisoblanadi. Facebook tomonidan 2012-yilda yaratilgan va 2015-yilda open source qilingan.
+
+### Real hayot misoli:
+
+Tasavvur qiling, siz restoranda zakaz berasiz:
+
+#### REST approach (Klassik):
+```
+👤 Mijoz: "Menu kitobini bering"
+🍕 Ofitsiant: *Butun 50 sahifalik menu kitobini beradi*
+
+👤 Mijoz: "Pizza ro'yxatini ko'rsating"
+🍕 Ofitsiant: *Alohida pizza menu* (2-chi request)
+
+👤 Mijoz: "Margarita pizzaning batafsil ma'lumotini bering"
+🍕 Ofitsiant: *Ingredients, price, description* (3-chi request)
+```
+
+#### GraphQL approach (Zamonaviy):
+```
+👤 Mijoz: "Menga Margarita pizzaning faqat nomi, narxi va rasmini bering"
+🍕 Ofitsiant: *Aynan shu ma'lumotlarni beradi* (1 ta request)
+```
+
+### GraphQL'ning asosiy xususiyatlari:
+
+- 🎯 **Single endpoint** - bittada hamma
+- 📜 **Declarative** - nima kerak bo'lsa, shu narsa keladi
+- ⚡ **Efficient** - over-fetching va under-fetching yo'q
+- 🔄 **Real-time** - subscriptions orqali
+- 🛠️ **Type-safe** - kuchli type system
+
+---
+
+## GraphQL vs REST - Batafsil taqqoslash
+
+### 1. **Data Fetching**
+
+#### REST:
+```javascript
+// User ma'lumotlari olish
+GET /api/users/123
+{
+  "id": 123,
+  "name": "Alibek",
+  "email": "alibek@example.com",
+  "posts": [1, 2, 3],        // Faqat ID'lar
+  "followers": [4, 5, 6]     // Faqat ID'lar
+}
+
+// User postlari olish (2-chi request)
+GET /api/users/123/posts
+[
+  { "id": 1, "title": "Post 1", "content": "...", "comments": [7, 8] },
+  { "id": 2, "title": "Post 2", "content": "...", "comments": [9] }
+]
+
+// Har bir post uchun kommentlar (3, 4-chi requestlar)
+GET /api/posts/1/comments
+GET /api/posts/2/comments
+
+// Jami: 4 ta HTTP request!
+```
+
+#### GraphQL:
+```javascript
+// Bitta requestda hamma narsa
+query {
+  user(id: 123) {
+    name
+    email
+    posts {
+      title
+      content
+      comments {
+        text
+        author {
+          name
+        }
+      }
+    }
+  }
+}
+
+// Jami: 1 ta request!
+```
+
+### 2. **Over-fetching vs Under-fetching**
+
+#### REST muammolari:
+```javascript
+// Problem 1: Over-fetching
+// Mobile app faqat user nomi kerak, lekin hamma ma'lumot keladi
+GET /api/users/123
+{
+  "id": 123,
+  "name": "Alibek",          // ← Faqat bu kerak
+  "email": "alibek@example.com",  // ← Keraksiz
+  "bio": "Long bio text...",      // ← Keraksiz
+  "avatar": "base64image...",     // ← Keraksiz (katta)
+  "settings": { ... },            // ← Keraksiz
+  "lastLoginAt": "...",          // ← Keraksiz
+}
+
+// Problem 2: Under-fetching
+// Frontend user va uning postlarini ko'rsatmoqchi, lekin alohida requestlar kerak
+```
+
+#### GraphQL yechimi:
+```javascript
+// Faqat kerakli ma'lumotlar
+query GetUserName {
+  user(id: 123) {
+    name          // Faqat bu field
+  }
+}
+
+// Yoki batafsil ma'lumotlar bitta requestda
+query GetUserWithPosts {
+  user(id: 123) {
+    name
+    email
+    posts {
+      title
+      createdAt
+    }
+  }
+}
+```
+
+### 3. **API Versioning**
+
+#### REST:
+```javascript
+// Versioning muammosi
+/api/v1/users/123  // Eski versiya
+/api/v2/users/123  // Yangi versiya
+/api/v3/users/123  // Eng yangi versiya
+
+// Frontend turli versiyalarni maintain qilishi kerak
+```
+
+#### GraphQL:
+```javascript
+// Versioning yo'q, schema evolve qiladi
+type User {
+  name: String
+  email: String
+  bio: String          # Yangi field qo'shildi
+  avatar: String       # Yangi field qo'shildi
+  posts: [Post]        # Relationship qo'shildi
+}
+
+// Eski querylar ishlayveradi, yangi fieldlar optional
+```
+
+---
+
+## GraphQL Schema Design
+
+### Type System asoslari:
+
+```javascript
+// schema.js
+const { gql } = require('apollo-server-express');
+
+const typeDefs = gql`
+  # Scalar Types (Built-in)
+  scalar Date
+  scalar Upload
+
+  # Enum Types
+  enum PostStatus {
+    DRAFT
+    PUBLISHED
+    ARCHIVED
+  }
+
+  enum UserRole {
+    USER
+    ADMIN
+    MODERATOR
+  }
+
+  # Object Types
+  type User {
+    id: ID!                    # Required field
+    name: String!              # Required string
+    email: String!             # Required string
+    bio: String                # Optional string
+    avatar: String
+    role: UserRole!
+    createdAt: Date!
+    updatedAt: Date
+
+    # Relationships
+    posts: [Post!]!            # List of posts (never null)
+    comments: [Comment!]!
+    followers: [User!]!
+    following: [User!]!
+  }
+
+  type Post {
+    id: ID!
+    title: String!
+    content: String!
+    excerpt: String
+    status: PostStatus!
+    publishedAt: Date
+    createdAt: Date!
+    updatedAt: Date
+
+    # Relationships
+    author: User!
+    comments: [Comment!]!
+    tags: [Tag!]!
+    likes: [Like!]!
+
+    # Computed fields
+    likesCount: Int!
+    commentsCount: Int!
+  }
+
+  type Comment {
+    id: ID!
+    text: String!
+    createdAt: Date!
+    updatedAt: Date
+
+    # Relationships
+    author: User!
+    post: Post!
+    parent: Comment           # For reply comments
+    replies: [Comment!]!
+  }
+
+  type Tag {
+    id: ID!
+    name: String!
+    slug: String!
+    description: String
+    color: String
+
+    # Relationships
+    posts: [Post!]!
+
+    # Computed
+    postsCount: Int!
+  }
+
+  type Like {
+    id: ID!
+    createdAt: Date!
+
+    # Relationships
+    user: User!
+    post: Post!
+  }
+
+  # Input Types (for mutations)
+  input CreatePostInput {
+    title: String!
+    content: String!
+    excerpt: String
+    status: PostStatus = DRAFT
+    tagIds: [ID!]
+  }
+
+  input UpdatePostInput {
+    title: String
+    content: String
+    excerpt: String
+    status: PostStatus
+    tagIds: [ID!]
+  }
+
+  input CreateCommentInput {
+    text: String!
+    postId: ID!
+    parentId: ID              # For replies
+  }
+
+  # Queries
+  type Query {
+    # User queries
+    users: [User!]!
+    user(id: ID!): User
+    me: User
+
+    # Post queries
+    posts(
+      status: PostStatus
+      authorId: ID
+      tagId: ID
+      search: String
+      limit: Int = 10
+      offset: Int = 0
+    ): PostConnection!
+
+    post(id: ID!): Post
+    postBySlug(slug: String!): Post
+
+    # Tag queries
+    tags: [Tag!]!
+    tag(id: ID!): Tag
+  }
+
+  # Mutations
+  type Mutation {
+    # User mutations
+    register(name: String!, email: String!, password: String!): AuthPayload!
+    login(email: String!, password: String!): AuthPayload!
+    updateProfile(name: String, bio: String, avatar: Upload): User!
+
+    # Post mutations
+    createPost(input: CreatePostInput!): Post!
+    updatePost(id: ID!, input: UpdatePostInput!): Post!
+    deletePost(id: ID!): Boolean!
+    publishPost(id: ID!): Post!
+
+    # Comment mutations
+    createComment(input: CreateCommentInput!): Comment!
+    updateComment(id: ID!, text: String!): Comment!
+    deleteComment(id: ID!): Boolean!
+
+    # Like mutations
+    likePost(postId: ID!): Like!
+    unlikePost(postId: ID!): Boolean!
+
+    # Follow mutations
+    followUser(userId: ID!): Boolean!
+    unfollowUser(userId: ID!): Boolean!
+  }
+
+  # Subscriptions (Real-time)
+  type Subscription {
+    postAdded: Post!
+    postUpdated(id: ID!): Post!
+    commentAdded(postId: ID!): Comment!
+    likesUpdated(postId: ID!): Int!
+  }
+
+  # Custom types for pagination
+  type PostConnection {
+    nodes: [Post!]!
+    totalCount: Int!
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+  }
+
+  type AuthPayload {
+    token: String!
+    user: User!
+  }
+`;
+
+module.exports = typeDefs;
+```
+
+---
+
+## Resolvers - Ma'lumotlarni olish logikasi
+
+### Resolver functions:
+
+```javascript
+// resolvers.js
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { AuthenticationError, ForbiddenError } = require('apollo-server-express');
+
+// Fake database
+const users = [];
+const posts = [];
+const comments = [];
+const likes = [];
+
+const resolvers = {
+  // Query resolvers
+  Query: {
+    // User queries
+    users: () => users,
+
+    user: (parent, { id }) => {
+      return users.find(user => user.id === id);
+    },
+
+    me: (parent, args, { user }) => {
+      if (!user) throw new AuthenticationError('Authentication required');
+      return user;
+    },
+
+    // Post queries with filtering and pagination
+    posts: (parent, { status, authorId, tagId, search, limit, offset }) => {
+      let filteredPosts = [...posts];
+
+      // Status filter
+      if (status) {
+        filteredPosts = filteredPosts.filter(post => post.status === status);
+      }
+
+      // Author filter
+      if (authorId) {
+        filteredPosts = filteredPosts.filter(post => post.authorId === authorId);
+      }
+
+      // Tag filter
+      if (tagId) {
+        filteredPosts = filteredPosts.filter(post =>
+          post.tagIds.includes(tagId)
+        );
+      }
+
+      // Search
+      if (search) {
+        const searchLower = search.toLowerCase();
+        filteredPosts = filteredPosts.filter(post =>
+          post.title.toLowerCase().includes(searchLower) ||
+          post.content.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // Sorting
+      filteredPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // Pagination
+      const totalCount = filteredPosts.length;
+      const nodes = filteredPosts.slice(offset, offset + limit);
+
+      return {
+        nodes,
+        totalCount,
+        hasNextPage: offset + limit < totalCount,
+        hasPreviousPage: offset > 0
+      };
+    },
+
+    post: (parent, { id }) => {
+      return posts.find(post => post.id === id);
+    }
+  },
+
+  // Mutation resolvers
+  Mutation: {
+    // Auth mutations
+    register: async (parent, { name, email, password }) => {
+      // Check if user exists
+      if (users.find(u => u.email === email)) {
+        throw new Error('Email allaqachon registered');
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user
+      const newUser = {
+        id: String(users.length + 1),
+        name,
+        email,
+        password: hashedPassword,
+        role: 'USER',
+        createdAt: new Date().toISOString()
+      };
+
+      users.push(newUser);
+
+      // Generate token
+      const token = jwt.sign(
+        { userId: newUser.id },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      return {
+        token,
+        user: newUser
+      };
+    },
+
+    login: async (parent, { email, password }) => {
+      // Find user
+      const user = users.find(u => u.email === email);
+      if (!user) {
+        throw new Error('Noto\'g\'ri login ma\'lumotlari');
+      }
+
+      // Check password
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        throw new Error('Noto\'g\'ri login ma\'lumotlari');
+      }
+
+      // Generate token
+      const token = jwt.sign(
+        { userId: user.id },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      return {
+        token,
+        user
+      };
+    },
+
+    // Post mutations
+    createPost: (parent, { input }, { user }) => {
+      if (!user) throw new AuthenticationError('Login required');
+
+      const newPost = {
+        id: String(posts.length + 1),
+        title: input.title,
+        content: input.content,
+        excerpt: input.excerpt || input.content.substring(0, 200),
+        status: input.status || 'DRAFT',
+        authorId: user.id,
+        tagIds: input.tagIds || [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      posts.push(newPost);
+
+      // Publish subscription
+      pubsub.publish('POST_ADDED', { postAdded: newPost });
+
+      return newPost;
+    },
+
+    updatePost: (parent, { id, input }, { user }) => {
+      if (!user) throw new AuthenticationError('Login required');
+
+      const post = posts.find(p => p.id === id);
+      if (!post) throw new Error('Post topilmadi');
+
+      // Authorization check
+      if (post.authorId !== user.id && user.role !== 'ADMIN') {
+        throw new ForbiddenError('Faqat post muallifi tahrirlashi mumkin');
+      }
+
+      // Update post
+      Object.keys(input).forEach(key => {
+        if (input[key] !== undefined) {
+          post[key] = input[key];
+        }
+      });
+      post.updatedAt = new Date().toISOString();
+
+      return post;
+    },
+
+    deletePost: (parent, { id }, { user }) => {
+      if (!user) throw new AuthenticationError('Login required');
+
+      const postIndex = posts.findIndex(p => p.id === id);
+      if (postIndex === -1) throw new Error('Post topilmadi');
+
+      const post = posts[postIndex];
+      if (post.authorId !== user.id && user.role !== 'ADMIN') {
+        throw new ForbiddenError('Faqat post muallifi o\'chirishi mumkin');
+      }
+
+      posts.splice(postIndex, 1);
+      return true;
+    },
+
+    // Like mutations
+    likePost: (parent, { postId }, { user }) => {
+      if (!user) throw new AuthenticationError('Login required');
+
+      // Check if already liked
+      const existingLike = likes.find(l => l.postId === postId && l.userId === user.id);
+      if (existingLike) {
+        throw new Error('Post allaqachon like qilingan');
+      }
+
+      const newLike = {
+        id: String(likes.length + 1),
+        userId: user.id,
+        postId,
+        createdAt: new Date().toISOString()
+      };
+
+      likes.push(newLike);
+
+      // Publish subscription for real-time updates
+      const likesCount = likes.filter(l => l.postId === postId).length;
+      pubsub.publish('LIKES_UPDATED', {
+        likesUpdated: likesCount,
+        postId
+      });
+
+      return newLike;
+    }
+  },
+
+  // Field resolvers (for relationships)
+  User: {
+    posts: (parent) => {
+      return posts.filter(post => post.authorId === parent.id);
+    },
+
+    comments: (parent) => {
+      return comments.filter(comment => comment.authorId === parent.id);
+    }
+  },
+
+  Post: {
+    author: (parent) => {
+      return users.find(user => user.id === parent.authorId);
+    },
+
+    comments: (parent) => {
+      return comments.filter(comment => comment.postId === parent.id);
+    },
+
+    likes: (parent) => {
+      return likes.filter(like => like.postId === parent.id);
+    },
+
+    likesCount: (parent) => {
+      return likes.filter(like => like.postId === parent.id).length;
+    },
+
+    commentsCount: (parent) => {
+      return comments.filter(comment => comment.postId === parent.id).length;
+    }
+  },
+
+  Comment: {
+    author: (parent) => {
+      return users.find(user => user.id === parent.authorId);
+    },
+
+    post: (parent) => {
+      return posts.find(post => post.id === parent.postId);
+    },
+
+    replies: (parent) => {
+      return comments.filter(comment => comment.parentId === parent.id);
+    }
+  }
+};
+
+module.exports = resolvers;
+```
+
+---
+
+## Apollo Server Setup
+
+### Server setup:
+
+```javascript
+// server.js
+const express = require('express');
+const { ApolloServer } = require('apollo-server-express');
+const { createServer } = require('http');
+const { SubscriptionServer } = require('subscriptions-transport-ws');
+const { execute, subscribe } = require('graphql');
+const { makeExecutableSchema } = require('@graphql-tools/schema');
+const jwt = require('jsonwebtoken');
+
+const typeDefs = require('./schema');
+const resolvers = require('./resolvers');
+
+async function startServer() {
+  const app = express();
+
+  // Create executable schema
+  const schema = makeExecutableSchema({
+    typeDefs,
+    resolvers
+  });
+
+  // Apollo Server setup
+  const server = new ApolloServer({
+    schema,
+
+    // Context function - User authentication
+    context: async ({ req }) => {
+      // Get token from headers
+      const authHeader = req.headers.authorization;
+      const token = authHeader && authHeader.split(' ')[1];
+
+      let user = null;
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          user = users.find(u => u.id === decoded.userId);
+        } catch (error) {
+          console.error('JWT verification failed:', error);
+        }
+      }
+
+      return { user };
+    },
+
+    // Development tools
+    introspection: process.env.NODE_ENV !== 'production',
+    playground: process.env.NODE_ENV !== 'production',
+
+    // Error formatting
+    formatError: (error) => {
+      console.error('GraphQL Error:', error);
+
+      // Return clean error to client
+      return {
+        message: error.message,
+        code: error.extensions?.code || 'UNKNOWN_ERROR',
+        path: error.path
+      };
+    }
+  });
+
+  await server.start();
+
+  // Apply middleware
+  server.applyMiddleware({
+    app,
+    path: '/graphql',
+    cors: {
+      origin: process.env.CLIENT_URL || 'http://localhost:3000',
+      credentials: true
+    }
+  });
+
+  // HTTP server
+  const httpServer = createServer(app);
+
+  // Subscriptions server
+  const subscriptionServer = SubscriptionServer.create(
+    {
+      schema,
+      execute,
+      subscribe,
+      onConnect: (connectionParams) => {
+        // Authentication for subscriptions
+        const token = connectionParams.authorization;
+        if (token) {
+          try {
+            const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
+            const user = users.find(u => u.id === decoded.userId);
+            return { user };
+          } catch (error) {
+            throw new Error('Invalid token');
+          }
+        }
+        return {};
+      }
+    },
+    {
+      server: httpServer,
+      path: server.graphqlPath
+    }
+  );
+
+  const PORT = process.env.PORT || 4000;
+
+  httpServer.listen(PORT, () => {
+    console.log(`🚀 GraphQL Server: http://localhost:${PORT}${server.graphqlPath}`);
+    console.log(`🔔 Subscriptions: ws://localhost:${PORT}${server.graphqlPath}`);
+    console.log(`🛠️ GraphQL Playground: http://localhost:${PORT}${server.graphqlPath}`);
+  });
+}
+
+startServer().catch(error => {
+  console.error('Server start failed:', error);
+});
+```
+
+---
+
+## Client-side Usage - React misoli
+
+### Apollo Client setup:
+
+```javascript
+// apolloClient.js
+import { ApolloClient, InMemoryCache, createHttpLink, split } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
+import { getMainDefinition } from '@apollo/client/utilities';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
+
+// HTTP link
+const httpLink = createHttpLink({
+  uri: 'http://localhost:4000/graphql'
+});
+
+// WebSocket link for subscriptions
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: 'ws://localhost:4000/graphql',
+    connectionParams: () => ({
+      authorization: localStorage.getItem('token')
+    })
+  })
+);
+
+// Auth link
+const authLink = setContext((_, { headers }) => {
+  const token = localStorage.getItem('token');
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : ""
+    }
+  };
+});
+
+// Split link - HTTP for queries/mutations, WS for subscriptions
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === 'OperationDefinition' &&
+      definition.operation === 'subscription'
+    );
+  },
+  wsLink,
+  authLink.concat(httpLink)
+);
+
+// Apollo client
+const client = new ApolloClient({
+  link: splitLink,
+  cache: new InMemoryCache()
+});
+
+export default client;
+```
+
+### React komponenti misoli:
+
+```javascript
+// components/BlogList.js
+import React from 'react';
+import { useQuery, useMutation, useSubscription } from '@apollo/client';
+import { gql } from '@apollo/client';
+
+// Queries
+const GET_POSTS = gql`
+  query GetPosts($limit: Int, $offset: Int) {
+    posts(limit: $limit, offset: $offset) {
+      nodes {
+        id
+        title
+        excerpt
+        createdAt
+        author {
+          name
+        }
+        likesCount
+        commentsCount
+      }
+      totalCount
+      hasNextPage
+    }
+  }
+`;
+
+const LIKE_POST = gql`
+  mutation LikePost($postId: ID!) {
+    likePost(postId: $postId) {
+      id
+    }
+  }
+`;
+
+const POST_ADDED = gql`
+  subscription {
+    postAdded {
+      id
+      title
+      excerpt
+      author {
+        name
+      }
+      likesCount
+    }
+  }
+`;
+
+const LIKES_UPDATED = gql`
+  subscription LikesUpdated($postId: ID!) {
+    likesUpdated(postId: $postId)
+  }
+`;
+
+function BlogList() {
+  const [page, setPage] = useState(1);
+  const limit = 5;
+
+  // Query posts
+  const { data, loading, error, fetchMore } = useQuery(GET_POSTS, {
+    variables: {
+      limit,
+      offset: (page - 1) * limit
+    },
+    notifyOnNetworkStatusChange: true
+  });
+
+  // Like mutation
+  const [likePost] = useMutation(LIKE_POST, {
+    onCompleted: () => {
+      console.log('Post liked!');
+    },
+    onError: (error) => {
+      console.error('Like failed:', error);
+    }
+  });
+
+  // Real-time subscriptions
+  const { data: newPost } = useSubscription(POST_ADDED, {
+    onSubscriptionData: ({ subscriptionData }) => {
+      console.log('New post added:', subscriptionData.data.postAdded);
+      // Update cache or show notification
+    }
+  });
+
+  if (loading) return <div>Loading posts...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  const handleLike = async (postId) => {
+    try {
+      await likePost({
+        variables: { postId },
+        // Cache update
+        update: (cache, { data: { likePost } }) => {
+          // Manual cache update if needed
+        }
+      });
+    } catch (error) {
+      alert('Like failed: ' + error.message);
+    }
+  };
+
+  return (
+    <div className="blog-list">
+      <h2>Blog Posts ({data.posts.totalCount})</h2>
+
+      {newPost && (
+        <div className="new-post-notification">
+          New post: {newPost.postAdded.title}
+        </div>
+      )}
+
+      {data.posts.nodes.map(post => (
+        <div key={post.id} className="blog-post">
+          <h3>{post.title}</h3>
+          <p>{post.excerpt}</p>
+          <div className="post-meta">
+            <span>By {post.author.name}</span>
+            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+            <button onClick={() => handleLike(post.id)}>
+              Like ({post.likesCount})
+            </button>
+            <span>Comments: {post.commentsCount}</span>
+          </div>
+        </div>
+      ))}
+
+      {data.posts.hasNextPage && (
+        <button
+          onClick={() => {
+            fetchMore({
+              variables: {
+                offset: page * limit
+              },
+              updateQuery: (prev, { fetchMoreResult }) => {
+                return {
+                  posts: {
+                    ...fetchMoreResult.posts,
+                    nodes: [...prev.posts.nodes, ...fetchMoreResult.posts.nodes]
+                  }
+                };
+              }
+            });
+            setPage(p => p + 1);
+          }}
+        >
+          Load More
+        </button>
+      )}
+    </div>
+  );
+}
+
+export default BlogList;
+```
+
+---
+
+## GraphQL afzalliklari va kamchiliklari
+
+### ✅ **Afzalliklari:**
+
+1. **Efficient data fetching** - over/under-fetching yo'q
+2. **Strong type system** - compile-time checking
+3. **Real-time subscriptions** - live updates
+4. **Introspection** - self-documenting
+5. **Single endpoint** - versioning muammolari yo'q
+6. **Developer experience** - GraphQL Playground, tools
+
+### ⚠️ **Kamchiliklari va cheklovlar:**
+
+1. **Learning curve** - REST'dan murakkab
+2. **Caching complexity** - HTTP caching ishlamaydi
+3. **Query complexity** - DoS attack riski
+4. **File uploads** - qo'shimcha configuratsiya kerak
+5. **Performance** - yomon querylar server'ni sekinlashtiradi
+
+### Qachon GraphQL, qachon REST?
+
+#### **GraphQL tanlang:**
+- ✅ Mobile applications (efficient data fetching)
+- ✅ Complex, interconnected data
+- ✅ Rapid frontend development
+- ✅ Real-time features kerak
+- ✅ Multiple platforms (iOS, Android, Web)
+
+#### **REST tanlang:**
+- ✅ Simple CRUD operations
+- ✅ File uploads/downloads ko'p
+- ✅ HTTP caching muhim
+- ✅ Third-party integrations
+- ✅ Team GraphQL bilmaydi
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **GraphQL Fundamentals** - query language asoslari
+✅ **Schema Design** - types, relationships, resolvers
+✅ **Apollo Server** - production-ready GraphQL server
+✅ **Queries & Mutations** - data fetching va manipulation
+✅ **Subscriptions** - real-time updates
+✅ **Client Integration** - React Apollo Client usage
+
+### 🔄 GraphQL vs REST xulosa:
+
+| Xususiyat | GraphQL | REST |
+|-----------|---------|------|
+| **Data fetching** | Aynan kerakli | Fixed structure |
+| **Requests count** | Bitta | Ko'p |
+| **Learning curve** | Qiyin | Oson |
+| **Caching** | Complex | HTTP cache |
+| **Real-time** | Built-in | WebSocket/SSE alohida |
+
+### 🚀 Keyingi darsda:
+
+- **API Documentation** - Swagger, OpenAPI, GraphQL Playground
+- **Testing strategies** - Jest, supertest, GraphQL testing
+- **Performance optimization** - caching, query optimization
+
+### 📚 Mustaqil mashq:
+
+1. **Blog GraphQL API** - complete CRUD with auth
+2. **Real-time Chat** - subscriptions for messaging
+3. **E-commerce GraphQL** - products, orders, reviews
+
+---
+
+<Callout type="success" title="Tabriklaymiz! 🎉">
+Siz endi GraphQL'ning kuchini bilasiz! Apollo Server, schema design va real-time subscriptions bilan zamonaviy API yaratishni o'rgandingiz. Frontend va backend o'rtasida optimal communication qura olasiz!
+</Callout>
+
+<Callout type="info" title="Architecture Tip 💡">
+GraphQL - bu silver bullet emas! Loyiha talablariga qarab REST yoki GraphQL tanlaing. Ko'pincha ikkalasini ham bitta loyihada ishlatish mumkin - REST simple operatsiyalar uchun, GraphQL complex data fetching uchun.
+</Callout>
+
+**Keyingi dars**: [API Documentation va Testing](/docs/api/23-api-documentation)

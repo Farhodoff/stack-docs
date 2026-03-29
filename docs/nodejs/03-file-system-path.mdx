@@ -1,0 +1,1547 @@
+---
+title: "File System va Path"
+description: "Node.js'da fayllar va papkalar bilan ishlash, path operatsiyalari va file I/O'ni professional darajada o'rganamiz"
+category: "nodejs"
+order: 3
+difficulty: "beginner"
+readTime: "35 daqiqa"
+tags:
+  - nodejs
+  - filesystem
+  - path
+  - files
+  - directories
+  - stream
+---
+
+# File System va Path
+
+Assalom aleykum! Ilk ikki darsda Node.js asoslari va modullar bilan tanishdik. Endi real dunyo dasturlarining asosi - **fayllar va papkalar** bilan ishlashni o'rganamiz.
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- 📁 **File System (fs)** - fayllar va papkalar bilan ishlash
+- 📍 **Path module** - yo'l va manzillar bilan ishlash
+- 🔄 **Sync vs Async** - sinxron va asinxron operatsiyalar
+- 📊 **File metadata** - fayl ma'lumotlari va statistikalar
+- 🗂️ **Directory operations** - papka operatsiyalari
+- 💼 **Real loyiha** - File Manager Application
+
+---
+
+## File System (fs) moduli
+
+**File System** - kompyuter xotirasida saqlanuvchi fayllar va papkalar bilan ishlash uchun moduldir.
+
+### Real hayot misoli:
+
+Tasavvur qiling, siz kitobxona mudiri sizlar:
+- 📚 **Kitoblarni** (fayllar) qo'shish, o'qish, o'chirish
+- 📂 **Javonlarni** (papkalar) yaratish, tartibga solish
+- 🔍 **Kitob ma'lumotlarini** (metadata) olish
+- 📋 **Ro'yxat**larni (directory listing) ko'rish
+
+File System aynan shunday vazifalarni bajaradi!
+
+### Asosiy operatsiyalar:
+
+```javascript
+const fs = require('fs');
+const path = require('path');
+
+// 1. CRUD operatsiyalar:
+//    📝 Create  - yaratish
+//    📖 Read    - o'qish
+//    ✏️  Update  - yangilash
+//    🗑️  Delete  - o'chirish
+
+// 2. Directory operatsiyalar:
+//    📁 mkdir   - papka yaratish
+//    📂 readdir - papka ichidagilarni ko'rish
+//    🗑️  rmdir   - papka o'chirish
+
+// 3. Meta ma'lumotlar:
+//    📊 stat    - fayl statistikasi
+//    ✅ exists  - mavjudligini tekshirish
+//    🔗 link    - bog'lanishlar
+```
+
+---
+
+## Fayllar bilan ishlash
+
+### 1. Fayl yaratish va yozish:
+
+```javascript
+const fs = require('fs');
+
+// Sinxron (Sync) - kutib turadi
+fs.writeFileSync('salom.txt', 'Assalom aleykum, Node.js!');
+console.log('✅ Fayl yaratildi!');
+
+// Asinxron (Async) - parallel ishlaydi
+fs.writeFile('salom-async.txt', 'Assalom aleykum, Async!', (err) => {
+  if (err) {
+    console.error('❌ Xatolik:', err.message);
+  } else {
+    console.log('✅ Async fayl yaratildi!');
+  }
+});
+
+// Modern async/await
+const util = require('util');
+const writeFileAsync = util.promisify(fs.writeFile);
+
+async function createFile() {
+  try {
+    await writeFileAsync('modern.txt', 'Modern async/await!');
+    console.log('✅ Modern fayl yaratildi!');
+  } catch (error) {
+    console.error('❌ Xatolik:', error.message);
+  }
+}
+
+createFile();
+```
+
+### 2. Fayl o'qish:
+
+```javascript
+const fs = require('fs');
+
+// Sinxron o'qish
+try {
+  const content = fs.readFileSync('salom.txt', 'utf8');
+  console.log('📖 Fayl matni:', content);
+} catch (error) {
+  console.error('❌ Faylni o\'qishda xatolik:', error.message);
+}
+
+// Asinxron o'qish
+fs.readFile('salom.txt', 'utf8', (err, data) => {
+  if (err) {
+    console.error('❌ Xatolik:', err.message);
+    return;
+  }
+  console.log('📖 Async fayl matni:', data);
+});
+
+// Promises bilan
+const fsPromises = require('fs').promises;
+
+async function readFile() {
+  try {
+    const content = await fsPromises.readFile('salom.txt', 'utf8');
+    console.log('📖 Modern fayl matni:', content);
+  } catch (error) {
+    console.error('❌ Xatolik:', error.message);
+  }
+}
+
+readFile();
+```
+
+### 3. Fayl mavjudligini tekshirish:
+
+```javascript
+const fs = require('fs');
+
+// Sinxron tekshirish
+if (fs.existsSync('salom.txt')) {
+  console.log('✅ Fayl mavjud');
+} else {
+  console.log('❌ Fayl yo\'q');
+}
+
+// Async bilan
+fs.access('salom.txt', fs.constants.F_OK, (err) => {
+  if (err) {
+    console.log('❌ Fayl yo\'q');
+  } else {
+    console.log('✅ Fayl mavjud');
+  }
+});
+
+// Modern usul
+async function checkFile(filename) {
+  try {
+    await fsPromises.access(filename);
+    console.log(`✅ ${filename} mavjud`);
+    return true;
+  } catch {
+    console.log(`❌ ${filename} yo'q`);
+    return false;
+  }
+}
+
+checkFile('salom.txt');
+```
+
+### 4. Fayl nusxa ko'chirish va o'chirish:
+
+```javascript
+const fs = require('fs');
+
+// Nusxa ko'chirish
+fs.copyFileSync('salom.txt', 'salom-copy.txt');
+console.log('✅ Fayl nusxa ko\'chirildi');
+
+// Fayl o'chirish
+fs.unlinkSync('salom-copy.txt');
+console.log('✅ Fayl o\'chirildi');
+
+// Async versiya
+async function copyAndDelete() {
+  try {
+    // Nusxa ko'chirish
+    await fsPromises.copyFile('salom.txt', 'temp-copy.txt');
+    console.log('✅ Async nusxa ko\'chirildi');
+
+    // 2 soniya kutish
+    setTimeout(async () => {
+      try {
+        await fsPromises.unlink('temp-copy.txt');
+        console.log('✅ Temp fayl o\'chirildi');
+      } catch (error) {
+        console.error('❌ O\'chirishda xatolik:', error.message);
+      }
+    }, 2000);
+
+  } catch (error) {
+    console.error('❌ Xatolik:', error.message);
+  }
+}
+
+copyAndDelete();
+```
+
+### 5. Fayl ma'lumotlari (Stats):
+
+```javascript
+const fs = require('fs');
+
+// Fayl statistikasi
+try {
+  const stats = fs.statSync('salom.txt');
+
+  console.log('📊 FAYL MA\'LUMOTLARI:');
+  console.log(`📏 Hajmi: ${stats.size} bytes`);
+  console.log(`📅 Yaratilgan: ${stats.birthtime}`);
+  console.log(`🔄 O'zgartirilgan: ${stats.mtime}`);
+  console.log(`📖 O'qilgan: ${stats.atime}`);
+  console.log(`📁 Bu papkami? ${stats.isDirectory()}`);
+  console.log(`📄 Bu faylmi? ${stats.isFile()}`);
+
+} catch (error) {
+  console.error('❌ Statistika olishda xatolik:', error.message);
+}
+
+// Async statistika
+fs.stat('salom.txt', (err, stats) => {
+  if (err) {
+    console.error('❌ Xatolik:', err.message);
+    return;
+  }
+
+  console.log('\n📊 ASYNC FAYL MA\'LUMOTLARI:');
+
+  // Hajmni human-readable formatda
+  const formatSize = (size) => {
+    const units = ['bytes', 'KB', 'MB', 'GB'];
+    let i = 0;
+    while (size >= 1024 && i < units.length - 1) {
+      size /= 1024;
+      i++;
+    }
+    return `${size.toFixed(2)} ${units[i]}`;
+  };
+
+  console.log(`📏 Hajmi: ${formatSize(stats.size)}`);
+  console.log(`📅 Yaratilgan: ${stats.birthtime.toLocaleDateString('uz-UZ')}`);
+});
+```
+
+---
+
+## Papkalar (Directories) bilan ishlash
+
+### 1. Papka yaratish:
+
+```javascript
+const fs = require('fs');
+const path = require('path');
+
+// Oddiy papka yaratish
+if (!fs.existsSync('test-folder')) {
+  fs.mkdirSync('test-folder');
+  console.log('✅ Papka yaratildi: test-folder');
+}
+
+// Nested papkalar yaratish
+const nestedPath = path.join('parent', 'child', 'grandchild');
+
+try {
+  fs.mkdirSync(nestedPath, { recursive: true });
+  console.log('✅ Nested papkalar yaratildi:', nestedPath);
+} catch (error) {
+  console.error('❌ Xatolik:', error.message);
+}
+
+// Async versiya
+async function createDirectories() {
+  try {
+    await fsPromises.mkdir('async-folder', { recursive: true });
+    console.log('✅ Async papka yaratildi');
+
+    // Bir nechta papka
+    const folders = ['images', 'documents', 'videos'];
+
+    for (const folder of folders) {
+      await fsPromises.mkdir(path.join('async-folder', folder), { recursive: true });
+      console.log(`✅ Papka yaratildi: ${folder}`);
+    }
+
+  } catch (error) {
+    console.error('❌ Papka yaratishda xatolik:', error.message);
+  }
+}
+
+createDirectories();
+```
+
+### 2. Papka ichidagilarni ko'rish:
+
+```javascript
+const fs = require('fs');
+const path = require('path');
+
+// Oddiy ro'yxat
+try {
+  const items = fs.readdirSync('.');
+  console.log('📂 Joriy papkadagi fayllar:');
+  items.forEach(item => {
+    console.log(`  📄 ${item}`);
+  });
+} catch (error) {
+  console.error('❌ Xatolik:', error.message);
+}
+
+// Batafsil ma'lumot bilan
+async function listDirectory(dirPath = '.') {
+  try {
+    const items = await fsPromises.readdir(dirPath);
+
+    console.log(`\n📂 ${dirPath} papkasidagi fayllar:\n`);
+
+    for (const item of items) {
+      const itemPath = path.join(dirPath, item);
+      const stats = await fsPromises.stat(itemPath);
+
+      const icon = stats.isDirectory() ? '📁' : '📄';
+      const size = stats.isFile() ? `(${(stats.size / 1024).toFixed(2)} KB)` : '';
+      const modified = stats.mtime.toLocaleDateString('uz-UZ');
+
+      console.log(`${icon} ${item} ${size} - ${modified}`);
+    }
+
+  } catch (error) {
+    console.error('❌ Papkani o\'qishda xatolik:', error.message);
+  }
+}
+
+listDirectory();
+```
+
+### 3. Papka ichidan qidirish (Recursive):
+
+```javascript
+const fs = require('fs');
+const path = require('path');
+
+async function findFiles(dirPath, extension) {
+  const foundFiles = [];
+
+  async function searchRecursive(currentPath) {
+    try {
+      const items = await fsPromises.readdir(currentPath);
+
+      for (const item of items) {
+        const itemPath = path.join(currentPath, item);
+        const stats = await fsPromises.stat(itemPath);
+
+        if (stats.isDirectory()) {
+          // Rekursiv qidirish
+          await searchRecursive(itemPath);
+        } else if (path.extname(item) === extension) {
+          // Qidirilayotgan fayl topildi
+          foundFiles.push({
+            name: item,
+            path: itemPath,
+            size: stats.size,
+            modified: stats.mtime
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Xatolik ${currentPath} da:`, error.message);
+    }
+  }
+
+  await searchRecursive(dirPath);
+  return foundFiles;
+}
+
+// JavaScript fayllarini qidirish
+async function searchJS() {
+  console.log('🔍 JavaScript fayllarini qidiryapman...\n');
+
+  const jsFiles = await findFiles('.', '.js');
+
+  if (jsFiles.length === 0) {
+    console.log('❌ JavaScript fayllar topilmadi');
+    return;
+  }
+
+  console.log(`✅ ${jsFiles.length} ta JavaScript fayl topildi:\n`);
+
+  jsFiles.forEach(file => {
+    console.log(`📄 ${file.name}`);
+    console.log(`   📍 Yo'l: ${file.path}`);
+    console.log(`   📏 Hajm: ${(file.size / 1024).toFixed(2)} KB`);
+    console.log(`   📅 O'zgartirilgan: ${file.modified.toLocaleString('uz-UZ')}`);
+    console.log('');
+  });
+}
+
+searchJS();
+```
+
+---
+
+## Path moduli
+
+**Path** moduli fayl yo'llari bilan samarali ishlash uchun kerak.
+
+### Operatsion tizimlar farqi:
+
+```javascript
+// Windows:   C:\Users\Name\Documents\file.txt
+// macOS/Linux: /home/name/documents/file.txt
+
+// Path moduli avtomatik hal qiladi!
+const path = require('path');
+
+console.log('Platform:', process.platform);
+console.log('Path separator:', path.sep);
+// Windows: \
+// macOS/Linux: /
+```
+
+### Path operatsiyalari:
+
+```javascript
+const path = require('path');
+
+const filePath = '/home/user/documents/report.pdf';
+
+console.log('📍 PATH OPERATSIYALARI:\n');
+
+// Fayl nomi (extension bilan)
+console.log('📄 basename:', path.basename(filePath));
+// report.pdf
+
+// Fayl nomi (extension siz)
+console.log('📄 name:', path.basename(filePath, '.pdf'));
+// report
+
+// Papka yo'li
+console.log('📁 dirname:', path.dirname(filePath));
+// /home/user/documents
+
+// Fayl extension
+console.log('🏷️  extname:', path.extname(filePath));
+// .pdf
+
+// Parse qilinger
+console.log('🔍 parse:', path.parse(filePath));
+/*
+{
+  root: '/',
+  dir: '/home/user/documents',
+  base: 'report.pdf',
+  ext: '.pdf',
+  name: 'report'
+}
+*/
+
+// Yo'llarni birlashtirish
+const newPath = path.join('/home', 'user', 'projects', 'node-app', 'src', 'index.js');
+console.log('🔗 join:', newPath);
+// /home/user/projects/node-app/src/index.js
+
+// Mutlaq yo'l yaratish
+const absolutePath = path.resolve('documents', 'report.pdf');
+console.log('📍 resolve:', absolutePath);
+// /current/directory/documents/report.pdf
+
+// Relative yo'l
+const relativePath = path.relative('/home/user', '/home/user/documents/file.txt');
+console.log('📎 relative:', relativePath);
+// documents/file.txt
+```
+
+### Cross-platform yo'l yaratish:
+
+```javascript
+const path = require('path');
+const os = require('os');
+
+// Foydalanuvchi home directory
+const homeDir = os.homedir();
+console.log('🏠 Home directory:', homeDir);
+
+// Cross-platform fayllar
+const configPath = path.join(homeDir, '.myapp', 'config.json');
+const logsPath = path.join(homeDir, '.myapp', 'logs', 'app.log');
+const tempPath = path.join(os.tmpdir(), 'myapp-temp');
+
+console.log('⚙️  Config:', configPath);
+console.log('📋 Logs:', logsPath);
+console.log('🗂️  Temp:', tempPath);
+
+// Platform-specific yo'llar
+const paths = {
+  windows: path.win32.join('C:', 'Users', 'Name', 'Documents'),
+  unix: path.posix.join('/home', 'name', 'documents')
+};
+
+console.log('\n🖥️  Platform paths:');
+console.log('Windows:', paths.windows);
+console.log('Unix:', paths.unix);
+```
+
+---
+
+## Sync vs Async - Qachon qaysi birini ishlatish?
+
+### Sinxron (Sync) operatsiyalar:
+
+```javascript
+console.log('1. Boshlang\'ich');
+
+// Bu yerda dastur to'xtaydi!
+const content = fs.readFileSync('large-file.txt', 'utf8');
+console.log('2. Fayl o\'qildi');
+
+console.log('3. Dastur davom etadi');
+
+// Natija:
+// 1. Boshlang'ich
+// 2. Fayl o'qildi (5 soniyadan keyin)
+// 3. Dastur davom etadi
+```
+
+**Afzalliklar:**
+- ✅ Oddiy kod
+- ✅ Ketma-ketlik kafolatlanadi
+- ✅ Error handiling oson
+
+**Kamchiliklar:**
+- ❌ Blocking - boshqa ishlar to'xtaydi
+- ❌ Slow performance
+- ❌ Server uchun yomon
+
+### Asinxron (Async) operatsiyalar:
+
+```javascript
+console.log('1. Boshlang\'ich');
+
+// Bu yerda dastur to'xtamaydi!
+fs.readFile('large-file.txt', 'utf8', (err, content) => {
+  console.log('3. Fayl o\'qildi');
+});
+
+console.log('2. Dastur davom etadi');
+
+// Natija:
+// 1. Boshlang'ich
+// 2. Dastur davom etadi (darhol)
+// 3. Fayl o'qildi (5 soniyadan keyin)
+```
+
+**Afzalliklar:**
+- ✅ Non-blocking - boshqa ishlar davom etadi
+- ✅ High performance
+- ✅ Server uchun ideal
+
+**Kamchiliklar:**
+- ❌ Callback hell
+- ❌ Error handling murakkab
+- ❌ Timing issues
+
+### Modern Promise/Async-Await:
+
+```javascript
+const fsPromises = require('fs').promises;
+
+async function modernFileOperations() {
+  console.log('1. Boshlang\'ich');
+
+  try {
+    // Non-blocking, lekin kutadi
+    const content = await fsPromises.readFile('large-file.txt', 'utf8');
+    console.log('2. Fayl o\'qildi');
+
+    // Ketma-ket operatsiyalar
+    await fsPromises.writeFile('backup.txt', content);
+    console.log('3. Backup yaratildi');
+
+  } catch (error) {
+    console.error('❌ Xatolik:', error.message);
+  }
+
+  console.log('4. Dastur tugadi');
+}
+
+modernFileOperations();
+console.log('5. Bu darhol ko\'rsatiladi');
+
+// Natija:
+// 5. Bu darhol ko'rsatiladi
+// 1. Boshlang'ich
+// 2. Fayl o'qildi (5 soniyadan keyin)
+// 3. Backup yaratildi
+// 4. Dastur tugadi
+```
+
+---
+
+## Amaliy loyiha: File Manager Application
+
+Keling, to'liq File Manager yaratamiz!
+
+### Loyiha strukturasi:
+
+```
+file-manager/
+├── src/
+│   ├── fileManager.js     # Asosiy class
+│   ├── logger.js          # Logging utilities
+│   └── utils.js           # Helper functions
+├── data/
+│   └── operations.json    # Operatsiyalar logi
+├── package.json
+└── app.js                # Main application
+```
+
+### 1. Loyihani setup qilish:
+
+```bash
+npm init -y
+npm install chalk inquirer moment
+```
+
+### 2. Logger moduli:
+
+```javascript
+// src/logger.js
+const chalk = require('chalk');
+const moment = require('moment');
+const fs = require('fs').promises;
+const path = require('path');
+
+class Logger {
+  constructor() {
+    this.logFile = path.join(__dirname, '../data/operations.json');
+    this.ensureLogDir();
+  }
+
+  async ensureLogDir() {
+    try {
+      await fs.mkdir(path.dirname(this.logFile), { recursive: true });
+    } catch (error) {
+      // Directory already exists
+    }
+  }
+
+  async log(level, message, extra = {}) {
+    const timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    // Console'ga chiqarish
+    const colors = {
+      info: chalk.blue,
+      success: chalk.green,
+      warning: chalk.yellow,
+      error: chalk.red
+    };
+
+    const icons = {
+      info: 'ℹ️',
+      success: '✅',
+      warning: '⚠️',
+      error: '❌'
+    };
+
+    console.log(colors[level](`[${timestamp}] ${icons[level]} ${message}`));
+
+    // Faylga yozish
+    try {
+      let logs = [];
+      try {
+        const data = await fs.readFile(this.logFile, 'utf8');
+        logs = JSON.parse(data);
+      } catch {
+        // Fayl yo'q yoki bo'sh
+      }
+
+      logs.push({
+        timestamp,
+        level,
+        message,
+        ...extra
+      });
+
+      // Faqat oxirgi 1000 ta log saqlash
+      if (logs.length > 1000) {
+        logs = logs.slice(-1000);
+      }
+
+      await fs.writeFile(this.logFile, JSON.stringify(logs, null, 2));
+    } catch (error) {
+      console.error('❌ Log yozishda xatolik:', error.message);
+    }
+  }
+
+  info(message, extra) { return this.log('info', message, extra); }
+  success(message, extra) { return this.log('success', message, extra); }
+  warning(message, extra) { return this.log('warning', message, extra); }
+  error(message, extra) { return this.log('error', message, extra); }
+
+  async getLogs(limit = 50) {
+    try {
+      const data = await fs.readFile(this.logFile, 'utf8');
+      const logs = JSON.parse(data);
+      return logs.slice(-limit).reverse();
+    } catch {
+      return [];
+    }
+  }
+}
+
+module.exports = Logger;
+```
+
+### 3. Utilities:
+
+```javascript
+// src/utils.js
+const path = require('path');
+
+class Utils {
+  static formatSize(bytes) {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let i = 0;
+    while (bytes >= 1024 && i < units.length - 1) {
+      bytes /= 1024;
+      i++;
+    }
+    return `${bytes.toFixed(2)} ${units[i]}`;
+  }
+
+  static formatDate(date) {
+    return new Date(date).toLocaleString('uz-UZ', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  }
+
+  static isValidFilename(filename) {
+    // Taqiqlangan belgilar
+    const invalidChars = /[<>:"/\\|?*]/;
+    return !invalidChars.test(filename) && filename.trim().length > 0;
+  }
+
+  static getFileType(filePath) {
+    const ext = path.extname(filePath).toLowerCase();
+
+    const types = {
+      // Matn fayllar
+      '.txt': 'text',
+      '.md': 'text',
+      '.json': 'text',
+      '.js': 'text',
+      '.html': 'text',
+      '.css': 'text',
+
+      // Rasm fayllar
+      '.jpg': 'image',
+      '.jpeg': 'image',
+      '.png': 'image',
+      '.gif': 'image',
+      '.svg': 'image',
+
+      // Video fayllar
+      '.mp4': 'video',
+      '.avi': 'video',
+      '.mov': 'video',
+      '.mkv': 'video',
+
+      // Audio fayllar
+      '.mp3': 'audio',
+      '.wav': 'audio',
+      '.flac': 'audio',
+
+      // Hujjat fayllar
+      '.pdf': 'document',
+      '.doc': 'document',
+      '.docx': 'document',
+      '.xls': 'document',
+      '.ppt': 'document'
+    };
+
+    return types[ext] || 'unknown';
+  }
+
+  static getFileIcon(filePath, isDirectory = false) {
+    if (isDirectory) return '📁';
+
+    const type = this.getFileType(filePath);
+    const icons = {
+      text: '📄',
+      image: '🖼️',
+      video: '🎬',
+      audio: '🎵',
+      document: '📋',
+      unknown: '📄'
+    };
+
+    return icons[type] || '📄';
+  }
+}
+
+module.exports = Utils;
+```
+
+### 4. File Manager class:
+
+```javascript
+// src/fileManager.js
+const fs = require('fs').promises;
+const fsSync = require('fs');
+const path = require('path');
+const Logger = require('./logger');
+const Utils = require('./utils');
+
+class FileManager {
+  constructor() {
+    this.logger = new Logger();
+    this.currentPath = process.cwd();
+  }
+
+  // Joriy papkani o'zgartirish
+  async changeDirectory(newPath) {
+    try {
+      const absolutePath = path.resolve(this.currentPath, newPath);
+      const stats = await fs.stat(absolutePath);
+
+      if (!stats.isDirectory()) {
+        throw new Error('Bu papka emas');
+      }
+
+      this.currentPath = absolutePath;
+      await this.logger.success(`Papka o'zgartirildi: ${this.currentPath}`);
+      return this.currentPath;
+    } catch (error) {
+      await this.logger.error(`Papka o'zgartirishda xatolik: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Joriy papka ichidagilarni ko'rish
+  async listDirectory(dirPath = this.currentPath) {
+    try {
+      const items = await fs.readdir(dirPath);
+      const result = [];
+
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item);
+        const stats = await fs.stat(itemPath);
+
+        result.push({
+          name: item,
+          path: itemPath,
+          isDirectory: stats.isDirectory(),
+          size: stats.size,
+          modified: stats.mtime,
+          created: stats.birthtime,
+          icon: Utils.getFileIcon(itemPath, stats.isDirectory()),
+          type: stats.isDirectory() ? 'directory' : Utils.getFileType(itemPath)
+        });
+      }
+
+      // Papkalar birinchi, keyin fayllar
+      result.sort((a, b) => {
+        if (a.isDirectory && !b.isDirectory) return -1;
+        if (!a.isDirectory && b.isDirectory) return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      await this.logger.info(`Directory listed: ${dirPath}`, { count: result.length });
+      return result;
+    } catch (error) {
+      await this.logger.error(`Directory listing xatolik: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Fayl yaratish
+  async createFile(filename, content = '') {
+    try {
+      if (!Utils.isValidFilename(filename)) {
+        throw new Error('Noto\'g\'ri fayl nomi');
+      }
+
+      const filePath = path.join(this.currentPath, filename);
+
+      if (fsSync.existsSync(filePath)) {
+        throw new Error('Fayl allaqachon mavjud');
+      }
+
+      await fs.writeFile(filePath, content, 'utf8');
+      await this.logger.success(`Fayl yaratildi: ${filename}`);
+      return filePath;
+    } catch (error) {
+      await this.logger.error(`Fayl yaratishda xatolik: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Papka yaratish
+  async createDirectory(dirname) {
+    try {
+      if (!Utils.isValidFilename(dirname)) {
+        throw new Error('Noto\'g\'ri papka nomi');
+      }
+
+      const dirPath = path.join(this.currentPath, dirname);
+      await fs.mkdir(dirPath, { recursive: true });
+      await this.logger.success(`Papka yaratildi: ${dirname}`);
+      return dirPath;
+    } catch (error) {
+      await this.logger.error(`Papka yaratishda xatolik: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Fayl o'qish
+  async readFile(filename) {
+    try {
+      const filePath = path.resolve(this.currentPath, filename);
+      const content = await fs.readFile(filePath, 'utf8');
+      await this.logger.info(`Fayl o'qildi: ${filename}`);
+      return content;
+    } catch (error) {
+      await this.logger.error(`Fayl o'qishda xatolik: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Fayl yozish
+  async writeFile(filename, content) {
+    try {
+      const filePath = path.resolve(this.currentPath, filename);
+      await fs.writeFile(filePath, content, 'utf8');
+      await this.logger.success(`Fayl yangilandi: ${filename}`);
+      return filePath;
+    } catch (error) {
+      await this.logger.error(`Fayl yozishda xatolik: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Fayl/papka o'chirish
+  async delete(itemName) {
+    try {
+      const itemPath = path.resolve(this.currentPath, itemName);
+      const stats = await fs.stat(itemPath);
+
+      if (stats.isDirectory()) {
+        await fs.rmdir(itemPath, { recursive: true });
+        await this.logger.success(`Papka o'chirildi: ${itemName}`);
+      } else {
+        await fs.unlink(itemPath);
+        await this.logger.success(`Fayl o'chirildi: ${itemName}`);
+      }
+
+      return true;
+    } catch (error) {
+      await this.logger.error(`O'chirishda xatolik: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Nusxa ko'chirish
+  async copy(sourceName, destName) {
+    try {
+      const sourcePath = path.resolve(this.currentPath, sourceName);
+      const destPath = path.resolve(this.currentPath, destName);
+
+      await fs.copyFile(sourcePath, destPath);
+      await this.logger.success(`Nusxa ko'chirildi: ${sourceName} → ${destName}`);
+      return destPath;
+    } catch (error) {
+      await this.logger.error(`Nusxa ko'chirishda xatolik: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Qayta nomlash
+  async rename(oldName, newName) {
+    try {
+      if (!Utils.isValidFilename(newName)) {
+        throw new Error('Noto\'g\'ri nom');
+      }
+
+      const oldPath = path.resolve(this.currentPath, oldName);
+      const newPath = path.resolve(this.currentPath, newName);
+
+      await fs.rename(oldPath, newPath);
+      await this.logger.success(`Qayta nomlandi: ${oldName} → ${newName}`);
+      return newPath;
+    } catch (error) {
+      await this.logger.error(`Qayta nomlashda xatolik: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Qidirish
+  async search(pattern, searchType = 'name') {
+    try {
+      const items = await this.listDirectory();
+      const results = [];
+
+      const searchPattern = pattern.toLowerCase();
+
+      for (const item of items) {
+        let match = false;
+
+        switch (searchType) {
+          case 'name':
+            match = item.name.toLowerCase().includes(searchPattern);
+            break;
+          case 'extension':
+            match = path.extname(item.name).toLowerCase() === searchPattern;
+            break;
+          case 'type':
+            match = item.type === searchPattern;
+            break;
+        }
+
+        if (match) {
+          results.push(item);
+        }
+      }
+
+      await this.logger.info(`Qidiruv: "${pattern}" (${searchType})`, { found: results.length });
+      return results;
+    } catch (error) {
+      await this.logger.error(`Qidirishda xatolik: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Fayl/papka ma'lumotlari
+  async getInfo(itemName) {
+    try {
+      const itemPath = path.resolve(this.currentPath, itemName);
+      const stats = await fs.stat(itemPath);
+
+      const info = {
+        name: itemName,
+        path: itemPath,
+        type: stats.isDirectory() ? 'directory' : 'file',
+        size: Utils.formatSize(stats.size),
+        sizeBytes: stats.size,
+        created: Utils.formatDate(stats.birthtime),
+        modified: Utils.formatDate(stats.mtime),
+        accessed: Utils.formatDate(stats.atime),
+        isDirectory: stats.isDirectory(),
+        isFile: stats.isFile(),
+        fileType: stats.isFile() ? Utils.getFileType(itemPath) : null
+      };
+
+      await this.logger.info(`Ma'lumot olindi: ${itemName}`);
+      return info;
+    } catch (error) {
+      await this.logger.error(`Ma'lumot olishda xatolik: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Disk ma'lumotlari
+  getDiskInfo() {
+    return {
+      currentPath: this.currentPath,
+      homePath: require('os').homedir(),
+      tempPath: require('os').tmpdir(),
+      platform: process.platform,
+      pathSeparator: path.sep
+    };
+  }
+}
+
+module.exports = FileManager;
+```
+
+### 5. Asosiy dastur:
+
+```javascript
+// app.js
+const inquirer = require('inquirer');
+const chalk = require('chalk');
+const FileManager = require('./src/fileManager');
+
+class FileManagerApp {
+  constructor() {
+    this.fm = new FileManager();
+  }
+
+  async showMainMenu() {
+    console.clear();
+    console.log(chalk.blue.bold('📁 FILE MANAGER APPLICATION\n'));
+    console.log(chalk.cyan(`📍 Joriy papka: ${this.fm.currentPath}\n`));
+
+    const choices = [
+      '📂 Papka ichidagilarni ko\'rish',
+      '📁 Papka o\'zgartirish',
+      '📄 Fayl yaratish',
+      '📂 Papka yaratish',
+      '📖 Fayl o\'qish',
+      '✏️  Fayl yozish',
+      '📋 Nusxa ko\'chirish',
+      '✏️  Qayta nomlash',
+      '🔍 Qidirish',
+      'ℹ️  Ma\'lumot olish',
+      '🗑️  O\'chirish',
+      '📊 Loglarni ko\'rish',
+      '❌ Chiqish'
+    ];
+
+    const { action } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'action',
+        message: 'Amalni tanlang:',
+        choices: choices
+      }
+    ]);
+
+    try {
+      switch (action) {
+        case choices[0]: await this.listDirectory(); break;
+        case choices[1]: await this.changeDirectory(); break;
+        case choices[2]: await this.createFile(); break;
+        case choices[3]: await this.createDirectory(); break;
+        case choices[4]: await this.readFile(); break;
+        case choices[5]: await this.writeFile(); break;
+        case choices[6]: await this.copyItem(); break;
+        case choices[7]: await this.renameItem(); break;
+        case choices[8]: await this.searchItems(); break;
+        case choices[9]: await this.showInfo(); break;
+        case choices[10]: await this.deleteItem(); break;
+        case choices[11]: await this.showLogs(); break;
+        case choices[12]:
+          console.log(chalk.green('\n👋 Xayr! File Manager yopildi.'));
+          process.exit(0);
+      }
+    } catch (error) {
+      console.log(chalk.red(`\n❌ Xatolik: ${error.message}`));
+    }
+
+    // Menu'ga qaytish
+    console.log(chalk.gray('\n📎 Davom etish uchun Enter bosing...'));
+    await inquirer.prompt([{ name: 'continue', message: '' }]);
+    return this.showMainMenu();
+  }
+
+  async listDirectory() {
+    const items = await this.fm.listDirectory();
+
+    if (items.length === 0) {
+      console.log(chalk.yellow('\n📂 Papka bo\'sh'));
+      return;
+    }
+
+    console.log(chalk.green.bold('\n📂 PAPKA ICHIDAGILAR:\n'));
+
+    items.forEach(item => {
+      const size = item.isDirectory ? '' : chalk.gray(`(${require('./src/utils').formatSize(item.size)})`);
+      const modified = chalk.gray(require('./src/utils').formatDate(item.modified));
+
+      console.log(`${item.icon} ${chalk.white(item.name)} ${size}`);
+      console.log(`   📅 ${modified}`);
+      console.log('');
+    });
+  }
+
+  async changeDirectory() {
+    const { path } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'path',
+        message: 'Yangi papka yo\'li (.., /, yoki papka nomi):',
+        default: '..'
+      }
+    ]);
+
+    await this.fm.changeDirectory(path);
+    console.log(chalk.green(`\n✅ Papka o'zgartirildi: ${this.fm.currentPath}`));
+  }
+
+  async createFile() {
+    const answers = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'filename',
+        message: 'Fayl nomi:',
+        validate: input => input.length > 0 || 'Fayl nomini kiriting!'
+      },
+      {
+        type: 'editor',
+        name: 'content',
+        message: 'Fayl matni (ixtiyoriy):',
+        default: ''
+      }
+    ]);
+
+    await this.fm.createFile(answers.filename, answers.content);
+    console.log(chalk.green(`\n✅ Fayl yaratildi: ${answers.filename}`));
+  }
+
+  async createDirectory() {
+    const { dirname } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'dirname',
+        message: 'Papka nomi:',
+        validate: input => input.length > 0 || 'Papka nomini kiriting!'
+      }
+    ]);
+
+    await this.fm.createDirectory(dirname);
+    console.log(chalk.green(`\n✅ Papka yaratildi: ${dirname}`));
+  }
+
+  async readFile() {
+    const items = await this.fm.listDirectory();
+    const files = items.filter(item => !item.isDirectory);
+
+    if (files.length === 0) {
+      console.log(chalk.yellow('\n📄 Papkada fayllar yo\'q'));
+      return;
+    }
+
+    const { filename } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'filename',
+        message: 'O\'qimoqchi bo\'lgan faylni tanlang:',
+        choices: files.map(file => file.name)
+      }
+    ]);
+
+    const content = await this.fm.readFile(filename);
+
+    console.log(chalk.green.bold(`\n📖 ${filename} MAZMUNI:\n`));
+    console.log(chalk.white('─'.repeat(60)));
+    console.log(content);
+    console.log(chalk.white('─'.repeat(60)));
+  }
+
+  async writeFile() {
+    const { filename, content } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'filename',
+        message: 'Fayl nomi:',
+        validate: input => input.length > 0 || 'Fayl nomini kiriting!'
+      },
+      {
+        type: 'editor',
+        name: 'content',
+        message: 'Yangi matn:'
+      }
+    ]);
+
+    await this.fm.writeFile(filename, content);
+    console.log(chalk.green(`\n✅ Fayl yangilandi: ${filename}`));
+  }
+
+  async copyItem() {
+    const items = await this.fm.listDirectory();
+
+    if (items.length === 0) {
+      console.log(chalk.yellow('\n📂 Nusxa ko\'chirish uchun fayllar yo\'q'));
+      return;
+    }
+
+    const answers = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'source',
+        message: 'Nusxa ko\'chirmoqchi bo\'lgan elementni tanlang:',
+        choices: items.map(item => item.name)
+      },
+      {
+        type: 'input',
+        name: 'dest',
+        message: 'Yangi nom:',
+        validate: input => input.length > 0 || 'Yangi nomni kiriting!'
+      }
+    ]);
+
+    await this.fm.copy(answers.source, answers.dest);
+    console.log(chalk.green(`\n✅ Nusxa ko'chirildi: ${answers.source} → ${answers.dest}`));
+  }
+
+  async renameItem() {
+    const items = await this.fm.listDirectory();
+
+    if (items.length === 0) {
+      console.log(chalk.yellow('\n📂 Qayta nomlash uchun fayllar yo\'q'));
+      return;
+    }
+
+    const answers = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'oldName',
+        message: 'Qayta nomlamoqchi bo\'lgan elementni tanlang:',
+        choices: items.map(item => item.name)
+      },
+      {
+        type: 'input',
+        name: 'newName',
+        message: 'Yangi nom:',
+        validate: input => input.length > 0 || 'Yangi nomni kiriting!'
+      }
+    ]);
+
+    await this.fm.rename(answers.oldName, answers.newName);
+    console.log(chalk.green(`\n✅ Qayta nomlandi: ${answers.oldName} → ${answers.newName}`));
+  }
+
+  async searchItems() {
+    const { pattern, type } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'pattern',
+        message: 'Qidiruv matni:',
+        validate: input => input.length > 0 || 'Qidiruv matnini kiriting!'
+      },
+      {
+        type: 'list',
+        name: 'type',
+        message: 'Qidiruv turi:',
+        choices: [
+          { name: 'Nom bo\'yicha', value: 'name' },
+          { name: 'Extension bo\'yicha', value: 'extension' },
+          { name: 'Tur bo\'yicha', value: 'type' }
+        ]
+      }
+    ]);
+
+    const results = await this.fm.search(pattern, type);
+
+    if (results.length === 0) {
+      console.log(chalk.yellow(`\n🔍 "${pattern}" uchun natijalar topilmadi`));
+      return;
+    }
+
+    console.log(chalk.green.bold(`\n🔍 QIDIRUV NATIJALARI (${results.length} ta):\n`));
+
+    results.forEach(item => {
+      const Utils = require('./src/utils');
+      const size = item.isDirectory ? '' : chalk.gray(`(${Utils.formatSize(item.size)})`);
+
+      console.log(`${item.icon} ${chalk.white(item.name)} ${size}`);
+    });
+  }
+
+  async showInfo() {
+    const items = await this.fm.listDirectory();
+
+    if (items.length === 0) {
+      console.log(chalk.yellow('\n📂 Ma\'lumot olish uchun fayllar yo\'q'));
+      return;
+    }
+
+    const { itemName } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'itemName',
+        message: 'Ma\'lumot olinmoqchi element:',
+        choices: items.map(item => item.name)
+      }
+    ]);
+
+    const info = await this.fm.getInfo(itemName);
+
+    console.log(chalk.blue.bold(`\nℹ️  ${itemName} MA'LUMOTLARI:\n`));
+    console.log(chalk.cyan(`📍 Yo'l: ${info.path}`));
+    console.log(chalk.cyan(`📦 Turi: ${info.type}`));
+    console.log(chalk.cyan(`📏 Hajm: ${info.size}`));
+    console.log(chalk.cyan(`📅 Yaratilgan: ${info.created}`));
+    console.log(chalk.cyan(`🔄 O'zgartirilgan: ${info.modified}`));
+    console.log(chalk.cyan(`👁️  Ko'rilgan: ${info.accessed}`));
+
+    if (info.fileType) {
+      console.log(chalk.cyan(`🏷️  Fayl turi: ${info.fileType}`));
+    }
+  }
+
+  async deleteItem() {
+    const items = await this.fm.listDirectory();
+
+    if (items.length === 0) {
+      console.log(chalk.yellow('\n📂 O\'chirish uchun fayllar yo\'q'));
+      return;
+    }
+
+    const answers = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'itemName',
+        message: 'O\'chirmoqchi bo\'lgan elementni tanlang:',
+        choices: items.map(item => item.name)
+      },
+      {
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Rostdan ham o\'chirmoqchimisiz?',
+        default: false
+      }
+    ]);
+
+    if (answers.confirm) {
+      await this.fm.delete(answers.itemName);
+      console.log(chalk.green(`\n✅ O'chirildi: ${answers.itemName}`));
+    } else {
+      console.log(chalk.yellow('\n❌ O\'chirish bekor qilindi'));
+    }
+  }
+
+  async showLogs() {
+    const logs = await this.fm.logger.getLogs(20);
+
+    if (logs.length === 0) {
+      console.log(chalk.yellow('\n📋 Loglar yo\'q'));
+      return;
+    }
+
+    console.log(chalk.blue.bold('\n📋 OXIRGI OPERATSIYALAR:\n'));
+
+    logs.forEach(log => {
+      const colors = {
+        info: chalk.blue,
+        success: chalk.green,
+        warning: chalk.yellow,
+        error: chalk.red
+      };
+
+      const color = colors[log.level] || chalk.white;
+      console.log(color(`[${log.timestamp}] ${log.message}`));
+    });
+  }
+}
+
+// Dasturni ishga tushirish
+console.log(chalk.blue.bold('🚀 File Manager ishga tushmoqda...\n'));
+
+const app = new FileManagerApp();
+app.showMainMenu().catch(err => {
+  console.error(chalk.red('💥 Fatal error:'), err.message);
+  process.exit(1);
+});
+```
+
+### 6. Package.json scripts:
+
+```json
+{
+  "name": "file-manager-app",
+  "version": "1.0.0",
+  "description": "Professional Node.js File Manager",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "keywords": ["nodejs", "file-manager", "fs"],
+  "author": "O'z ismingiz",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "inquirer": "^8.2.4",
+    "moment": "^2.29.4"
+  }
+}
+```
+
+### 7. Dasturni ishga tushirish:
+
+```bash
+npm start
+```
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **File System (fs)** - to'liq CRUD operatsiyalar
+✅ **Path moduli** - cross-platform yo'l operatsiyalari
+✅ **Sync vs Async** - qachon qaysi birini ishlatish
+✅ **File metadata** - stats, permissions, dates
+✅ **Directory operations** - recursive operations
+✅ **Real loyiha** - Professional File Manager
+
+### 📊 File Manager xususiyatlari:
+
+✅ **12 ta operatsiya** - To'liq file management
+✅ **Interactive CLI** - foydalanuvchi dosdor interface
+✅ **Logging system** - barcha operatsiyalar logi
+✅ **Cross-platform** - Windows, macOS, Linux
+✅ **Error handling** - professional xatoliklar boshqaruvi
+✅ **Search functionality** - turli xil qidiruv
+
+### 🚀 Keyingi darsda:
+
+- **HTTP Server** - built-in HTTP moduli
+- **Request/Response** - web serverlar asoslari
+- **REST API basics** - API yaratish asoslari
+- **Express.js'ga tayyorgarlik** - framework'ga o'tish
+
+### 📚 Mustaqil mashq:
+
+1. **File backup system** - avtomatik backup yaratish
+2. **Log file analyzer** - log fayllarni tahlil qilish
+3. **Batch file processor** - ko'p fayllar bilan ishlash
+
+---
+
+<Callout type="success" title="Ajoyib! 🎉">
+Siz endi Node.js'da fayllar va papkalar bilan professional darajada ishlashni o'rgandingiz! File Manager loyihasi orqali real backend ko'nikmalarini rivojlantirdingiz.
+</Callout>
+
+<Callout type="info" title="Professional Tip 💡">
+File operations backend development'ning asosi! Har bir web ilovada file upload, config management, logging kerak bo'ladi. Bu bilimlar siz uchun juda muhim!
+</Callout>
+
+**Keyingi dars**: [HTTP Server Basics](/docs/nodejs/04-http-server-basics)

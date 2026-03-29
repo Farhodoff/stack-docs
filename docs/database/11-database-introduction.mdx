@@ -1,0 +1,632 @@
+---
+title: "Ma'lumotlar Bazasi - Kirish va Asoslar"
+description: "Ma'lumotlar bazasi nima, SQL vs NoSQL, PostgreSQL tanishing va ma'lumotlarni saqlash asoslari"
+difficulty: "Beginner"
+readTime: "25 daqiqa"
+tags: ["database", "sql", "postgresql", "nosql", "data-modeling"]
+category: "database"
+---
+
+# Ma'lumotlar Bazasi - Kirish va Asoslar
+
+Salom! Bu darsda biz ma'lumotlar bazasi (database) dunyosiga kiramiz. Ma'lumotlar bazasi zamonaviy ilovalarning yuragdir - faqatgina muvaffaqiyatli ilovalar ma'lumotlarni to'g'ri saqlash va boshqarish biladi.
+
+## Bu darsdan nimani o'rganasiz?
+
+- 📊 **Ma'lumotlar bazasi** nima va nega kerak
+- ⚖️ **SQL vs NoSQL** - qaysi birini tanlash kerak?
+- 🐘 **PostgreSQL** bilan tanishing
+- 🏗️ **Ma'lumot modeling** asoslari
+- 💻 **Amaliy misollar** bilan tushunish
+
+---
+
+## 1. Ma'lumotlar bazasi nima? 🤔
+
+Ma'lumotlar bazasi - bu **ma'lumotlarni tashkil etilgan tarzda saqlash**, **izlash** va **boshqarish** imkonini beruvchi sistema.
+
+### Oddiy misolda tushuntirsak:
+
+```
+❌ NOTO'G'RI: Ma'lumotlarni fayl sifatida saqlash
+users.txt
+john_doe,25,john@email.com
+jane_smith,30,jane@email.com
+alice_brown,28,alice@email.com
+
+❌ Muammolar:
+- Qidirish qiyin
+- Ma'lumot o'zgarishi xavfli
+- Bir vaqtda ko'p kishi ishlata olmaydi
+- Ma'lumot yo'qolishi xavfi
+```
+
+```sql
+✅ TO'G'RI: Ma'lumotlarni database'da saqlash
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  age INTEGER CHECK (age > 0),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+✅ Afzalliklari:
+- Tez qidirish (indexes)
+- Ma'lumot xavfsizligi (ACID)
+- Ko'p foydalanuvchi qo'llab-quvvatlash
+- Backup va recovery
+- Data validation
+```
+
+### Real dasturlarda database:
+
+```javascript
+// Node.js + Express ilovada
+// Foydalanuvchilarni olish
+app.get('/users', async (req, res) => {
+  try {
+    // Database'dan ma'lumot olish
+    const users = await db.query('SELECT * FROM users WHERE active = true');
+    res.json(users.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Server xatosi' });
+  }
+});
+
+// Yangi foydalanuvchi qo'shish
+app.post('/users', async (req, res) => {
+  const { name, email, age } = req.body;
+
+  try {
+    const result = await db.query(
+      'INSERT INTO users (name, email, age) VALUES ($1, $2, $3) RETURNING *',
+      [name, email, age]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: 'Foydalanuvchi qo\'shib bo\'lmadi' });
+  }
+});
+```
+
+---
+
+## 2. SQL vs NoSQL - Qaysi birini tanlash? ⚖️
+
+### SQL Databases (Relational) 📊
+
+**Misol:** PostgreSQL, MySQL, SQLite
+
+```sql
+-- Foydalanuvchilar jadvali
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL
+);
+
+-- Postlar jadvali
+CREATE TABLE posts (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  content TEXT,
+  user_id INTEGER REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Bog'lanish (Relationship)
+SELECT p.title, u.username
+FROM posts p
+JOIN users u ON p.user_id = u.id
+WHERE u.username = 'john_doe';
+```
+
+**SQL Afzalliklari:**
+- ✅ Ma'lumot izchilligi (ACID properties)
+- ✅ Murakkab so'rovlar (JOIN, GROUP BY)
+- ✅ Mature va barqaror
+- ✅ Strong schema validation
+- ✅ Backup va recovery
+
+**SQL Kamchiliklari:**
+- ❌ Vertikal scaling qiyin
+- ❌ Schema o'zgarishi qiyin
+- ❌ Un structured data bilan qiyin
+
+### NoSQL Databases 🔀
+
+**Misol:** MongoDB, Redis, Firebase
+
+```javascript
+// MongoDB - Document database
+{
+  "_id": "507f1f77bcf86cd799439011",
+  "username": "john_doe",
+  "email": "john@email.com",
+  "posts": [
+    {
+      "title": "Birinchi post",
+      "content": "Salom dunyo!",
+      "created_at": "2024-01-15T10:30:00Z"
+    },
+    {
+      "title": "Ikkinchi post",
+      "content": "Database haqida",
+      "tags": ["database", "mongodb"],
+      "created_at": "2024-01-16T14:20:00Z"
+    }
+  ],
+  "profile": {
+    "age": 25,
+    "location": "Toshkent",
+    "skills": ["JavaScript", "Node.js", "React"]
+  }
+}
+```
+
+**NoSQL Afzalliklari:**
+- ✅ Yuqori performance
+- ✅ Horizontal scaling oson
+- ✅ Flexible schema
+- ✅ JSON/BSON bilan ishlash qulay
+- ✅ Rapid development
+
+**NoSQL Kamchiliklari:**
+- ❌ ACID properties cheklangan
+- ❌ Complex relationships qiyin
+- ❌ Learning curve
+
+### Qachon qaysi birini tanlash? 🎯
+
+| Holat | SQL tavsiya etiladi | NoSQL tavsiya etiladi |
+|-------|---------------------|----------------------|
+| **Structured data** | ✅ E-commerce, Banking | ❌ |
+| **Complex relationships** | ✅ CRM, ERP systems | ❌ |
+| **ACID reliability** | ✅ Financial systems | ❌ |
+| **Rapid prototyping** | ❌ | ✅ Chat apps, Social media |
+| **Big data, high traffic** | ❌ | ✅ Analytics, IoT |
+| **Flexible schema** | ❌ | ✅ Content management |
+
+---
+
+## 3. PostgreSQL bilan tanishing 🐘
+
+PostgreSQL - eng kuchli va professional SQL database'lardan biri.
+
+### Nega PostgreSQL?
+
+```sql
+-- 1. Advanced data types
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255),
+  price DECIMAL(10,2),
+  features JSON,                    -- JSON support
+  tags TEXT[],                     -- Array support
+  search_vector TSVECTOR,          -- Full-text search
+  location POINT,                  -- Geometric types
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Powerful queries
+SELECT name, price,
+       features->>'color' as color,
+       array_length(tags, 1) as tag_count
+FROM products
+WHERE price BETWEEN 100 AND 500
+  AND tags @> ARRAY['electronics']  -- Array contains
+  AND features->>'brand' = 'Samsung'
+ORDER BY price DESC;
+
+-- 3. Advanced indexes
+CREATE INDEX idx_products_search ON products USING GIN(search_vector);
+CREATE INDEX idx_products_location ON products USING GIST(location);
+CREATE INDEX idx_products_price_tags ON products(price) WHERE array_length(tags, 1) > 0;
+```
+
+### PostgreSQL Features:
+
+1. **ACID Compliance** - Ma'lumot xavfsizligi
+2. **Advanced Data Types** - JSON, Arrays, Geographic
+3. **Full-text Search** - Qidirish imkoniyatlari
+4. **Extensions** - PostGIS, pg_stat_statements
+5. **Performance** - Query optimizer, indexing
+6. **Reliability** - Backup, replication, high availability
+
+---
+
+## 4. Ma'lumot Modeling Asoslari 🏗️
+
+Ma'lumot modeling - bu real dunyoni database'da ifodalash san'ati.
+
+### Entity-Relationship (ER) Model:
+
+```sql
+-- Blog tizimi uchun model
+
+-- 1. Foydalanuvchilar
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role VARCHAR(20) DEFAULT 'user',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Kategoriyalar
+CREATE TABLE categories (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) UNIQUE NOT NULL,
+  slug VARCHAR(100) UNIQUE NOT NULL,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Postlar
+CREATE TABLE posts (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) UNIQUE NOT NULL,
+  content TEXT NOT NULL,
+  excerpt TEXT,
+  featured_image VARCHAR(500),
+  status VARCHAR(20) DEFAULT 'draft',
+
+  -- Foreign Keys (Relationships)
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+
+  -- Timestamps
+  published_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+  -- Constraints
+  CONSTRAINT valid_status CHECK (status IN ('draft', 'published', 'archived'))
+);
+
+-- 4. Izohlar
+CREATE TABLE comments (
+  id SERIAL PRIMARY KEY,
+  content TEXT NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending',
+
+  -- Relationships
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  parent_comment_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
+
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+
+  CONSTRAINT valid_comment_status CHECK (status IN ('pending', 'approved', 'rejected'))
+);
+
+-- 5. Teglar (Many-to-Many relationship)
+CREATE TABLE tags (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL,
+  slug VARCHAR(50) UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE post_tags (
+  post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+  tag_id INTEGER REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (post_id, tag_id)
+);
+
+-- Indexes for performance
+CREATE INDEX idx_posts_status ON posts(status);
+CREATE INDEX idx_posts_published_at ON posts(published_at) WHERE status = 'published';
+CREATE INDEX idx_comments_post_id ON comments(post_id);
+CREATE INDEX idx_post_tags_post_id ON post_tags(post_id);
+CREATE INDEX idx_post_tags_tag_id ON post_tags(tag_id);
+```
+
+### Relationship Types:
+
+```sql
+-- 1. One-to-Many: Bitta user ko'p postlarga ega
+users -> posts (user_id)
+
+-- 2. Many-to-Many: Postlar ko'p taglarga, taglar ko'p postlarga
+posts <-> tags (post_tags junction table)
+
+-- 3. One-to-One: User profile (optional)
+users -> user_profiles (user_id UNIQUE)
+
+-- 4. Self-referencing: Comment replies
+comments -> comments (parent_comment_id)
+```
+
+---
+
+## 5. Amaliy Mashq: Kitob Do'koni Database 📚
+
+Keling, oddiy kitob do'koni uchun database yaratamiz:
+
+```sql
+-- 1. Mualliflar
+CREATE TABLE authors (
+  id SERIAL PRIMARY KEY,
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
+  bio TEXT,
+  birth_date DATE,
+  death_date DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Janrlar
+CREATE TABLE genres (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL,
+  description TEXT
+);
+
+-- 3. Kitoblar
+CREATE TABLE books (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  isbn VARCHAR(17) UNIQUE, -- ISBN-13 format
+  description TEXT,
+  page_count INTEGER CHECK (page_count > 0),
+  publication_date DATE,
+  price DECIMAL(10,2) CHECK (price >= 0),
+  stock_quantity INTEGER DEFAULT 0,
+
+  -- Foreign key
+  primary_author_id INTEGER REFERENCES authors(id),
+  genre_id INTEGER REFERENCES genres(id),
+
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. Ko'p muallifli kitoblar uchun
+CREATE TABLE book_authors (
+  book_id INTEGER REFERENCES books(id) ON DELETE CASCADE,
+  author_id INTEGER REFERENCES authors(id) ON DELETE CASCADE,
+  role VARCHAR(50) DEFAULT 'author', -- 'author', 'co-author', 'editor'
+  PRIMARY KEY (book_id, author_id)
+);
+
+-- 5. Mijozlar
+CREATE TABLE customers (
+  id SERIAL PRIMARY KEY,
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  phone VARCHAR(20),
+  address TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. Buyurtmalar
+CREATE TABLE orders (
+  id SERIAL PRIMARY KEY,
+  order_number VARCHAR(50) UNIQUE NOT NULL,
+  customer_id INTEGER NOT NULL REFERENCES customers(id),
+  total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
+  status VARCHAR(20) DEFAULT 'pending',
+  order_date TIMESTAMPTZ DEFAULT NOW(),
+
+  CONSTRAINT valid_order_status CHECK (
+    status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled')
+  )
+);
+
+-- 7. Buyurtma elementlari
+CREATE TABLE order_items (
+  id SERIAL PRIMARY KEY,
+  order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  book_id INTEGER NOT NULL REFERENCES books(id),
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  unit_price DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),
+  total_price DECIMAL(10,2) NOT NULL CHECK (total_price >= 0)
+);
+
+-- Sample data qo'shish
+INSERT INTO authors (first_name, last_name, bio) VALUES
+('J.K.', 'Rowling', 'British author best known for Harry Potter series'),
+('George R.R.', 'Martin', 'American novelist and short story writer'),
+('Agatha', 'Christie', 'English writer known for detective novels');
+
+INSERT INTO genres (name, description) VALUES
+('Fantasy', 'Fiction involving magical or supernatural elements'),
+('Mystery', 'Fiction dealing with puzzling crimes or strange events'),
+('Science Fiction', 'Fiction based on future scientific advances');
+
+INSERT INTO books (title, isbn, description, page_count, price, primary_author_id, genre_id) VALUES
+('Harry Potter va Aql Toshi', '978-0-747-53269-6', 'Sehrgar bolaning sarguzashtlari', 223, 15.99, 1, 1),
+('Taxtlar O''yini', '978-0-553-10354-0', 'Fantasy epik romani', 694, 25.99, 2, 1),
+('Oryent Ekspressida Qotillik', '978-0-062-07350-6', 'Famous detective mystery', 256, 12.99, 3, 2);
+```
+
+### Ma'lumotlarni so'rash:
+
+```sql
+-- 1. Barcha kitoblar va ularning mualliflari
+SELECT b.title, a.first_name || ' ' || a.last_name as author, g.name as genre
+FROM books b
+JOIN authors a ON b.primary_author_id = a.id
+JOIN genres g ON b.genre_id = g.id
+ORDER BY b.title;
+
+-- 2. Eng qimmat kitoblar (top 5)
+SELECT title, price, page_count,
+       price::numeric / page_count as price_per_page
+FROM books
+WHERE price IS NOT NULL AND page_count > 0
+ORDER BY price DESC
+LIMIT 5;
+
+-- 3. Har bir janrda nechta kitob bor?
+SELECT g.name as genre, COUNT(b.id) as book_count,
+       AVG(b.price) as average_price
+FROM genres g
+LEFT JOIN books b ON g.id = b.genre_id
+GROUP BY g.name
+ORDER BY book_count DESC;
+
+-- 4. Mijozlarning buyurtmalari
+SELECT c.first_name || ' ' || c.last_name as customer,
+       o.order_number, o.total_amount, o.status,
+       COUNT(oi.id) as items_count
+FROM customers c
+JOIN orders o ON c.id = o.customer_id
+LEFT JOIN order_items oi ON o.id = oi.order_id
+GROUP BY c.id, o.id
+ORDER BY o.order_date DESC;
+```
+
+---
+
+## 6. Database Development Tools 🛠️
+
+### 1. **pgAdmin** - PostgreSQL GUI
+
+```bash
+# pgAdmin bilan database boshqarish
+- Visual query builder
+- Schema browser
+- Data editing
+- Performance monitoring
+- Backup/restore tools
+```
+
+### 2. **DBeaver** - Universal database tool
+
+```bash
+# DBeaver features:
+- Multi-platform support
+- SQL editor with autocomplete
+- ER diagrams
+- Data import/export
+- Connection management
+```
+
+### 3. **Prisma Studio** - Modern database browser
+
+```bash
+# Prisma Studio (keyingi darslarda)
+- Web-based interface
+- Real-time data editing
+- Relation navigation
+- Type-safe operations
+```
+
+---
+
+## 7. Real Loyihaga Tayyorgarlik 🎯
+
+### Database Design Best Practices:
+
+```sql
+-- 1. Naming conventions
+-- ✅ TO'G'RI
+CREATE TABLE user_profiles (
+  user_id INTEGER,
+  first_name VARCHAR(100),
+  created_at TIMESTAMPTZ
+);
+
+-- ❌ NOTO'G'RI
+CREATE TABLE UserProfiles (
+  UserId INTEGER,
+  firstName VARCHAR(100),
+  CreatedAt TIMESTAMPTZ
+);
+
+-- 2. Constraints va Validation
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  price DECIMAL(10,2) CHECK (price > 0),
+  email VARCHAR(255) UNIQUE,
+  status VARCHAR(20) DEFAULT 'active',
+
+  -- Enums o'rniga CHECK constraints
+  CONSTRAINT valid_status CHECK (status IN ('active', 'inactive', 'archived'))
+);
+
+-- 3. Indexes for performance
+CREATE INDEX idx_products_name ON products(name);
+CREATE INDEX idx_products_status_price ON products(status, price)
+WHERE status = 'active';
+
+-- 4. Foreign key constraints
+ALTER TABLE orders
+ADD CONSTRAINT fk_orders_customer
+FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE RESTRICT;
+```
+
+### Performance Tips:
+
+```sql
+-- 1. Use EXPLAIN to analyze queries
+EXPLAIN ANALYZE
+SELECT p.title, u.username
+FROM posts p
+JOIN users u ON p.user_id = u.id
+WHERE p.status = 'published'
+ORDER BY p.created_at DESC
+LIMIT 10;
+
+-- 2. Index commonly filtered/sorted columns
+CREATE INDEX idx_posts_status_created ON posts(status, created_at DESC);
+
+-- 3. Use partial indexes for filtered data
+CREATE INDEX idx_active_users ON users(email) WHERE active = true;
+
+-- 4. Connection pooling (application level)
+const pool = new Pool({
+  host: 'localhost',
+  database: 'myapp',
+  user: 'postgres',
+  password: 'secret',
+  max: 20, // maksimum connection count
+  idleTimeoutMillis: 30000
+});
+```
+
+---
+
+## Xulosa 🎯
+
+Bu darsda biz quyidagilarni o'rgandik:
+
+✅ **Ma'lumotlar bazasi** - zamonaviy ilovalarning asosi
+✅ **SQL vs NoSQL** - qaysi birini qachon tanlash
+✅ **PostgreSQL** - kuchli va professional database
+✅ **Ma'lumot modeling** - real dunyoni ma'lumotda ifodalash
+✅ **Amaliy misollar** - kitob do'koni database
+✅ **Best practices** - professional development
+
+### Keyingi darsda:
+
+🐘 **PostgreSQL o'rnatish va sozlash**
+- Local development environment
+- Database yaratish va boshqarish
+- Birinchi jadvallarni yaratish
+- Ma'lumot import/export
+
+### Uyga vazifa:
+
+1. **PostgreSQL o'rnatish** (keyingi darsga tayyorgarlik)
+2. **Database loyihasi o'ylab toping** - qaysi turdagi ilova yaratmoqchisiz?
+3. **ER diagram chizish** - 4-5 jadval bilan oddiy sistem
+
+---
+
+### Qo'shimcha resurslar:
+
+- 📖 [PostgreSQL Documentation](https://postgresql.org/docs/)
+- 🎥 [Database Design Course](https://youtu.be/ztHopE5Wnpc)
+- 🛠️ [pgAdmin Download](https://pgadmin.org/download/)
+- 📚 [SQL Fundamentals](https://www.w3schools.com/sql/)
+
+**Keyingi dars:** PostgreSQL o'rnatish va sozlash 🐘

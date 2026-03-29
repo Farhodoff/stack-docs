@@ -1,0 +1,782 @@
+---
+title: "REST API Design va Principles"
+description: "REST API tushunchasi, HTTP metodlari, status kodlari va professional API design printsiplarini o'rganamiz"
+category: "api"
+order: 19
+difficulty: "intermediate"
+readTime: "40 daqiqa"
+tags:
+  - rest
+  - api
+  - http
+  - design
+  - principles
+  - backend
+---
+
+# REST API Design va Principles
+
+Assalom aleykum! Database bilan ishlashni o'rgangach, endi **API Design** - zamonaviy web dasturlashning eng muhim qismlaridan birini o'rganamiz. Bu darsda REST API tamoyillari va professional API yaratish ko'nikmalarini o'zlashtirамiz.
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- 🌐 **REST API** nima va nega muhim
+- 🔄 **HTTP metodlari** - GET, POST, PUT, DELETE
+- 📋 **Status kodlari** - 200, 404, 500 va boshqalar
+- 🏗️ **API Design principles** - best practices
+- 🔍 **URL strukturasi** - RESTful routing
+- 💼 **Real loyiha** - Blog Platform API
+
+---
+
+## REST API nima?
+
+### REST tushunchasi
+
+**REST** (Representational State Transfer) - bu web servislar uchun arxitektur yondashuv.
+
+**Oddiy tilda**: REST API - bu turli dasturlar o'rtasida ma'lumot almashish uchun qoidalar to'plami.
+
+### Real hayot misoli:
+
+Tasavvur qiling, siz restoran mijozi sizlar:
+
+```
+🍕 Mijoz (Frontend) → 📱 Ofitsiant (API) → 👨‍🍳 Oshpaz (Database)
+
+1. Mijoz: "Margarita pizza buyurtma qilaman" (HTTP Request)
+2. Ofitsiant: Buyurtmani oshpazga yetkazadi (API Processing)
+3. Oshpaz: Pizza tayyorlaydi (Database Operation)
+4. Ofitsiant: Tayyor pizzani mijozga olib keladi (HTTP Response)
+```
+
+### REST'ning afzalliklari:
+
+- ✅ **Oddiy** - tushunish va ishlatish oson
+- ✅ **Moslashuvchan** - har qanday til/platform bilan ishlaydi
+- ✅ **Kengaytiriladigan** - katta loyihalarda samarali
+- ✅ **Standardlashtrilgan** - dunyo bo'yicha qabul qilingan
+- ✅ **Stateless** - har bir request mustaqil
+
+---
+
+## HTTP metodlari - CRUD operatsiyalar
+
+### Asosiy HTTP metodlari:
+
+| HTTP Metod | CRUD | Vazifasi | Misol |
+|------------|------|----------|-------|
+| **GET** | Read | Ma'lumot olish | Bloglarni ko'rish |
+| **POST** | Create | Yangi ma'lumot yaratish | Yangi blog yozish |
+| **PUT** | Update | To'liq yangilash | Blog ma'lumotlarini o'zgartirish |
+| **PATCH** | Update | Qisman yangilash | Faqat blog title'ini o'zgartirish |
+| **DELETE** | Delete | O'chirish | Blogni o'chirish |
+
+### 1. GET - Ma'lumot olish:
+
+```javascript
+// Barcha bloglarni olish
+GET /api/blogs
+
+// Bitta blogni olish
+GET /api/blogs/123
+
+// Foydalanuvchi bloglarini olish
+GET /api/users/456/blogs
+
+// Filtrlash va sahifalash
+GET /api/blogs?category=tech&page=2&limit=10
+```
+
+### 2. POST - Yangi ma'lumot yaratish:
+
+```javascript
+// Yangi blog yaratish
+POST /api/blogs
+Content-Type: application/json
+
+{
+  "title": "Node.js bilan API yaratish",
+  "content": "Bu darsda biz...",
+  "category": "backend",
+  "authorId": 123
+}
+```
+
+### 3. PUT - To'liq yangilash:
+
+```javascript
+// Blogni to'liq yangilash
+PUT /api/blogs/123
+Content-Type: application/json
+
+{
+  "title": "Yangilangan sarlavha",
+  "content": "To'liq yangilangan content",
+  "category": "frontend",
+  "authorId": 123
+}
+```
+
+### 4. PATCH - Qisman yangilash:
+
+```javascript
+// Faqat title'ni o'zgartirish
+PATCH /api/blogs/123
+Content-Type: application/json
+
+{
+  "title": "Yangilangan sarlavha"
+}
+```
+
+### 5. DELETE - O'chirish:
+
+```javascript
+// Blogni o'chirish
+DELETE /api/blogs/123
+```
+
+---
+
+## HTTP Status kodlari
+
+### Status kodlari turkumlari:
+
+| Turkum | Ma'nosi | Misol |
+|--------|---------|-------|
+| **2xx** | Muvaffaqiyat | 200, 201, 204 |
+| **3xx** | Yo'naltirish | 301, 304 |
+| **4xx** | Client xatosi | 400, 401, 404 |
+| **5xx** | Server xatosi | 500, 502, 503 |
+
+### Asosiy status kodlari:
+
+#### ✅ Muvaffaqiyatli (2xx):
+```javascript
+200 OK              // Umumiy muvaffaqiyat
+201 Created         // Yangi resurs yaratildi
+204 No Content      // Muvaffaqiyat, lekin content yo'q
+```
+
+#### ⚠️ Client xatoliklari (4xx):
+```javascript
+400 Bad Request     // Noto'g'ri request
+401 Unauthorized    // Autentifikatsiya kerak
+403 Forbidden       // Ruxsat yo'q
+404 Not Found       // Resurs topilmadi
+```
+
+#### ❌ Server xatoliklari (5xx):
+```javascript
+500 Internal Server Error   // Server ichki xatosi
+502 Bad Gateway            // Gateway xatosi
+503 Service Unavailable    // Servis ishlamayapti
+```
+
+### Amaliy misollar:
+
+```javascript
+// GET /api/blogs - Muvaffaqiyatli
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+[
+  { "id": 1, "title": "Blog 1" },
+  { "id": 2, "title": "Blog 2" }
+]
+
+// POST /api/blogs - Yangi blog yaratildi
+HTTP/1.1 201 Created
+Location: /api/blogs/123
+Content-Type: application/json
+
+{
+  "id": 123,
+  "title": "Yangi blog",
+  "message": "Blog muvaffaqiyatli yaratildi"
+}
+
+// GET /api/blogs/999 - Topilmadi
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+
+{
+  "error": "Blog topilmadi",
+  "code": "BLOG_NOT_FOUND",
+  "blogId": 999
+}
+```
+
+---
+
+## RESTful URL strukturasi
+
+### URL design principles:
+
+#### ✅ **YAXSHI URL'lar:**
+
+```javascript
+// Resurs nomlari - ko'plik shaklda
+/api/users
+/api/blogs
+/api/categories
+
+// Hierarchy - ierarxiya
+/api/users/123/blogs
+/api/blogs/456/comments
+/api/categories/tech/blogs
+
+// Filtrlash - query parameters
+/api/blogs?category=tech&published=true&page=2
+/api/users?role=admin&status=active
+```
+
+#### ❌ **YOMON URL'lar:**
+
+```javascript
+// Verb ishlatmang (GET, POST, etc)
+/api/getUsers          ❌
+/api/createBlog        ❌
+/api/deleteBlog/123    ❌
+
+// Singular nomlarga yo'l qo'ymang
+/api/user              ❌
+/api/blog              ❌
+
+// Underscorening o'rniga kebab-case
+/api/user_profiles     ❌
+/api/blog-posts        ✅
+```
+
+### Hierarchy misollari:
+
+```javascript
+// Blog platform uchun RESTful routes
+GET    /api/blogs              // Barcha bloglar
+POST   /api/blogs              // Yangi blog yaratish
+GET    /api/blogs/123          // Bitta blog olish
+PUT    /api/blogs/123          // Blogni yangilash
+DELETE /api/blogs/123          // Blogni o'chirish
+
+// Blog comments uchun
+GET    /api/blogs/123/comments      // Blog kommentlari
+POST   /api/blogs/123/comments      // Yangi komment qo'shish
+GET    /api/comments/456            // Bitta komment
+PUT    /api/comments/456            // Kommentni yangilash
+DELETE /api/comments/456            // Kommentni o'chirish
+
+// User management
+GET    /api/users                   // Barcha userlar
+GET    /api/users/789               // Bitta user
+GET    /api/users/789/blogs         // User bloglari
+GET    /api/users/789/comments      // User kommentlari
+```
+
+---
+
+## API Response formatlari
+
+### Standard JSON response:
+
+#### Muvaffaqiyatli response:
+```javascript
+// GET /api/blogs/123
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "title": "Node.js darsligi",
+    "content": "Backend development...",
+    "author": {
+      "id": 456,
+      "name": "Alibek Tursunov"
+    },
+    "category": "backend",
+    "publishedAt": "2026-03-29T10:00:00Z",
+    "updatedAt": "2026-03-29T15:30:00Z"
+  },
+  "meta": {
+    "timestamp": "2026-03-29T16:00:00Z",
+    "version": "v1"
+  }
+}
+```
+
+#### Xatolik response:
+```javascript
+// GET /api/blogs/999 (topilmadi)
+{
+  "success": false,
+  "error": {
+    "code": "BLOG_NOT_FOUND",
+    "message": "Belgilangan ID bilan blog topilmadi",
+    "details": "Blog ID: 999 bazada mavjud emas"
+  },
+  "meta": {
+    "timestamp": "2026-03-29T16:00:00Z",
+    "requestId": "req_123456"
+  }
+}
+```
+
+#### List response (sahifalash):
+```javascript
+// GET /api/blogs?page=2&limit=5
+{
+  "success": true,
+  "data": [
+    { "id": 1, "title": "Blog 1" },
+    { "id": 2, "title": "Blog 2" }
+  ],
+  "pagination": {
+    "page": 2,
+    "limit": 5,
+    "total": 47,
+    "totalPages": 10,
+    "hasNext": true,
+    "hasPrev": true
+  },
+  "meta": {
+    "timestamp": "2026-03-29T16:00:00Z"
+  }
+}
+```
+
+---
+
+## Node.js bilan REST API yaratish
+
+### Express.js bilan API server:
+
+```javascript
+// server.js - Asosiy server
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+const blogsRouter = require('./routes/blogs');
+const usersRouter = require('./routes/users');
+
+app.use('/api/blogs', blogsRouter);
+app.use('/api/users', usersRouter);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    error: {
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Server ichki xatosi yuz berdi'
+    }
+  });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: {
+      code: 'ENDPOINT_NOT_FOUND',
+      message: `${req.path} yo'li topilmadi`
+    }
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`✅ Server ${PORT} portda ishlamoqda`);
+  console.log(`🌐 API: http://localhost:${PORT}/api`);
+});
+```
+
+### Blogs routing:
+
+```javascript
+// routes/blogs.js
+const express = require('express');
+const router = express.Router();
+
+// Fake database (keyinchalik haqiqiy DB ulash)
+let blogs = [
+  {
+    id: 1,
+    title: "Node.js bilan tanishuv",
+    content: "Node.js server-side JavaScript...",
+    author: "Alibek Tursunov",
+    category: "backend",
+    publishedAt: "2026-03-25T10:00:00Z"
+  },
+  {
+    id: 2,
+    title: "React asoslari",
+    content: "React - frontend library...",
+    author: "Malika Karimova",
+    category: "frontend",
+    publishedAt: "2026-03-26T14:30:00Z"
+  }
+];
+
+// GET /api/blogs - Barcha bloglar
+router.get('/', (req, res) => {
+  try {
+    // Query parameters
+    const { category, author, page = 1, limit = 10 } = req.query;
+
+    let filteredBlogs = [...blogs];
+
+    // Filtrlash
+    if (category) {
+      filteredBlogs = filteredBlogs.filter(blog =>
+        blog.category.toLowerCase() === category.toLowerCase()
+      );
+    }
+
+    // Sahifalash
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedBlogs = filteredBlogs.slice(startIndex, endIndex);
+
+    // Response
+    res.status(200).json({
+      success: true,
+      data: paginatedBlogs,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: filteredBlogs.length,
+        totalPages: Math.ceil(filteredBlogs.length / limit)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'FETCH_BLOGS_FAILED',
+        message: 'Bloglarni olishda xatolik yuz berdi'
+      }
+    });
+  }
+});
+
+// GET /api/blogs/:id - Bitta blog
+router.get('/:id', (req, res) => {
+  try {
+    const blogId = parseInt(req.params.id);
+    const blog = blogs.find(b => b.id === blogId);
+
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'BLOG_NOT_FOUND',
+          message: 'Blog topilmadi',
+          blogId: blogId
+        }
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: blog
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'FETCH_BLOG_FAILED',
+        message: 'Blogni olishda xatolik yuz berdi'
+      }
+    });
+  }
+});
+
+// POST /api/blogs - Yangi blog yaratish
+router.post('/', (req, res) => {
+  try {
+    const { title, content, author, category } = req.body;
+
+    // Validation
+    if (!title || !content || !author) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Title, content va author majburiy maydonlar'
+        }
+      });
+    }
+
+    // Yangi blog yaratish
+    const newBlog = {
+      id: blogs.length + 1,
+      title,
+      content,
+      author,
+      category: category || 'general',
+      publishedAt: new Date().toISOString()
+    };
+
+    blogs.push(newBlog);
+
+    res.status(201).json({
+      success: true,
+      data: newBlog,
+      message: 'Blog muvaffaqiyatli yaratildi'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'CREATE_BLOG_FAILED',
+        message: 'Blog yaratishda xatolik yuz berdi'
+      }
+    });
+  }
+});
+
+// PUT /api/blogs/:id - Blogni yangilash
+router.put('/:id', (req, res) => {
+  try {
+    const blogId = parseInt(req.params.id);
+    const { title, content, author, category } = req.body;
+
+    const blogIndex = blogs.findIndex(b => b.id === blogId);
+
+    if (blogIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'BLOG_NOT_FOUND',
+          message: 'Yangilamoqchi bo\'lgan blog topilmadi'
+        }
+      });
+    }
+
+    // Blog yangilash
+    const updatedBlog = {
+      ...blogs[blogIndex],
+      title: title || blogs[blogIndex].title,
+      content: content || blogs[blogIndex].content,
+      author: author || blogs[blogIndex].author,
+      category: category || blogs[blogIndex].category,
+      updatedAt: new Date().toISOString()
+    };
+
+    blogs[blogIndex] = updatedBlog;
+
+    res.status(200).json({
+      success: true,
+      data: updatedBlog,
+      message: 'Blog muvaffaqiyatli yangilandi'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'UPDATE_BLOG_FAILED',
+        message: 'Blogni yangilashda xatolik yuz berdi'
+      }
+    });
+  }
+});
+
+// DELETE /api/blogs/:id - Blogni o'chirish
+router.delete('/:id', (req, res) => {
+  try {
+    const blogId = parseInt(req.params.id);
+    const blogIndex = blogs.findIndex(b => b.id === blogId);
+
+    if (blogIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'BLOG_NOT_FOUND',
+          message: 'O\'chirmoqchi bo\'lgan blog topilmadi'
+        }
+      });
+    }
+
+    const deletedBlog = blogs[blogIndex];
+    blogs.splice(blogIndex, 1);
+
+    res.status(200).json({
+      success: true,
+      message: 'Blog muvaffaqiyatli o\'chirildi',
+      data: deletedBlog
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'DELETE_BLOG_FAILED',
+        message: 'Blogni o\'chirishda xatolik yuz berdi'
+      }
+    });
+  }
+});
+
+module.exports = router;
+```
+
+---
+
+## API testing Postman bilan
+
+### 1. Postman o'rnatish:
+- [getpostman.com](https://www.postman.com/downloads/) saytidan yuklab olish
+- Desktop yoki web versiyasini tanlash
+
+### 2. API endpoints test qilish:
+
+```javascript
+// 1. GET - Barcha bloglar
+GET http://localhost:3000/api/blogs
+Headers: Content-Type: application/json
+
+// 2. GET - Filter bilan
+GET http://localhost:3000/api/blogs?category=backend&limit=5
+
+// 3. POST - Yangi blog yaratish
+POST http://localhost:3000/api/blogs
+Headers: Content-Type: application/json
+Body (JSON):
+{
+  "title": "API Testing darsi",
+  "content": "Bu darsda API test qilishni o'rganamiz",
+  "author": "Jasur Karimov",
+  "category": "backend"
+}
+
+// 4. PUT - Blog yangilash
+PUT http://localhost:3000/api/blogs/1
+Headers: Content-Type: application/json
+Body (JSON):
+{
+  "title": "Yangilangan sarlavha",
+  "content": "Yangilangan content"
+}
+
+// 5. DELETE - Blog o'chirish
+DELETE http://localhost:3000/api/blogs/3
+```
+
+### 3. Test collection yaratish:
+
+```javascript
+// Postman'da "New Collection" yaratish
+// Har bir endpoint uchun alohida request yaratish
+// Environment variables o'rnatish (base URL)
+// Tests yozish - response validation
+```
+
+---
+
+## API Best Practices
+
+### 1. **Consistent naming** (Doimiy nomlash):
+```javascript
+✅ YAXSHI:
+/api/users
+/api/blog-posts
+/api/user-profiles
+
+❌ YOMON:
+/api/Users
+/api/blogPosts
+/api/user_profiles
+```
+
+### 2. **Proper HTTP codes** (To'g'ri status kodlar):
+```javascript
+✅ YAXSHI:
+CREATE → 201 Created
+UPDATE → 200 OK
+DELETE → 200 OK / 204 No Content
+NOT_FOUND → 404 Not Found
+
+❌ YOMON:
+CREATE → 200 OK
+ERROR → 200 OK with error message
+```
+
+### 3. **Meaningful error messages** (Yaxlit xato xabarlari):
+```javascript
+✅ YAXSHI:
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Title maydon majburiy",
+    "field": "title"
+  }
+}
+
+❌ YOMON:
+{
+  "error": "Something went wrong"
+}
+```
+
+### 4. **API Versioning** (Versiyalash):
+```javascript
+✅ YAXSHI:
+/api/v1/users
+/api/v2/users
+
+Headers: Accept: application/vnd.api+json;version=1
+```
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **REST API** - arxitektur stili va tamoyillar
+✅ **HTTP metodlari** - GET, POST, PUT, PATCH, DELETE
+✅ **Status kodlari** - 200, 400, 404, 500 va boshqalar
+✅ **URL strukturasi** - RESTful routing patterns
+✅ **Express.js API** - professional blog platform API
+✅ **Postman testing** - API test qilish ko'nikmalari
+
+### 📊 Loyiha natijalari:
+
+✅ **5 ta endpoint** yaratdik (CRUD + list)
+✅ **Error handling** - professional xato boshqaruvi
+✅ **Data validation** - ma'lumotlarni tekshirish
+✅ **Response formatting** - standart JSON formatlar
+✅ **Testing ready** - Postman bilan test qilish uchun
+
+### 🚀 Keyingi darsda:
+
+- **JWT Authentication** - API himoyasi
+- **Sessions va Cookies** - user management
+- **OAuth2 integration** - Google, GitHub login
+- **API Security** - data validation, rate limiting
+
+### 📚 Mustaqil mashq:
+
+1. **E-commerce API** - products, orders, customers
+2. **Social media API** - users, posts, comments, likes
+3. **Task management API** - projects, tasks, teams
+
+---
+
+<Callout type="success" title="Tabriklaymiz! 🎉">
+Siz endi REST API design printsiplarini o'rgandingiz va professional blog API yaratdingiz! Bu backend development yo'lida katta yutuq. API'lar zamonaviy web dasturlashning negizi hisoblanadi.
+</Callout>
+
+<Callout type="info" title="Pro Developer Tip 💡">
+Har doim API dizayningizni "developer experience" (DX) nuqtai nazaridan baholang. Yaxshi API - bu tushunish oson, xatoliklari aniq va dokumentatsiyasi to'liq API dir!
+</Callout>
+
+**Keyingi dars**: [API Authentication va Security](/docs/api/20-api-authentication)

@@ -1,0 +1,1114 @@
+---
+title: "Node.js Modules va NPM"
+description: "Node.js module tizimi, CommonJS, require/exports va NPM paketlar bilan professional ishlashni o'rganamiz"
+category: "nodejs"
+order: 2
+difficulty: "beginner"
+readTime: "30 daqiqa"
+tags:
+  - nodejs
+  - modules
+  - npm
+  - commonjs
+  - require
+  - exports
+---
+
+# Node.js Modules va NPM
+
+Assalom aleykum! Birinchi darsda Node.js bilan tanishdik va oddiy server yaratdik. Endi kodni qanday tashkil qilish va boshqa dasturchilarning kodlari bilan qanday ishlashni o'rganamiz.
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- 🧩 **Module tizimi** - kodingizni qanday bo'laklarga ajratish
+- 📦 **CommonJS** - require/exports
+- 🌐 **NPM** - paket menejeri bilan professional ishlash
+- 📚 **Built-in modullar** - Node.js'ning o'z kutubxonalari
+- 🔧 **External packages** - boshqa dasturchilarning kodlari
+- 💼 **Real loyiha** - Employee Management System
+
+---
+
+## Module nima va nega kerak?
+
+### Muammo: Katta kod fayllar
+
+Tasavvur qiling, 1000+ qator kodi bor faylingiz:
+
+```javascript
+// app.js - YOMON YONDASHUV ❌
+const http = require('http');
+
+// Database functions
+function connectDatabase() { /* 50 qator kod */ }
+function saveUser() { /* 30 qator kod */ }
+function getUsers() { /* 40 qator kod */ }
+
+// Authentication functions
+function Login() { /* 60 qator kod */ }
+function logout() { /* 20 qator kod */ }
+function checkPassword() { /* 35 qator kod */ }
+
+// Email functions
+function sendEmail() { /* 45 qator kod */ }
+function sendSMS() { /* 25 qator kod */ }
+
+// Server code
+const server = http.createServer((req, res) => {
+  // Server logikasi... 200+ qator
+});
+
+// 1000+ qator kod bir faylda! 😱
+```
+
+### Yechim: Module tizimi
+
+**Module** - bu alohida vazifani bajaruvchi kod bo'lagi.
+
+```javascript
+// YAXSHI YONDASHUV ✅
+
+// database.js - Database bilan ishlash
+module.exports = {
+  connectDatabase() { /* kod */ },
+  saveUser() { /* kod */ },
+  getUsers() { /* kod */ }
+};
+
+// auth.js - Authentication
+module.exports = {
+  login() { /* kod */ },
+  logout() { /* kod */ },
+  checkPassword() { /* kod */ }
+};
+
+// email.js - Email/SMS
+module.exports = {
+  sendEmail() { /* kod */ },
+  sendSMS() { /* kod */ }
+};
+
+// app.js - Asosiy server
+const database = require('./database');
+const auth = require('./auth');
+const email = require('./email');
+
+// Endi kod toza va tushunarli! 🎉
+```
+
+### Module afzalliklari:
+
+- ✅ **Kod toza** - har bir modul o'z vazifasi
+- ✅ **Qaytа ishlatish** - bir necha joyda ishlatsa bo'ladi
+- ✅ **Oson debug** - xatolikni topish oson
+- ✅ **Timda ishlash** - har kim o'z modulini yozadi
+- ✅ **Test qilish** - har bir modulni alohida test qilish
+
+---
+
+## CommonJS - require/exports tizimi
+
+Node.js **CommonJS** formatidan foydalanadi.
+
+### 1. Oddiy export:
+
+```javascript
+// math.js
+function add(a, b) {
+  return a + b;
+}
+
+function subtract(a, b) {
+  return a - b;
+}
+
+function multiply(a, b) {
+  return a * b;
+}
+
+// Bitta function export qilish
+module.exports = add;
+```
+
+```javascript
+// app.js
+const add = require('./math');
+
+console.log(add(5, 3)); // 8
+// subtract va multiply yo'q! ❌
+```
+
+### 2. Object export:
+
+```javascript
+// math.js
+function add(a, b) {
+  return a + b;
+}
+
+function subtract(a, b) {
+  return a - b;
+}
+
+function multiply(a, b) {
+  return a * b;
+}
+
+// Bir nechta functionlarni export qilish
+module.exports = {
+  add,      // add: add qisqartmasi
+  subtract,
+  multiply
+};
+
+// Yoki to'liq:
+/*
+module.exports = {
+  add: add,
+  subtract: subtract,
+  multiply: multiply
+};
+*/
+```
+
+```javascript
+// app.js
+const math = require('./math');
+
+console.log(math.add(5, 3));      // 8
+console.log(math.subtract(10, 4)); // 6
+console.log(math.multiply(6, 7));  // 42
+
+// Yoki destructuring:
+const { add, subtract } = require('./math');
+
+console.log(add(5, 3));      // 8
+console.log(subtract(10, 4)); // 6
+```
+
+### 3. exports shorthand:
+
+```javascript
+// calculator.js
+exports.add = (a, b) => a + b;
+exports.subtract = (a, b) => a - b;
+exports.multiply = (a, b) => a * b;
+exports.divide = (a, b) => a / b;
+
+// Bu quyidagi bilan bir xil:
+// module.exports.add = (a, b) => a + b;
+```
+
+### 4. Aralash export:
+
+```javascript
+// user.js
+class User {
+  constructor(name, email) {
+    this.name = name;
+    this.email = email;
+  }
+
+  getInfo() {
+    return `${this.name} (${this.email})`;
+  }
+}
+
+const ADMIN_ROLE = 'admin';
+const USER_ROLE = 'user';
+
+function createUser(name, email) {
+  return new User(name, email);
+}
+
+module.exports = {
+  User,           // Class
+  ADMIN_ROLE,     // Constant
+  USER_ROLE,      // Constant
+  createUser      // Function
+};
+```
+
+```javascript
+// app.js
+const { User, ADMIN_ROLE, createUser } = require('./user');
+
+const user1 = new User('Alibek', 'alibek@email.com');
+const user2 = createUser('Malika', 'malika@email.com');
+
+console.log(user1.getInfo()); // Alibek (alibek@email.com)
+console.log(ADMIN_ROLE);      // admin
+```
+
+---
+
+## Built-in modullar (O'rnatilgan)
+
+Node.js o'zi bilan keladigan modullar:
+
+### 1. File System (fs):
+
+```javascript
+const fs = require('fs');
+
+// Fayl yozish
+fs.writeFileSync('salom.txt', 'Assalom aleykum, Node.js!');
+
+// Fayl o'qish
+const content = fs.readFileSync('salom.txt', 'utf8');
+console.log(content); // "Assalom aleykum, Node.js!"
+
+// Metodlar ro'yxati
+fs.existsSync(path)      // Fayl mavjudmi?
+fs.mkdirSync(path)       // Papka yaratish
+fs.readdirSync(path)     // Papka ichidagilarni ko'rish
+fs.unlinkSync(path)      // Fayl o'chirish
+```
+
+### 2. Path:
+
+```javascript
+const path = require('path');
+
+console.log(path.join('/users', 'alibek', 'documents'));
+// /users/alibek/documents
+
+console.log(path.extname('file.txt'));    // .txt
+console.log(path.basename('/home/user/file.txt')); // file.txt
+console.log(path.dirname('/home/user/file.txt'));  // /home/user
+```
+
+### 3. OS (Operating System):
+
+```javascript
+const os = require('os');
+
+console.log(os.platform());  // 'darwin' (macOS), 'win32', 'linux'
+console.log(os.arch());      // 'x64', 'arm64'
+console.log(os.cpus().length); // CPU yadrolar soni
+console.log(os.totalmem());   // Umumiy RAM (bytes)
+console.log(os.freemem());    // Bo'sh RAM (bytes)
+console.log(os.homedir());    // Home directory
+```
+
+### 4. Crypto:
+
+```javascript
+const crypto = require('crypto');
+
+// Tasodifiy string
+const randomBytes = crypto.randomBytes(16).toString('hex');
+console.log(randomBytes); // 4f4ac7b2e56a8c7d9f3e2b1a0c5d8f9e
+
+// Password hash
+const password = 'userPassword123';
+const hash = crypto.createHash('sha256').update(password).digest('hex');
+console.log(hash); // hashed password
+```
+
+---
+
+## NPM - Node Package Manager
+
+### NPM nima?
+
+**NPM** - dunyodagi eng katta dasturiy ta'minot kutubxonasi:
+- 📊 **2+ million paketlar**
+- 📈 **Har hafta 1000+ yangi paketlar**
+- 🌐 **240+ million haftalik yuklanish**
+- 👥 **17+ million dasturchi** ishlatadi
+
+### Proyekt boshlash:
+
+```bash
+# Yangi proyekt yaratish
+mkdir my-nodejs-app
+cd my-nodejs-app
+
+# package.json fayl yaratish
+npm init -y
+
+# Yoki qo'lda ma'lumot kiritish:
+npm init
+```
+
+### Asosiy NPM buyruqlari:
+
+```bash
+# Paket o'rnatish (local)
+npm install express
+npm install lodash
+npm i mongodb      # qisqartmasi
+
+# Paket o'rnatish (global)
+npm install -g nodemon
+npm install -g typescript
+
+# Development dependencies
+npm install -D jest
+npm install --save-dev eslint
+
+# Ma'lum versiya o'rnatish
+npm install express@4.18.0
+npm install lodash@latest
+
+# Barcha paketlarni o'rnatish
+npm install
+
+# Paket yangilash
+npm update express
+npm update           # barchasi
+
+# Paket o'chirish
+npm uninstall express
+npm uninstall -g nodemon
+
+# Paketlarni ko'rish
+npm list
+npm list -g          # global paketlar
+
+# Paket haqida ma'lumot
+npm info express
+npm info lodash
+
+# Eski versiyalarni tekshirish
+npm outdated
+```
+
+### package.json struktura:
+
+```json
+{
+  "name": "my-nodejs-app",
+  "version": "1.0.0",
+  "description": "Mening Node.js ilovam",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest",
+    "build": "tsc"
+  },
+  "keywords": ["nodejs", "express", "api"],
+  "author": "Sizning ismingiz",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20",
+    "jest": "^29.0.0"
+  }
+}
+```
+
+### Versiya raqamlari:
+
+```json
+{
+  "dependencies": {
+    "express": "4.18.0",     // Aniq versiya
+    "lodash": "^4.17.21",    // 4.x.x eng yangi
+    "moment": "~2.29.4",     // 2.29.x eng yangi
+    "chalk": "*",            // Eng yangi versiya
+    "axios": ">=0.27.0"      // 0.27.0 va undan yuqori
+  }
+}
+```
+
+---
+
+## Popular NPM paketlari
+
+### 1. Lodash - Utility library:
+
+```bash
+npm install lodash
+```
+
+```javascript
+const _ = require('lodash');
+
+const users = [
+  { name: 'Alibek', age: 25, city: 'Tashkent' },
+  { name: 'Malika', age: 22, city: 'Samarkand' },
+  { name: 'Jasur', age: 28, city: 'Tashkent' }
+];
+
+// Filtering
+const tashkentUsers = _.filter(users, { city: 'Tashkent' });
+console.log(tashkentUsers); // Alibek va Jasur
+
+// Mapping
+const names = _.map(users, 'name');
+console.log(names); // ['Alibek', 'Malika', 'Jasur']
+
+// Grouping
+const byCity = _.groupBy(users, 'city');
+console.log(byCity);
+// { Tashkent: [Alibek, Jasur], Samarkand: [Malika] }
+```
+
+### 2. Moment.js - Vaqt bilan ishlash:
+
+```bash
+npm install moment
+```
+
+```javascript
+const moment = require('moment');
+
+// Hozirgi vaqt
+console.log(moment().format('DD.MM.YYYY')); // 29.03.2026
+console.log(moment().format('HH:mm:ss'));   // 14:30:25
+
+// Sana operatsiyalar
+const birthday = moment('1995-06-15');
+const yearsOld = moment().diff(birthday, 'years');
+console.log(`Yosh: ${yearsOld}`); // Yosh: 30
+
+// Relative time
+console.log(moment().subtract(2, 'days').fromNow()); // 2 days ago
+console.log(moment().add(1, 'week').fromNow());      // in 7 days
+```
+
+### 3. Chalk - Terminal ranglari:
+
+```bash
+npm install chalk@4.1.2
+```
+
+```javascript
+const chalk = require('chalk');
+
+console.log(chalk.red('Xatolik yuz berdi!'));
+console.log(chalk.green('Muvaffaqiyatli bajarildi!'));
+console.log(chalk.blue.bold('Muhim ma\'lumot'));
+console.log(chalk.bgYellow.black('Warning!'));
+
+// Template literal bilan
+console.log(chalk`
+  {green ✅ Server ishga tushdi}
+  {blue 🌐 URL: http://localhost:3000}
+  {yellow ⚡ Port: 3000}
+`);
+```
+
+### 4. Axios - HTTP client:
+
+```bash
+npm install axios
+```
+
+```javascript
+const axios = require('axios');
+
+// GET request
+async function getUsers() {
+  try {
+    const response = await axios.get('https://jsonplaceholder.typicode.com/users');
+    console.log(response.data); // Users array
+  } catch (error) {
+    console.error('Xatolik:', error.message);
+  }
+}
+
+// POST request
+async function createUser() {
+  try {
+    const newUser = {
+      name: 'Alibek Tursunov',
+      username: 'alibek',
+      email: 'alibek@example.com'
+    };
+
+    const response = await axios.post('https://jsonplaceholder.typicode.com/users', newUser);
+    console.log('Yaratilgan user:', response.data);
+  } catch (error) {
+    console.error('Xatolik:', error.message);
+  }
+}
+```
+
+---
+
+## Amaliy loyiha: Employee Management System
+
+Keling, real loyiha qilamiz - xodimlarni boshqarish tizimi.
+
+### Loyiha strukturasi:
+
+```
+employee-system/
+├── data/
+│   └── employees.json
+├── modules/
+│   ├── employee.js
+│   ├── fileManager.js
+│   └── logger.js
+├── package.json
+└── app.js
+```
+
+### 1. Loyihani setup qilish:
+
+```bash
+mkdir employee-system
+cd employee-system
+npm init -y
+npm install inquirer chalk moment
+```
+
+### 2. Data fayl:
+
+```json
+// data/employees.json
+[
+  {
+    "id": 1,
+    "name": "Alibek Tursunov",
+    "position": "Senior Developer",
+    "salary": 15000000,
+    "hireDate": "2022-01-15",
+    "department": "IT"
+  },
+  {
+    "id": 2,
+    "name": "Malika Karimova",
+    "position": "UI/UX Designer",
+    "salary": 12000000,
+    "hireDate": "2023-03-20",
+    "department": "Design"
+  }
+]
+```
+
+### 3. File manager moduli:
+
+```javascript
+// modules/fileManager.js
+const fs = require('fs');
+const path = require('path');
+
+const DATA_FILE = path.join(__dirname, '../data/employees.json');
+
+class FileManager {
+  static readEmployees() {
+    try {
+      if (!fs.existsSync(DATA_FILE)) {
+        return [];
+      }
+      const data = fs.readFileSync(DATA_FILE, 'utf8');
+      return JSON.parse(data);
+    } catch (error) {
+      console.error('Faylni o\'qishda xatolik:', error.message);
+      return [];
+    }
+  }
+
+  static saveEmployees(employees) {
+    try {
+      // data papkasini yaratish (agar yo'q bo'lsa)
+      const dataDir = path.dirname(DATA_FILE);
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+
+      const data = JSON.stringify(employees, null, 2);
+      fs.writeFileSync(DATA_FILE, data, 'utf8');
+      return true;
+    } catch (error) {
+      console.error('Faylni saqlashda xatolik:', error.message);
+      return false;
+    }
+  }
+}
+
+module.exports = FileManager;
+```
+
+### 4. Logger moduli:
+
+```javascript
+// modules/logger.js
+const chalk = require('chalk');
+const moment = require('moment');
+
+class Logger {
+  static info(message) {
+    const time = moment().format('HH:mm:ss');
+    console.log(chalk.blue(`[${time}] ℹ️  ${message}`));
+  }
+
+  static success(message) {
+    const time = moment().format('HH:mm:ss');
+    console.log(chalk.green(`[${time}] ✅ ${message}`));
+  }
+
+  static error(message) {
+    const time = moment().format('HH:mm:ss');
+    console.log(chalk.red(`[${time}] ❌ ${message}`));
+  }
+
+  static warning(message) {
+    const time = moment().format('HH:mm:ss');
+    console.log(chalk.yellow(`[${time}] ⚠️  ${message}`));
+  }
+}
+
+module.exports = Logger;
+```
+
+### 5. Employee moduli:
+
+```javascript
+// modules/employee.js
+const FileManager = require('./fileManager');
+const Logger = require('./logger');
+
+class Employee {
+  constructor(id, name, position, salary, hireDate, department) {
+    this.id = id;
+    this.name = name;
+    this.position = position;
+    this.salary = salary;
+    this.hireDate = hireDate;
+    this.department = department;
+  }
+
+  // Barcha xodimlarni olish
+  static getAllEmployees() {
+    return FileManager.readEmployees();
+  }
+
+  // ID orqali xodimni topish
+  static findById(id) {
+    const employees = FileManager.readEmployees();
+    return employees.find(emp => emp.id === parseInt(id));
+  }
+
+  // Yangi xodim qo'shish
+  static addEmployee(employeeData) {
+    const employees = FileManager.readEmployees();
+
+    // Yangi ID yaratish
+    const newId = employees.length > 0
+      ? Math.max(...employees.map(emp => emp.id)) + 1
+      : 1;
+
+    const newEmployee = new Employee(
+      newId,
+      employeeData.name,
+      employeeData.position,
+      employeeData.salary,
+      employeeData.hireDate,
+      employeeData.department
+    );
+
+    employees.push(newEmployee);
+
+    if (FileManager.saveEmployees(employees)) {
+      Logger.success(`Xodim qo'shildi: ${employeeData.name}`);
+      return newEmployee;
+    } else {
+      Logger.error('Xodimni qo\'shishda xatolik');
+      return null;
+    }
+  }
+
+  // Xodimni yangilash
+  static updateEmployee(id, updates) {
+    const employees = FileManager.readEmployees();
+    const index = employees.findIndex(emp => emp.id === parseInt(id));
+
+    if (index === -1) {
+      Logger.error('Xodim topilmadi');
+      return null;
+    }
+
+    // Ma'lumotni yangilash
+    employees[index] = { ...employees[index], ...updates };
+
+    if (FileManager.saveEmployees(employees)) {
+      Logger.success(`Xodim yangilandi: ${employees[index].name}`);
+      return employees[index];
+    } else {
+      Logger.error('Xodimni yangilashda xatolik');
+      return null;
+    }
+  }
+
+  // Xodimni o'chirish
+  static deleteEmployee(id) {
+    const employees = FileManager.readEmployees();
+    const index = employees.findIndex(emp => emp.id === parseInt(id));
+
+    if (index === -1) {
+      Logger.error('Xodim topilmadi');
+      return false;
+    }
+
+    const deletedEmployee = employees[index];
+    employees.splice(index, 1);
+
+    if (FileManager.saveEmployees(employees)) {
+      Logger.success(`Xodim o'chirildi: ${deletedEmployee.name}`);
+      return true;
+    } else {
+      Logger.error('Xodimni o\'chirishda xatolik');
+      return false;
+    }
+  }
+
+  // Statistika
+  static getStatistics() {
+    const employees = FileManager.readEmployees();
+
+    if (employees.length === 0) {
+      return {
+        total: 0,
+        departments: {},
+        avgSalary: 0
+      };
+    }
+
+    const departments = {};
+    let totalSalary = 0;
+
+    employees.forEach(emp => {
+      // Department bo'yicha guruhlash
+      if (!departments[emp.department]) {
+        departments[emp.department] = 0;
+      }
+      departments[emp.department]++;
+
+      // Maoshni hisoblash
+      totalSalary += emp.salary;
+    });
+
+    return {
+      total: employees.length,
+      departments: departments,
+      avgSalary: Math.round(totalSalary / employees.length)
+    };
+  }
+}
+
+module.exports = Employee;
+```
+
+### 6. Asosiy dastur:
+
+```javascript
+// app.js
+const inquirer = require('inquirer');
+const Employee = require('./modules/employee');
+const Logger = require('./modules/logger');
+const chalk = require('chalk');
+
+async function mainMenu() {
+  console.clear();
+  console.log(chalk.blue.bold('🏢 EMPLOYEE MANAGEMENT SYSTEM\n'));
+
+  const choices = [
+    '📋 Barcha xodimlarni ko\'rish',
+    '➕ Yangi xodim qo\'shish',
+    '🔍 Xodimni qidirish',
+    '✏️  Xodimni yangilash',
+    '🗑️  Xodimni o\'chirish',
+    '📊 Statistika',
+    '❌ Chiqish'
+  ];
+
+  const { action } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'action',
+      message: 'Amalni tanlang:',
+      choices: choices
+    }
+  ]);
+
+  switch (action) {
+    case choices[0]: await showAllEmployees(); break;
+    case choices[1]: await addNewEmployee(); break;
+    case choices[2]: await searchEmployee(); break;
+    case choices[3]: await updateEmployee(); break;
+    case choices[4]: await deleteEmployee(); break;
+    case choices[5]: await showStatistics(); break;
+    case choices[6]:
+      Logger.info('Dastur tugadi. Xayr!');
+      process.exit(0);
+  }
+
+  // Menu'ga qaytish
+  console.log('\nIltimos, Enter ni bosing...');
+  await inquirer.prompt([{ name: 'continue', message: '' }]);
+  return mainMenu();
+}
+
+async function showAllEmployees() {
+  const employees = Employee.getAllEmployees();
+
+  if (employees.length === 0) {
+    Logger.warning('Xodimlar ro\'yxati bo\'sh');
+    return;
+  }
+
+  console.log(chalk.green.bold('\n📋 XODIMLAR RO\'YXATI:\n'));
+
+  employees.forEach(emp => {
+    console.log(chalk.white(`ID: ${emp.id}`));
+    console.log(chalk.yellow(`👤 Ism: ${emp.name}`));
+    console.log(chalk.blue(`💼 Lavozim: ${emp.position}`));
+    console.log(chalk.cyan(`🏢 Bo'lim: ${emp.department}`));
+    console.log(chalk.green(`💰 Maosh: ${emp.salary.toLocaleString('uz-UZ')} so'm`));
+    console.log(chalk.gray(`📅 Ishga kirgan: ${emp.hireDate}`));
+    console.log(chalk.gray('─'.repeat(40)));
+  });
+}
+
+async function addNewEmployee() {
+  console.log(chalk.green.bold('\n➕ YANGI XODIM QO\'SHISH:\n'));
+
+  const answers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'name',
+      message: '👤 Xodim ismi:',
+      validate: input => input.length > 0 || 'Ism kiritish majburiy!'
+    },
+    {
+      type: 'input',
+      name: 'position',
+      message: '💼 Lavozimi:',
+      validate: input => input.length > 0 || 'Lavozim kiritish majburiy!'
+    },
+    {
+      type: 'input',
+      name: 'department',
+      message: '🏢 Bo\'lim:',
+      validate: input => input.length > 0 || 'Bo\'lim kiritish majburiy!'
+    },
+    {
+      type: 'input',
+      name: 'salary',
+      message: '💰 Maosh (so\'m):',
+      validate: input => {
+        const salary = parseInt(input);
+        return (!isNaN(salary) && salary > 0) || 'To\'g\'ri maosh kiriting!';
+      },
+      filter: input => parseInt(input)
+    },
+    {
+      type: 'input',
+      name: 'hireDate',
+      message: '📅 Ishga kirgan san (YYYY-MM-DD):',
+      default: new Date().toISOString().split('T')[0],
+      validate: input => {
+        const date = new Date(input);
+        return !isNaN(date.getTime()) || 'To\'g\'ri sana kiriting!';
+      }
+    }
+  ]);
+
+  Employee.addEmployee(answers);
+}
+
+async function searchEmployee() {
+  const { searchId } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'searchId',
+      message: '🔍 Xodim ID sini kiriting:',
+      validate: input => !isNaN(parseInt(input)) || 'To\'g\'ri ID kiriting!'
+    }
+  ]);
+
+  const employee = Employee.findById(searchId);
+
+  if (employee) {
+    console.log(chalk.green.bold('\n✅ XODIM TOPILDI:\n'));
+    console.log(chalk.yellow(`👤 Ism: ${employee.name}`));
+    console.log(chalk.blue(`💼 Lavozim: ${employee.position}`));
+    console.log(chalk.cyan(`🏢 Bo'lim: ${employee.department}`));
+    console.log(chalk.green(`💰 Maosh: ${employee.salary.toLocaleString('uz-UZ')} so'm`));
+    console.log(chalk.gray(`📅 Ishga kirgan: ${employee.hireDate}`));
+  } else {
+    Logger.error('Xodim topilmadi');
+  }
+}
+
+async function updateEmployee() {
+  const { updateId } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'updateId',
+      message: '✏️  Yangilamoqchi bo\'lgan xodim ID si:',
+      validate: input => !isNaN(parseInt(input)) || 'To\'g\'ri ID kiriting!'
+    }
+  ]);
+
+  const employee = Employee.findById(updateId);
+
+  if (!employee) {
+    Logger.error('Xodim topilmadi');
+    return;
+  }
+
+  console.log(chalk.green(`\nHozirgi ma'lumotlar: ${employee.name} - ${employee.position}\n`));
+
+  const updates = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'name',
+      message: 'Yangi ism (bo\'sh qoldirsangiz o\'zgartirilmaydi):',
+      default: employee.name
+    },
+    {
+      type: 'input',
+      name: 'position',
+      message: 'Yangi lavozim:',
+      default: employee.position
+    },
+    {
+      type: 'input',
+      name: 'department',
+      message: 'Yangi bo\'lim:',
+      default: employee.department
+    },
+    {
+      type: 'input',
+      name: 'salary',
+      message: 'Yangi maosh:',
+      default: employee.salary,
+      filter: input => parseInt(input)
+    }
+  ]);
+
+  Employee.updateEmployee(updateId, updates);
+}
+
+async function deleteEmployee() {
+  const { deleteId } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'deleteId',
+      message: '🗑️  O\'chirmoqchi bo\'lgan xodim ID si:',
+      validate: input => !isNaN(parseInt(input)) || 'To\'g\'ri ID kiriting!'
+    }
+  ]);
+
+  const employee = Employee.findById(deleteId);
+
+  if (!employee) {
+    Logger.error('Xodim topilmadi');
+    return;
+  }
+
+  const { confirm } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'confirm',
+      message: `${employee.name} ni o'chirishni tasdiqlaysizmi?`,
+      default: false
+    }
+  ]);
+
+  if (confirm) {
+    Employee.deleteEmployee(deleteId);
+  } else {
+    Logger.info('O\'chirish bekor qilindi');
+  }
+}
+
+async function showStatistics() {
+  const stats = Employee.getStatistics();
+
+  console.log(chalk.blue.bold('\n📊 STATISTIKA:\n'));
+
+  if (stats.total === 0) {
+    Logger.warning('Ma\'lumotlar yo\'q');
+    return;
+  }
+
+  console.log(chalk.green(`👥 Jami xodimlar: ${stats.total}`));
+  console.log(chalk.yellow(`💰 O'rtacha maosh: ${stats.avgSalary.toLocaleString('uz-UZ')} so'm`));
+
+  console.log(chalk.blue('\n🏢 Bo\'limlar bo\'yicha:'));
+  Object.entries(stats.departments).forEach(([dept, count]) => {
+    console.log(chalk.cyan(`   ${dept}: ${count} xodim`));
+  });
+}
+
+// Dasturni ishga tushirish
+Logger.info('Employee Management System ishga tushdi');
+mainMenu().catch(err => {
+  Logger.error('Dasturda xatolik: ' + err.message);
+});
+```
+
+### 7. Dasturni ishga tushirish:
+
+```bash
+# NPM scripts qo'shish
+# package.json'ga qo'shing:
+{
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  }
+}
+
+# Ishga tushirish
+npm start
+```
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **Module tizimi** - kod tashkiloti va strukturasi
+✅ **CommonJS** - require/exports syntax
+✅ **Built-in modullar** - fs, path, os, crypto
+✅ **NPM** - paket menejeri va ecosystem
+✅ **Popular paketlar** - lodash, moment, chalk, axios
+✅ **Real loyiha** - Employee Management System
+
+### 📊 Loyiha natijalari:
+
+✅ **5 ta modul** yaratdik (employee, fileManager, logger)
+✅ **File operations** - JSON bilan ishlash
+✅ **Interactive CLI** - inquirer.js bilan
+✅ **Professional logging** - chalk bilan rangli chiqarish
+✅ **CRUD operatsiyalar** - Create, Read, Update, Delete
+
+### 🚀 Keyingi darsda:
+
+- **File System** - chuqur o'rganish
+- **Asynchronous file operations** - async/await
+- **Streams** - katta fayllar bilan ishlash
+- **Real-time file watching** - file changes monitoring
+
+### 📚 Mustaqil mashq:
+
+1. **To-Do List CLI** - vazifalar boshqaruvi tizimi
+2. **JSON database query** - filter, sort, search
+3. **CSV file processor** - Excel fayllar bilan ishlash
+
+---
+
+<Callout type="success" title="Tabriklaymiz! 🎉">
+Siz endi Node.js modullar tizimi bilan ishlashni o'rgandingiz! Employee Management System loyihasi orqali real backend dasturlash ko'nikmalarini rivojlantirdingiz.
+</Callout>
+
+<Callout type="info" title="Next Level 💡">
+Keyingi darsda File System bilan chuqur ishlaymiz. Katta fayllar, real-time monitoring va performance optimizatsiyani o'rganamiz. Backend developer bo'lish yo'lingizda!
+</Callout>
+
+**Keyingi dars**: [File System va Path](/docs/nodejs/03-file-system-path)

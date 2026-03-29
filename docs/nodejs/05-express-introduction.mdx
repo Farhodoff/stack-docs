@@ -1,0 +1,1518 @@
+---
+title: "Express.js bilan tanishuv"
+description: "Express.js framework orqali web server yaratish, routing, middleware va built-in HTTP'dan Express'ga migration qilishni o'rganamiz"
+category: "nodejs"
+order: 5
+difficulty: "intermediate"
+readTime: "45 daqiqa"
+tags:
+  - nodejs
+  - express
+  - framework
+  - routing
+  - middleware
+  - web-server
+---
+
+# Express.js bilan tanishuv
+
+Assalom aleykum! Oldingi darsda Node.js built-in HTTP moduli bilan web server yaratdik. Endi **Express.js** framework'ni o'rganamiz - bu Node.js'da eng mashhur web framework!
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- 🚀 **Express.js nima** - framework afzalliklari
+- 📦 **O'rnatish va setup** - loyiha boshlash
+- 🛣️ **Routing tizimi** - URL handling
+- 🔧 **Middleware** - request processing pipeline
+- 🔄 **HTTP'dan Express'ga** - migration qilish
+- 💼 **Real loyiha** - E-commerce API
+
+---
+
+## Express.js nima va nega kerak?
+
+**Express.js** - Node.js uchun minimal va flexible web application framework. Bu "built-in HTTP modulining ustki qavati" deb o'ylashingiz mumkin.
+
+### Built-in HTTP vs Express.js:
+
+**Oldingi darsda built-in HTTP bilan:**
+```javascript
+// 50+ qator kod
+const server = http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  const pathname = parsedUrl.pathname;
+  const method = req.method;
+
+  // Manual routing
+  if (pathname === '/api/users' && method === 'GET') {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ users: [] }));
+  } else if (pathname === '/api/users' && method === 'POST') {
+    // POST body parsing
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      // Manual JSON parsing...
+    });
+  }
+  // Va hokazo...
+});
+```
+
+**Express.js bilan:**
+```javascript
+// 5 qator kod
+const express = require('express');
+const app = express();
+
+app.use(express.json()); // Automatic JSON parsing
+
+app.get('/api/users', (req, res) => {
+  res.json({ users: [] });
+});
+
+app.post('/api/users', (req, res) => {
+  console.log(req.body); // Parsed JSON ready!
+  res.json({ success: true });
+});
+
+app.listen(3000, () => console.log('Server running!'));
+```
+
+### Express.js afzalliklari:
+
+- ✅ **Kam kod** - 10x kamroq kod yozish
+- ✅ **Routing** - oson URL handling
+- ✅ **Middleware** - request processing pipeline
+- ✅ **JSON support** - automatic parsing
+- ✅ **Template engines** - dynamic HTML
+- ✅ **Static files** - automatic serving
+- ✅ **Error handling** - centralized errors
+- ✅ **Ecosystem** - minglab plugin
+
+---
+
+## Express.js o'rnatish va setup
+
+### 1. Proyekt yaratish:
+
+```bash
+mkdir express-tutorial
+cd express-tutorial
+npm init -y
+```
+
+### 2. Express.js o'rnatish:
+
+```bash
+# Express.js
+npm install express
+
+# Development dependencies
+npm install -D nodemon
+
+# Qo'shimcha paketlar
+npm install cors helmet morgan dotenv
+```
+
+### 3. Package.json scripts:
+
+```json
+{
+  "name": "express-tutorial",
+  "version": "1.0.0",
+  "description": "Express.js o'rganish loyihasi",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Testlar yo'q\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
+```
+
+### 4. Birinchi Express server:
+
+```javascript
+// app.js
+const express = require('express');
+
+// Express app yaratish
+const app = express();
+
+// Middleware
+app.use(express.json()); // JSON body parser
+
+// Basic route
+app.get('/', (req, res) => {
+  res.json({
+    message: '🎉 Express.js server ishlayapti!',
+    timestamp: new Date().toISOString(),
+    platform: process.platform,
+    nodeVersion: process.version
+  });
+});
+
+// Server ishga tushirish
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Express server: http://localhost:${PORT}`);
+});
+```
+
+```bash
+# Ishga tushirish
+npm run dev  # nodemon bilan (auto-restart)
+# yoki
+npm start    # oddiy node bilan
+```
+
+---
+
+## Express.js routing tizimi
+
+**Route** - HTTP method + URL path + Handler function.
+
+### 1. Basic routes:
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+// GET route
+app.get('/', (req, res) => {
+  res.json({ message: 'Bosh sahifa' });
+});
+
+// POST route
+app.post('/users', (req, res) => {
+  console.log('Yangi user:', req.body);
+  res.json({ message: 'User yaratildi', data: req.body });
+});
+
+// PUT route
+app.put('/users/:id', (req, res) => {
+  const userId = req.params.id;
+  console.log(`User ${userId} yangilanyapti:`, req.body);
+  res.json({ message: `User ${userId} yangilandi` });
+});
+
+// DELETE route
+app.delete('/users/:id', (req, res) => {
+  const userId = req.params.id;
+  res.json({ message: `User ${userId} o'chirildi` });
+});
+
+app.listen(3000, () => {
+  console.log('🧪 Test qiling:');
+  console.log('GET    http://localhost:3000/');
+  console.log('POST   http://localhost:3000/users');
+  console.log('PUT    http://localhost:3000/users/123');
+  console.log('DELETE http://localhost:3000/users/123');
+});
+```
+
+### 2. Route parameters:
+
+```javascript
+const express = require('express');
+const app = express();
+
+// Path parameters
+app.get('/users/:id', (req, res) => {
+  const userId = req.params.id;
+  res.json({
+    message: `User ${userId} ma'lumoti`,
+    userId: userId,
+    type: typeof userId // string!
+  });
+});
+
+// Multiple parameters
+app.get('/users/:userId/posts/:postId', (req, res) => {
+  const { userId, postId } = req.params;
+  res.json({
+    message: `User ${userId}ning post ${postId}`,
+    params: req.params
+  });
+});
+
+// Optional parameters
+app.get('/products/:id?', (req, res) => {
+  if (req.params.id) {
+    res.json({ message: `Product ${req.params.id}` });
+  } else {
+    res.json({ message: 'Barcha productlar' });
+  }
+});
+
+// Wildcard routes
+app.get('/files/*', (req, res) => {
+  const filePath = req.params[0]; // * ichidagi qism
+  res.json({
+    message: 'Fayl so\'rovi',
+    path: filePath,
+    fullUrl: req.url
+  });
+});
+
+app.listen(3000, () => {
+  console.log('🧪 Parameter test'lari:');
+  console.log('http://localhost:3000/users/123');
+  console.log('http://localhost:3000/users/123/posts/456');
+  console.log('http://localhost:3000/products/789');
+  console.log('http://localhost:3000/products');
+  console.log('http://localhost:3000/files/documents/report.pdf');
+});
+```
+
+### 3. Query parameters:
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.get('/search', (req, res) => {
+  const {
+    q,          // query string
+    limit = 10, // default value
+    page = 1,
+    sort = 'name'
+  } = req.query;
+
+  res.json({
+    search: {
+      query: q,
+      limit: parseInt(limit),
+      page: parseInt(page),
+      sort: sort
+    },
+    url: req.url,
+    allQuery: req.query
+  });
+});
+
+// Real search logic misoli
+const products = [
+  { id: 1, name: 'Laptop', price: 1200, category: 'electronics' },
+  { id: 2, name: 'Phone', price: 800, category: 'electronics' },
+  { id: 3, name: 'Book', price: 50, category: 'education' },
+  { id: 4, name: 'Chair', price: 150, category: 'furniture' }
+];
+
+app.get('/products', (req, res) => {
+  let result = [...products];
+
+  // Search by name
+  if (req.query.search) {
+    const searchTerm = req.query.search.toLowerCase();
+    result = result.filter(p =>
+      p.name.toLowerCase().includes(searchTerm)
+    );
+  }
+
+  // Filter by category
+  if (req.query.category) {
+    result = result.filter(p => p.category === req.query.category);
+  }
+
+  // Filter by price range
+  if (req.query.minPrice) {
+    result = result.filter(p => p.price >= parseInt(req.query.minPrice));
+  }
+
+  if (req.query.maxPrice) {
+    result = result.filter(p => p.price <= parseInt(req.query.maxPrice));
+  }
+
+  // Sort
+  if (req.query.sort) {
+    const sortField = req.query.sort;
+    result.sort((a, b) => {
+      if (typeof a[sortField] === 'number') {
+        return a[sortField] - b[sortField];
+      }
+      return a[sortField].localeCompare(b[sortField]);
+    });
+  }
+
+  // Pagination
+  const limit = parseInt(req.query.limit) || 10;
+  const page = parseInt(req.query.page) || 1;
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+
+  const paginatedResult = result.slice(startIndex, endIndex);
+
+  res.json({
+    success: true,
+    data: paginatedResult,
+    pagination: {
+      page,
+      limit,
+      total: result.length,
+      totalPages: Math.ceil(result.length / limit)
+    },
+    filters: req.query
+  });
+});
+
+app.listen(3000, () => {
+  console.log('🧪 Query test'lari:');
+  console.log('http://localhost:3000/search?q=nodejs&limit=5&page=2');
+  console.log('http://localhost:3000/products?search=phone&category=electronics');
+  console.log('http://localhost:3000/products?minPrice=100&maxPrice=1000&sort=price');
+});
+```
+
+---
+
+## Middleware tushunchasi
+
+**Middleware** - request va response o'rtasida ishlaydigan function'lar. pipeline kabi ishlaydi:
+
+```
+Request → Middleware 1 → Middleware 2 → Route Handler → Response
+```
+
+### 1. Built-in middleware:
+
+```javascript
+const express = require('express');
+const app = express();
+
+// JSON body parser
+app.use(express.json());
+
+// URL-encoded data parser (forms)
+app.use(express.urlencoded({ extended: true }));
+
+// Static files
+app.use(express.static('public'));
+
+// Routes
+app.get('/', (req, res) => {
+  res.json({ message: 'Middleware'lar ishladi!' });
+});
+
+app.post('/submit', (req, res) => {
+  res.json({
+    message: 'Form ma\'lumoti olindi',
+    body: req.body
+  });
+});
+
+app.listen(3000);
+```
+
+### 2. Custom middleware:
+
+```javascript
+const express = require('express');
+const app = express();
+
+// Logger middleware
+const customLogger = (req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`📡 ${timestamp} - ${req.method} ${req.url}`);
+
+  // IP address
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  console.log(`📍 IP: ${ip}`);
+
+  // User agent
+  console.log(`🖥️ User-Agent: ${req.headers['user-agent']}`);
+
+  next(); // Keyingi middleware'ga o'tish!
+};
+
+// Authentication middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Access token kerak!'
+    });
+  }
+
+  // Token validation (simplified)
+  if (token === 'valid-token') {
+    req.user = { id: 1, name: 'Alibek', role: 'admin' };
+    next();
+  } else {
+    res.status(403).json({
+      success: false,
+      message: 'Noto\'g\'ri token!'
+    });
+  }
+};
+
+// Request timing middleware
+const requestTimer = (req, res, next) => {
+  req.startTime = Date.now();
+
+  // Response tugagach timing ni hisoblash
+  res.on('finish', () => {
+    const duration = Date.now() - req.startTime;
+    console.log(`⏰ Request ${req.url} - ${duration}ms`);
+  });
+
+  next();
+};
+
+// Global middleware'lar
+app.use(express.json());
+app.use(customLogger);
+app.use(requestTimer);
+
+// Public route
+app.get('/', (req, res) => {
+  res.json({ message: 'Public route' });
+});
+
+// Protected route
+app.get('/dashboard', authenticateToken, (req, res) => {
+  res.json({
+    message: 'Dashboard data',
+    user: req.user
+  });
+});
+
+app.listen(3000, () => {
+  console.log('🧪 Middleware test'lari:');
+  console.log('Public:    http://localhost:3000/');
+  console.log('Protected: http://localhost:3000/dashboard');
+  console.log('Header:    Authorization: Bearer valid-token');
+});
+```
+
+### 3. Error handling middleware:
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+// Routes
+app.get('/', (req, res) => {
+  res.json({ message: 'OK' });
+});
+
+app.get('/error-test', (req, res, next) => {
+  // Xatolikni simulate qilish
+  const error = new Error('Bu test xatoligi!');
+  error.status = 500;
+  next(error); // Error middleware'ga jo'natish
+});
+
+app.get('/async-error', async (req, res, next) => {
+  try {
+    // Async operation simulate
+    await new Promise((resolve, reject) => {
+      setTimeout(() => reject(new Error('Async xatolik!')), 1000);
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 404 handler (oxirgi route'dan keyin)
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route topilmadi',
+    path: req.originalUrl
+  });
+});
+
+// Error handling middleware (eng oxirda)
+app.use((error, req, res, next) => {
+  console.error('💥 Error:', error.message);
+
+  // Error stack'ni development'da ko'rsatish
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  res.status(error.status || 500).json({
+    success: false,
+    message: error.message,
+    ...(isDevelopment && { stack: error.stack })
+  });
+});
+
+app.listen(3000, () => {
+  console.log('🧪 Error handling test'lari:');
+  console.log('http://localhost:3000/error-test');
+  console.log('http://localhost:3000/async-error');
+  console.log('http://localhost:3000/not-found-route');
+});
+```
+
+---
+
+## Third-party middleware
+
+### Popular middleware'lar:
+
+```javascript
+const express = require('express');
+const cors = require('cors');       // CORS support
+const helmet = require('helmet');   // Security headers
+const morgan = require('morgan');   // HTTP request logger
+
+const app = express();
+
+// Security middleware
+app.use(helmet()); // Security headers qo'shadi
+
+// CORS middleware
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://myapp.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Logging middleware
+app.use(morgan('combined')); // Apache Combined Log format
+
+// Custom logging format
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
+
+// Built-in middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Middleware'lar ishladi!',
+    security: 'Helmet active',
+    cors: 'CORS configured',
+    logging: 'Morgan active'
+  });
+});
+
+app.listen(3000, () => {
+  console.log('✅ Professional server: http://localhost:3000');
+});
+```
+
+---
+
+## Built-in HTTP'dan Express'ga migration
+
+Oldingi darsda yaratgan Blog API'ni Express'ga o'tkazamiz:
+
+### 1. Express version - Posts routes:
+
+```javascript
+// routes/posts.js
+const express = require('express');
+const router = express.Router();
+
+// In-memory database (demo uchun)
+let posts = [
+  {
+    id: 1,
+    title: 'Node.js bilan web server',
+    content: 'Node.js bilan web server yaratish...',
+    author: 'Alibek',
+    tags: ['nodejs', 'backend'],
+    createdAt: '2026-03-29T10:00:00Z',
+    views: 0
+  }
+];
+
+let nextId = 2;
+
+// GET /api/posts - Barcha postlar
+router.get('/', (req, res) => {
+  const { q, limit = 10, page = 1 } = req.query;
+
+  let result = [...posts];
+
+  // Search
+  if (q) {
+    const searchTerm = q.toLowerCase();
+    result = result.filter(post =>
+      post.title.toLowerCase().includes(searchTerm) ||
+      post.content.toLowerCase().includes(searchTerm) ||
+      post.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+    );
+  }
+
+  // Pagination
+  const limitNum = parseInt(limit);
+  const pageNum = parseInt(page);
+  const startIndex = (pageNum - 1) * limitNum;
+  const endIndex = startIndex + limitNum;
+  const paginatedPosts = result.slice(startIndex, endIndex);
+
+  res.json({
+    success: true,
+    data: paginatedPosts,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total: result.length,
+      totalPages: Math.ceil(result.length / limitNum)
+    }
+  });
+});
+
+// GET /api/posts/:id - Bitta post
+router.get('/:id', (req, res) => {
+  const postId = parseInt(req.params.id);
+  const post = posts.find(p => p.id === postId);
+
+  if (!post) {
+    return res.status(404).json({
+      success: false,
+      message: 'Post topilmadi'
+    });
+  }
+
+  // Views increment
+  post.views++;
+
+  res.json({
+    success: true,
+    data: post
+  });
+});
+
+// POST /api/posts - Yangi post
+router.post('/', (req, res) => {
+  const { title, content, author, tags } = req.body;
+
+  // Validation
+  if (!title || !content || !author) {
+    return res.status(400).json({
+      success: false,
+      message: 'Title, content va author majburiy!'
+    });
+  }
+
+  const newPost = {
+    id: nextId++,
+    title,
+    content,
+    author,
+    tags: tags || [],
+    createdAt: new Date().toISOString(),
+    views: 0
+  };
+
+  posts.push(newPost);
+
+  res.status(201).json({
+    success: true,
+    message: 'Post yaratildi',
+    data: newPost
+  });
+});
+
+// PUT /api/posts/:id - Post yangilash
+router.put('/:id', (req, res) => {
+  const postId = parseInt(req.params.id);
+  const postIndex = posts.findIndex(p => p.id === postId);
+
+  if (postIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: 'Post topilmadi'
+    });
+  }
+
+  posts[postIndex] = {
+    ...posts[postIndex],
+    ...req.body,
+    id: postId, // ID o'zgarmaydi
+    updatedAt: new Date().toISOString()
+  };
+
+  res.json({
+    success: true,
+    message: 'Post yangilandi',
+    data: posts[postIndex]
+  });
+});
+
+// DELETE /api/posts/:id - Post o'chirish
+router.delete('/:id', (req, res) => {
+  const postId = parseInt(req.params.id);
+  const postIndex = posts.findIndex(p => p.id === postId);
+
+  if (postIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: 'Post topilmadi'
+    });
+  }
+
+  const deletedPost = posts[postIndex];
+  posts.splice(postIndex, 1);
+
+  res.json({
+    success: true,
+    message: 'Post o\'chirildi',
+    data: deletedPost
+  });
+});
+
+module.exports = router;
+```
+
+### 2. Main Express app:
+
+```javascript
+// app.js
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+const helmet = require('helmet');
+
+// Routes import qilish
+const postsRoutes = require('./routes/posts');
+
+const app = express();
+
+// Security
+app.use(helmet());
+
+// CORS
+app.use(cors());
+
+// Logging
+app.use(morgan('combined'));
+
+// Body parsing
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Express Blog API',
+    version: '2.0.0',
+    message: 'Built-in HTTP'dan Express'ga migration qilindi!',
+    endpoints: {
+      'GET /api/posts': 'Barcha postlar',
+      'GET /api/posts/:id': 'Bitta post',
+      'POST /api/posts': 'Yangi post',
+      'PUT /api/posts/:id': 'Post yangilash',
+      'DELETE /api/posts/:id': 'Post o\'chirish'
+    }
+  });
+});
+
+// Posts routes
+app.use('/api/posts', postsRoutes);
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route topilmadi',
+    path: req.originalUrl
+  });
+});
+
+// Error handler
+app.use((error, req, res, next) => {
+  console.error('💥 Error:', error.message);
+
+  res.status(error.status || 500).json({
+    success: false,
+    message: error.message,
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Express Blog API: http://localhost:${PORT}`);
+  console.log('📚 API Documentation: http://localhost:${PORT}');
+});
+```
+
+### 3. Comparison - Built-in vs Express:
+
+```javascript
+// OLDIN - Built-in HTTP (50+ qator)
+const http = require('http');
+const url = require('url');
+
+const server = http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  const pathname = parsedUrl.pathname;
+  const method = req.method;
+
+  // Manual CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Manual JSON parsing
+  let body = '';
+  req.on('data', chunk => body += chunk);
+  req.on('end', () => {
+    try {
+      const data = body ? JSON.parse(body) : {};
+
+      // Manual routing
+      if (pathname === '/api/posts' && method === 'GET') {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ posts: [] }));
+      }
+      // ... va hokazo 50+ qator
+    } catch (error) {
+      res.statusCode = 500;
+      res.end('Error');
+    }
+  });
+});
+
+// HOZIR - Express.js (5 qator)
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+app.use(cors());
+
+app.get('/api/posts', (req, res) => {
+  res.json({ posts: [] });
+});
+```
+
+---
+
+## Amaliy loyiha: E-commerce API
+
+Keling, Express.js bilan to'liq E-commerce API yaratamiz!
+
+### Loyiha strukturasi:
+
+```
+ecommerce-api/
+├── controllers/
+│   ├── productController.js
+│   ├── categoryController.js
+│   └── orderController.js
+├── middleware/
+│   ├── auth.js
+│   ├── validation.js
+│   └── logger.js
+├── routes/
+│   ├── products.js
+│   ├── categories.js
+│   └── orders.js
+├── models/
+│   └── data.js
+├── public/
+│   └── documentation.html
+├── .env
+├── app.js
+└── package.json
+```
+
+### 1. Data models:
+
+```javascript
+// models/data.js
+let categories = [
+  { id: 1, name: 'Electronics', description: 'Electronic devices' },
+  { id: 2, name: 'Clothing', description: 'Fashion and apparel' },
+  { id: 3, name: 'Books', description: 'Books and literature' }
+];
+
+let products = [
+  {
+    id: 1,
+    name: 'iPhone 15',
+    description: 'Latest iPhone model',
+    price: 1200,
+    category: 1,
+    stock: 50,
+    imageUrl: '/images/iphone15.jpg',
+    createdAt: '2026-03-29T10:00:00Z'
+  },
+  {
+    id: 2,
+    name: 'Samsung Galaxy S24',
+    description: 'Premium Android phone',
+    price: 1000,
+    category: 1,
+    stock: 30,
+    imageUrl: '/images/galaxy-s24.jpg',
+    createdAt: '2026-03-29T11:00:00Z'
+  },
+  {
+    id: 3,
+    name: 'T-shirt',
+    description: 'Cotton t-shirt',
+    price: 25,
+    category: 2,
+    stock: 100,
+    imageUrl: '/images/tshirt.jpg',
+    createdAt: '2026-03-29T12:00:00Z'
+  }
+];
+
+let orders = [
+  {
+    id: 1,
+    customerName: 'Alibek Tursunov',
+    customerEmail: 'alibek@example.com',
+    items: [
+      { productId: 1, quantity: 1, price: 1200 },
+      { productId: 3, quantity: 2, price: 25 }
+    ],
+    total: 1250,
+    status: 'pending',
+    createdAt: '2026-03-29T13:00:00Z'
+  }
+];
+
+let nextCategoryId = 4;
+let nextProductId = 4;
+let nextOrderId = 2;
+
+module.exports = {
+  categories,
+  products,
+  orders,
+  getNextCategoryId: () => nextCategoryId++,
+  getNextProductId: () => nextProductId++,
+  getNextOrderId: () => nextOrderId++
+};
+```
+
+### 2. Middleware:
+
+```javascript
+// middleware/validation.js
+const validateProduct = (req, res, next) => {
+  const { name, description, price, category, stock } = req.body;
+
+  const errors = [];
+
+  if (!name || name.trim().length < 2) {
+    errors.push('Product name kamida 2 ta belgi bo\'lishi kerak');
+  }
+
+  if (!description || description.trim().length < 10) {
+    errors.push('Description kamida 10 ta belgi bo\'lishi kerak');
+  }
+
+  if (!price || price < 0) {
+    errors.push('Price 0dan katta bo\'lishi kerak');
+  }
+
+  if (!category) {
+    errors.push('Category majburiy');
+  }
+
+  if (stock === undefined || stock < 0) {
+    errors.push('Stock 0 yoki katta bo\'lishi kerak');
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation xatoliklari',
+      errors
+    });
+  }
+
+  next();
+};
+
+const validateOrder = (req, res, next) => {
+  const { customerName, customerEmail, items } = req.body;
+
+  const errors = [];
+
+  if (!customerName || customerName.trim().length < 2) {
+    errors.push('Customer name majburiy');
+  }
+
+  if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+    errors.push('To\'g\'ri email kiriting');
+  }
+
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    errors.push('Order items majburiy');
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation xatoliklari',
+      errors
+    });
+  }
+
+  next();
+};
+
+module.exports = {
+  validateProduct,
+  validateOrder
+};
+```
+
+```javascript
+// middleware/logger.js
+const morgan = require('morgan');
+
+// Custom token (request body log qilish uchun)
+morgan.token('body', (req) => {
+  return JSON.stringify(req.body);
+});
+
+// Custom format
+const customFormat = ':method :url :status :res[content-length] - :response-time ms :body';
+
+const logger = morgan(customFormat, {
+  skip: (req, res) => {
+    // Health check route'ni log qilmaslik
+    return req.url === '/health';
+  }
+});
+
+module.exports = logger;
+```
+
+### 3. Product Controller:
+
+```javascript
+// controllers/productController.js
+const { products, categories, getNextProductId } = require('../models/data');
+
+const getAllProducts = (req, res) => {
+  const {
+    category,
+    search,
+    minPrice,
+    maxPrice,
+    sort = 'name',
+    limit = 10,
+    page = 1
+  } = req.query;
+
+  let result = [...products];
+
+  // Filter by category
+  if (category) {
+    result = result.filter(p => p.category === parseInt(category));
+  }
+
+  // Search by name or description
+  if (search) {
+    const searchTerm = search.toLowerCase();
+    result = result.filter(p =>
+      p.name.toLowerCase().includes(searchTerm) ||
+      p.description.toLowerCase().includes(searchTerm)
+    );
+  }
+
+  // Price range filter
+  if (minPrice) {
+    result = result.filter(p => p.price >= parseFloat(minPrice));
+  }
+
+  if (maxPrice) {
+    result = result.filter(p => p.price <= parseFloat(maxPrice));
+  }
+
+  // Sorting
+  result.sort((a, b) => {
+    switch (sort) {
+      case 'price_asc':
+        return a.price - b.price;
+      case 'price_desc':
+        return b.price - a.price;
+      case 'name':
+        return a.name.localeCompare(b.name);
+      case 'newest':
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      default:
+        return a.name.localeCompare(b.name);
+    }
+  });
+
+  // Pagination
+  const limitNum = parseInt(limit);
+  const pageNum = parseInt(page);
+  const startIndex = (pageNum - 1) * limitNum;
+  const endIndex = startIndex + limitNum;
+  const paginatedProducts = result.slice(startIndex, endIndex);
+
+  // Category ma'lumotlarini qo'shish
+  const productsWithCategory = paginatedProducts.map(product => ({
+    ...product,
+    categoryName: categories.find(c => c.id === product.category)?.name
+  }));
+
+  res.json({
+    success: true,
+    data: productsWithCategory,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total: result.length,
+      totalPages: Math.ceil(result.length / limitNum)
+    },
+    filters: { category, search, minPrice, maxPrice, sort }
+  });
+};
+
+const getProductById = (req, res) => {
+  const productId = parseInt(req.params.id);
+  const product = products.find(p => p.id === productId);
+
+  if (!product) {
+    return res.status(404).json({
+      success: false,
+      message: 'Product topilmadi'
+    });
+  }
+
+  // Category ma'lumoti qo'shish
+  const categoryData = categories.find(c => c.id === product.category);
+
+  res.json({
+    success: true,
+    data: {
+      ...product,
+      categoryName: categoryData?.name,
+      categoryDescription: categoryData?.description
+    }
+  });
+};
+
+const createProduct = (req, res) => {
+  const { name, description, price, category, stock, imageUrl } = req.body;
+
+  // Category mavjudligini tekshirish
+  const categoryExists = categories.find(c => c.id === parseInt(category));
+  if (!categoryExists) {
+    return res.status(400).json({
+      success: false,
+      message: 'Category topilmadi'
+    });
+  }
+
+  const newProduct = {
+    id: getNextProductId(),
+    name: name.trim(),
+    description: description.trim(),
+    price: parseFloat(price),
+    category: parseInt(category),
+    stock: parseInt(stock),
+    imageUrl: imageUrl || '/images/default-product.jpg',
+    createdAt: new Date().toISOString()
+  };
+
+  products.push(newProduct);
+
+  res.status(201).json({
+    success: true,
+    message: 'Product yaratildi',
+    data: newProduct
+  });
+};
+
+const updateProduct = (req, res) => {
+  const productId = parseInt(req.params.id);
+  const productIndex = products.findIndex(p => p.id === productId);
+
+  if (productIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: 'Product topilmadi'
+    });
+  }
+
+  // Category check (agar category yangilanayotgan bo'lsa)
+  if (req.body.category) {
+    const categoryExists = categories.find(c => c.id === parseInt(req.body.category));
+    if (!categoryExists) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category topilmadi'
+      });
+    }
+  }
+
+  products[productIndex] = {
+    ...products[productIndex],
+    ...req.body,
+    id: productId,
+    updatedAt: new Date().toISOString()
+  };
+
+  res.json({
+    success: true,
+    message: 'Product yangilandi',
+    data: products[productIndex]
+  });
+};
+
+const deleteProduct = (req, res) => {
+  const productId = parseInt(req.params.id);
+  const productIndex = products.findIndex(p => p.id === productId);
+
+  if (productIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: 'Product topilmadi'
+    });
+  }
+
+  const deletedProduct = products[productIndex];
+  products.splice(productIndex, 1);
+
+  res.json({
+    success: true,
+    message: 'Product o\'chirildi',
+    data: deletedProduct
+  });
+};
+
+module.exports = {
+  getAllProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct
+};
+```
+
+### 4. Routes setup:
+
+```javascript
+// routes/products.js
+const express = require('express');
+const router = express.Router();
+const { validateProduct } = require('../middleware/validation');
+const {
+  getAllProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct
+} = require('../controllers/productController');
+
+router.get('/', getAllProducts);
+router.get('/:id', getProductById);
+router.post('/', validateProduct, createProduct);
+router.put('/:id', validateProduct, updateProduct);
+router.delete('/:id', deleteProduct);
+
+module.exports = router;
+```
+
+### 5. Main app:
+
+```javascript
+// app.js
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const dotenv = require('dotenv');
+
+// Custom middleware
+const logger = require('./middleware/logger');
+
+// Routes
+const productRoutes = require('./routes/products');
+
+// Environment variables
+dotenv.config();
+
+const app = express();
+
+// Security
+app.use(helmet());
+
+// CORS
+app.use(cors());
+
+// Logging
+app.use(logger);
+
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Static files
+app.use('/images', express.static('public/images'));
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// API Documentation
+app.get('/', (req, res) => {
+  res.json({
+    name: 'E-commerce API',
+    version: '1.0.0',
+    description: 'Express.js bilan yaratilgan E-commerce API',
+    endpoints: {
+      'GET /api/products': 'Barcha productlar (search, filter, sort, pagination)',
+      'GET /api/products/:id': 'Bitta product',
+      'POST /api/products': 'Yangi product yaratish',
+      'PUT /api/products/:id': 'Product yangilash',
+      'DELETE /api/products/:id': 'Product o\'chirish',
+      'GET /health': 'Server health check'
+    },
+    queryParameters: {
+      search: 'Product nomi yoki description bo\'yicha qidirish',
+      category: 'Category ID bo\'yicha filter',
+      minPrice: 'Minimal narx',
+      maxPrice: 'Maksimal narx',
+      sort: 'name, price_asc, price_desc, newest',
+      limit: 'Sahifadagi elementlar soni (default: 10)',
+      page: 'Sahifa raqami (default: 1)'
+    },
+    sampleRequests: {
+      getAllProducts: 'GET /api/products?search=phone&category=1&sort=price_asc&limit=5',
+      createProduct: {
+        url: 'POST /api/products',
+        body: {
+          name: 'MacBook Pro',
+          description: 'Apple laptop with M3 chip',
+          price: 2500,
+          category: 1,
+          stock: 20,
+          imageUrl: '/images/macbook.jpg'
+        }
+      }
+    }
+  });
+});
+
+// API Routes
+app.use('/api/products', productRoutes);
+
+// 404 Handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route topilmadi',
+    path: req.originalUrl,
+    availableEndpoints: [
+      'GET /',
+      'GET /health',
+      'GET /api/products'
+    ]
+  });
+});
+
+// Global Error Handler
+app.use((error, req, res, next) => {
+  console.error('💥 Unhandled Error:', error);
+
+  res.status(error.status || 500).json({
+    success: false,
+    message: 'Server xatoligi',
+    error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ E-commerce API: http://localhost:${PORT}`);
+  console.log(`📚 Documentation: http://localhost:${PORT}/`);
+  console.log(`❤️ Health Check: http://localhost:${PORT}/health`);
+});
+
+module.exports = app;
+```
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **Express.js framework** - built-in HTTP'dan farqi
+✅ **Routing system** - parameters, query strings, wildcards
+✅ **Middleware concept** - pipeline processing
+✅ **Third-party middleware** - CORS, helmet, morgan
+✅ **Error handling** - centralized error management
+✅ **Migration** - built-in HTTP'dan Express'ga o'tkazish
+✅ **Real loyiha** - E-commerce API
+
+### 📊 E-commerce API xususiyatlari:
+
+✅ **RESTful Design** - REST principles
+✅ **Advanced filtering** - search, category, price range
+✅ **Sorting options** - name, price, newest
+✅ **Pagination** - page & limit support
+✅ **Validation** - input data validation
+✅ **Error handling** - professional error management
+✅ **Documentation** - API endpoint documentation
+✅ **Health monitoring** - server status endpoint
+
+### 😲 Code comparison:
+
+| Feature | Built-in HTTP | Express.js |
+|---------|---------------|------------|
+| Basic route | 15+ qator | 3 qator |
+| JSON parsing | 10+ qator | 1 qator middleware |
+| CORS setup | 5+ qator | 1 qator middleware |
+| Error handling | 20+ qator | 5 qator middleware |
+| Static files | 30+ qator | 1 qator middleware |
+
+### 🚀 Keyingi darsda:
+
+- **Express Middleware** - chuqur o'rganish
+- **Authentication & Authorization** - JWT, sessions
+- **File upload** - multer middleware
+- **Rate limiting** - API protection
+- **Advanced routing** - route groups, versioning
+
+### 📚 Mustaqil mashq:
+
+1. **User management API** - CRUD users
+2. **Category management** - categories CRUD
+3. **Order management** - order processing system
+
+---
+
+<Callout type="success" title="Express.js Master! 🎉">
+Siz endi Express.js framework'ni professional darajada o'rgandingiz! Built-in HTTP'dan Express'ga migration qildingiz va real e-commerce API yaratdingiz. Framework'lar qanday hayotingizni osonlashtiradi!
+</Callout>
+
+<Callout type="info" title="Web Development Speed! ⚡">
+Express.js bilan development speed 10x oshdi! Keyingi darslarda middleware'larni chuqur o'rganib, authentication, file upload va boshqa professional xususiyatlarni qo'shamiz.
+</Callout>
+
+**Keyingi dars**: [Express Middleware](/docs/nodejs/06-express-middleware)

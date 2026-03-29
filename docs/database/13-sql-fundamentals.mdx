@@ -1,0 +1,1288 @@
+---
+title: "SQL Fundamentals - Ma'lumotlar bilan Ishlash"
+description: "CRUD operatsiyalar, JOIN'lar, aggregate functions va complex SQL sho'rovlar bo'yicha to'liq qo'llanma"
+difficulty: "Intermediate"
+readTime: "50 daqiqa"
+tags: ["sql", "crud", "joins", "aggregation", "subqueries", "performance"]
+category: "database"
+---
+
+# SQL Fundamentals - Ma'lumotlar bilan Ishlash
+
+Salom! Bu darsda biz SQL (Structured Query Language) ning barcha asosiy qismlarini o'rganamiz. Oxirida siz murakkab ma'lumotlar bilan professional darajada ishlay olasiz.
+
+## Bu darsdan nimani o'rganasiz?
+
+- 🔍 **CRUD Operations** - Ma'lumot yaratish, o'qish, yangilash va o'chirish
+- 🔗 **JOIN'lar** - Jadvallarni bog'lash va complex relationships
+- 📊 **Aggregate Functions** - Hisoblar va statistika
+- 🎯 **Subqueries va CTE** - Nested queries va temporary tables
+- 🚀 **Performance Optimization** - Indexes va query optimization
+- 💡 **Real-world Examples** - E-commerce va Blog sistemasida amaliy misollar
+
+---
+
+## 1. Test Ma'lumotlar Bazasini Tayyorlash 🛠️
+
+Keling birgalikda test database yaratamiz:
+
+```sql
+-- Database va jadvallarni yaratish
+CREATE DATABASE ecommerce_test;
+\c ecommerce_test;
+
+-- 1. Kategoriyalar jadvali
+CREATE TABLE categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    parent_id INTEGER REFERENCES categories(id),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Foydalanuvchilar jadvali
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    birth_date DATE,
+    gender VARCHAR(10) CHECK (gender IN ('male', 'female', 'other')),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Mahsulotlar jadvali
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    description TEXT,
+    short_description TEXT,
+    price DECIMAL(10,2) NOT NULL CHECK (price >= 0),
+    sale_price DECIMAL(10,2) CHECK (sale_price >= 0),
+    cost_price DECIMAL(10,2) CHECK (cost_price >= 0),
+    sku VARCHAR(100) UNIQUE NOT NULL,
+    barcode VARCHAR(100),
+    weight DECIMAL(8,2),
+    length DECIMAL(8,2),
+    width DECIMAL(8,2),
+    height DECIMAL(8,2),
+    stock_quantity INTEGER DEFAULT 0 CHECK (stock_quantity >= 0),
+    low_stock_threshold INTEGER DEFAULT 5,
+    manage_stock BOOLEAN DEFAULT true,
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'out_of_stock')),
+    featured BOOLEAN DEFAULT false,
+    category_id INTEGER NOT NULL REFERENCES categories(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 4. Buyurtmalar jadvali
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    order_number VARCHAR(50) UNIQUE NOT NULL,
+    user_id INTEGER REFERENCES users(id),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded')),
+    subtotal DECIMAL(10,2) NOT NULL CHECK (subtotal >= 0),
+    tax_amount DECIMAL(10,2) DEFAULT 0 CHECK (tax_amount >= 0),
+    shipping_amount DECIMAL(10,2) DEFAULT 0 CHECK (shipping_amount >= 0),
+    discount_amount DECIMAL(10,2) DEFAULT 0 CHECK (discount_amount >= 0),
+    total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
+    currency VARCHAR(3) DEFAULT 'USD',
+    shipping_address JSONB,
+    billing_address JSONB,
+    notes TEXT,
+    ordered_at TIMESTAMPTZ DEFAULT NOW(),
+    shipped_at TIMESTAMPTZ,
+    delivered_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. Buyurtma elementi jadvali
+CREATE TABLE order_items (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    product_id INTEGER NOT NULL REFERENCES products(id),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    unit_price DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),
+    total_price DECIMAL(10,2) NOT NULL CHECK (total_price >= 0),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. Mahsulot sharhlari
+CREATE TABLE product_reviews (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    title VARCHAR(255),
+    comment TEXT,
+    is_verified_purchase BOOLEAN DEFAULT false,
+    is_approved BOOLEAN DEFAULT false,
+    helpful_count INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index'larni yaratish (performance uchun)
+CREATE INDEX idx_products_category_id ON products(category_id);
+CREATE INDEX idx_products_status ON products(status);
+CREATE INDEX idx_products_price ON products(price);
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_created_at ON orders(created_at);
+CREATE INDEX idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX idx_order_items_product_id ON order_items(product_id);
+CREATE INDEX idx_reviews_product_id ON product_reviews(product_id);
+```
+
+### Test Ma'lumotlarni Kiritish
+
+```sql
+-- Kategoriyalarni qo'shish
+INSERT INTO categories (name, slug, description) VALUES
+('Electronics', 'electronics', 'Electronic devices and accessories'),
+('Books', 'books', 'Physical and digital books'),
+('Clothing', 'clothing', 'Mens and womens clothing'),
+('Home & Garden', 'home-garden', 'Home improvement and gardening'),
+('Sports', 'sports', 'Sports equipment and accessories'),
+('Smartphones', 'smartphones', 'Mobile phones and accessories'),
+('Laptops', 'laptops', 'Laptops and computer accessories');
+
+-- Parent-child categories
+UPDATE categories SET parent_id = 1 WHERE slug IN ('smartphones', 'laptops');
+
+-- Foydalanuvchilarni qo'shish
+INSERT INTO users (username, email, first_name, last_name, phone, birth_date, gender) VALUES
+('john_doe', 'john@example.com', 'John', 'Doe', '+1234567890', '1990-05-15', 'male'),
+('jane_smith', 'jane@example.com', 'Jane', 'Smith', '+1234567891', '1985-09-22', 'female'),
+('alice_brown', 'alice@example.com', 'Alice', 'Brown', '+1234567892', '1992-11-08', 'female'),
+('bob_wilson', 'bob@example.com', 'Bob', 'Wilson', '+1234567893', '1988-03-17', 'male'),
+('carol_davis', 'carol@example.com', 'Carol', 'Davis', '+1234567894', '1995-07-30', 'female');
+
+-- Mahsulotlarni qo'shish
+INSERT INTO products (name, slug, description, price, sale_price, cost_price, sku, stock_quantity, category_id, featured) VALUES
+('iPhone 14 Pro Max', 'iphone-14-pro-max', 'Latest iPhone with Pro camera system', 1099.00, 999.00, 800.00, 'APPLE-IPH14PM', 50, 6, true),
+('Samsung Galaxy S23', 'samsung-galaxy-s23', 'Android flagship smartphone', 899.00, null, 650.00, 'SAMSUNG-S23', 30, 6, true),
+('MacBook Pro 16"', 'macbook-pro-16', 'Professional laptop for developers', 2399.00, 2199.00, 1800.00, 'APPLE-MBP16', 15, 7, true),
+('Dell XPS 13', 'dell-xps-13', 'Ultrabook for business', 1299.00, null, 900.00, 'DELL-XPS13', 25, 7, false),
+('The Great Gatsby', 'great-gatsby', 'Classic American novel', 12.99, null, 5.00, 'BOOK-GATSBY', 100, 2, false),
+('Nike Air Max 90', 'nike-air-max-90', 'Classic running shoes', 129.99, 99.99, 60.00, 'NIKE-AIR90', 75, 5, true),
+('Levi\'s 501 Jeans', 'levis-501-jeans', 'Classic straight fit jeans', 79.99, null, 40.00, 'LEVIS-501', 120, 3, false),
+('Wireless Headphones', 'wireless-headphones', 'Bluetooth noise-cancelling headphones', 199.99, 149.99, 80.00, 'AUDIO-WH100', 40, 1, true);
+
+-- Buyurtmalarni yaratish
+INSERT INTO orders (order_number, user_id, status, subtotal, tax_amount, shipping_amount, total_amount, shipping_address) VALUES
+('ORD-001', 1, 'delivered', 1098.00, 87.84, 0.00, 1185.84, '{"street": "123 Main St", "city": "New York", "zip": "10001"}'),
+('ORD-002', 2, 'shipped', 229.98, 18.40, 15.99, 264.37, '{"street": "456 Oak Ave", "city": "Los Angeles", "zip": "90210"}'),
+('ORD-003', 3, 'processing', 2199.00, 175.92, 0.00, 2374.92, '{"street": "789 Pine St", "city": "Chicago", "zip": "60601"}'),
+('ORD-004', 1, 'pending', 139.98, 11.20, 10.99, 162.17, '{"street": "123 Main St", "city": "New York", "zip": "10001"}'),
+('ORD-005', 4, 'cancelled', 79.99, 6.40, 8.99, 95.38, '{"street": "321 Elm St", "city": "Miami", "zip": "33101"}');
+
+-- Buyurtma elementlarini qo'shish
+INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
+(1, 1, 1, 999.00, 999.00),
+(1, 8, 1, 149.99, 149.99),
+(2, 6, 1, 99.99, 99.99),
+(2, 5, 10, 12.99, 129.90),
+(3, 3, 1, 2199.00, 2199.00),
+(4, 6, 1, 99.99, 99.99),
+(4, 7, 1, 79.99, 79.99),
+(5, 7, 1, 79.99, 79.99);
+
+-- Mahsulot sharhlarini qo'shish
+INSERT INTO product_reviews (product_id, user_id, rating, title, comment, is_verified_purchase, is_approved) VALUES
+(1, 1, 5, 'Amazing phone!', 'Camera quality is outstanding. Highly recommended.', true, true),
+(1, 2, 4, 'Great but expensive', 'Love the features but price is high', false, true),
+(3, 3, 5, 'Perfect for development', 'Fast performance, great display for coding', true, true),
+(6, 1, 4, 'Comfortable shoes', 'Perfect for running, good quality', true, true),
+(8, 2, 3, 'Average headphones', 'Sound quality is okay, not the best', true, true);
+```
+
+---
+
+## 2. CRUD Operations - Ma'lumot Boshqaruvi 🔍
+
+### SELECT - Ma'lumotni O'qish
+
+```sql
+-- 1. Oddiy SELECT
+SELECT * FROM users;
+
+SELECT id, username, email, first_name || ' ' || last_name as full_name
+FROM users
+WHERE is_active = true;
+
+-- 2. WHERE bilan filterlash
+SELECT name, price, stock_quantity
+FROM products
+WHERE price BETWEEN 100 AND 500
+  AND stock_quantity > 20
+  AND status = 'active';
+
+-- 3. LIKE operatori bilan qidirish
+SELECT name, description
+FROM products
+WHERE name ILIKE '%iphone%'
+   OR description ILIKE '%smartphone%';
+
+-- 4. IN va NOT IN operatorlari
+SELECT name, price, category_id
+FROM products
+WHERE category_id IN (1, 6, 7)  -- Electronics, Smartphones, Laptops
+  AND status NOT IN ('inactive', 'out_of_stock');
+
+-- 5. NULL qiymatlar bilan ishlash
+SELECT name, price, sale_price,
+       CASE
+         WHEN sale_price IS NOT NULL THEN sale_price
+         ELSE price
+       END as effective_price
+FROM products
+WHERE sale_price IS NOT NULL;  -- Chegirmadagi mahsulotlar
+
+-- 6. ORDER BY va LIMIT
+SELECT name, price, stock_quantity
+FROM products
+WHERE status = 'active'
+ORDER BY price DESC, stock_quantity ASC
+LIMIT 10 OFFSET 0;  -- Birinchi 10 ta
+
+-- 7. DISTINCT - takrorlanmaydigan qiymatlar
+SELECT DISTINCT category_id, status
+FROM products
+ORDER BY category_id;
+
+-- 8. Complex filtering
+SELECT p.name, p.price, c.name as category_name
+FROM products p
+JOIN categories c ON p.category_id = c.id
+WHERE p.price > (
+    SELECT AVG(price) FROM products WHERE status = 'active'
+)
+ORDER BY p.price DESC;
+```
+
+### INSERT - Ma'lumot Qo'shish
+
+```sql
+-- 1. Oddiy INSERT
+INSERT INTO categories (name, slug, description)
+VALUES ('Video Games', 'video-games', 'Gaming consoles and games');
+
+-- 2. Ko'p qatorli INSERT
+INSERT INTO products (name, slug, price, cost_price, sku, stock_quantity, category_id) VALUES
+('PlayStation 5', 'playstation-5', 499.99, 400.00, 'SONY-PS5', 20, 9),
+('Xbox Series X', 'xbox-series-x', 499.99, 400.00, 'MS-XBSX', 15, 9),
+('Nintendo Switch', 'nintendo-switch', 299.99, 220.00, 'NINTENDO-SW', 30, 9);
+
+-- 3. INSERT ... RETURNING
+INSERT INTO users (username, email, first_name, last_name, gender)
+VALUES ('gaming_pro', 'gamer@example.com', 'Alex', 'Johnson', 'male')
+RETURNING id, username, created_at;
+
+-- 4. INSERT ... ON CONFLICT (UPSERT)
+INSERT INTO categories (name, slug, description)
+VALUES ('Electronics', 'electronics', 'Updated electronics description')
+ON CONFLICT (slug)
+DO UPDATE SET
+    description = EXCLUDED.description,
+    updated_at = NOW();
+
+-- 5. INSERT ... SELECT (ma'lumotni ko'chirish)
+-- Archived products jadvalini yaratish
+CREATE TABLE archived_products AS
+SELECT * FROM products WHERE 1=0;  -- Struktura'ni ko'chirish, ma'lumot emas
+
+INSERT INTO archived_products
+SELECT * FROM products
+WHERE status = 'inactive'
+  AND updated_at < NOW() - INTERVAL '6 months';
+
+-- 6. Bulk INSERT with error handling
+DO $$
+DECLARE
+    product_record RECORD;
+BEGIN
+    FOR product_record IN
+        SELECT unnest(ARRAY['Product 1', 'Product 2', 'Product 3']) as name,
+               unnest(ARRAY['prod-1', 'prod-2', 'prod-3']) as slug,
+               unnest(ARRAY[29.99, 39.99, 49.99]) as price
+    LOOP
+        BEGIN
+            INSERT INTO products (name, slug, price, cost_price, sku, stock_quantity, category_id)
+            VALUES (
+                product_record.name,
+                product_record.slug,
+                product_record.price,
+                product_record.price * 0.7,
+                'BULK-' || upper(product_record.slug),
+                10,
+                1
+            );
+        EXCEPTION WHEN unique_violation THEN
+            -- Ignore duplicate errors
+            RAISE NOTICE 'Product % already exists', product_record.slug;
+        END;
+    END LOOP;
+END $$;
+```
+
+### UPDATE - Ma'lumotni Yangilash
+
+```sql
+-- 1. Oddiy UPDATE
+UPDATE products
+SET price = 999.99, updated_at = NOW()
+WHERE id = 1;
+
+-- 2. Shartli UPDATE
+UPDATE products
+SET status = 'out_of_stock'
+WHERE stock_quantity = 0;
+
+-- 3. Mathematical operations
+UPDATE products
+SET price = price * 1.1  -- 10% narx oshirish
+WHERE category_id = 1
+  AND status = 'active';
+
+-- 4. JOIN bilan UPDATE
+UPDATE products p
+SET low_stock_threshold = 10
+FROM categories c
+WHERE p.category_id = c.id
+  AND c.name = 'Electronics';
+
+-- 5. Subquery bilan UPDATE
+UPDATE products
+SET featured = true
+WHERE id IN (
+    SELECT DISTINCT product_id
+    FROM product_reviews
+    WHERE rating >= 4
+      AND is_approved = true
+    GROUP BY product_id
+    HAVING COUNT(*) >= 3
+);
+
+-- 6. CASE statement bilan conditional update
+UPDATE products
+SET status = CASE
+    WHEN stock_quantity = 0 THEN 'out_of_stock'
+    WHEN stock_quantity <= low_stock_threshold THEN 'low_stock'
+    ELSE 'active'
+END,
+updated_at = NOW()
+WHERE status != 'inactive';
+
+-- 7. JSON field yangilash
+UPDATE orders
+SET shipping_address = shipping_address || '{"delivery_notes": "Leave at door"}'
+WHERE id = 1;
+
+-- 8. UPDATE ... RETURNING
+UPDATE products
+SET sale_price = price * 0.8  -- 20% chegirma
+WHERE featured = true
+  AND sale_price IS NULL
+RETURNING id, name, price, sale_price;
+```
+
+### DELETE - Ma'lumotni O'chirish
+
+```sql
+-- 1. Oddiy DELETE
+DELETE FROM product_reviews
+WHERE rating < 2 AND is_approved = false;
+
+-- 2. Shartli DELETE
+DELETE FROM orders
+WHERE status = 'cancelled'
+  AND created_at < NOW() - INTERVAL '1 year';
+
+-- 3. JOIN bilan DELETE
+DELETE FROM products p
+USING categories c
+WHERE p.category_id = c.id
+  AND c.name = 'Discontinued Category'
+  AND p.status = 'inactive';
+
+-- 4. Subquery bilan DELETE
+DELETE FROM users
+WHERE id NOT IN (
+    SELECT DISTINCT user_id
+    FROM orders
+    WHERE user_id IS NOT NULL
+      AND created_at > NOW() - INTERVAL '2 years'
+);
+
+-- 5. TRUNCATE (barcha ma'lumotni o'chirish)
+TRUNCATE TABLE archived_products RESTART IDENTITY CASCADE;
+
+-- 6. Soft DELETE (ma'lumotni o'chirmasdan inactive qilish)
+-- Soft delete uchun yangi column qo'shish
+ALTER TABLE products ADD COLUMN deleted_at TIMESTAMPTZ;
+
+-- Soft delete function
+CREATE OR REPLACE FUNCTION soft_delete_product(product_id INTEGER)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE products
+    SET deleted_at = NOW(),
+        status = 'inactive',
+        updated_at = NOW()
+    WHERE id = product_id
+      AND deleted_at IS NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Ishlatish
+SELECT soft_delete_product(10);
+
+-- 7. CASCADE DELETE misollari
+-- Buyurtmani va barcha items'larni o'chirish
+DELETE FROM orders WHERE id = 5;  -- order_items avtomatik o'chiriladi (CASCADE)
+```
+
+---
+
+## 3. JOIN Operations - Jadvallarni Bog'lash 🔗
+
+### INNER JOIN
+
+```sql
+-- 1. Mahsulotlar va ularning kategoriyalari
+SELECT p.name as product_name,
+       p.price,
+       c.name as category_name,
+       p.stock_quantity
+FROM products p
+INNER JOIN categories c ON p.category_id = c.id
+WHERE p.status = 'active'
+ORDER BY c.name, p.name;
+
+-- 2. Foydalanuvchilar va ularning buyurtmalari
+SELECT u.first_name || ' ' || u.last_name as customer_name,
+       u.email,
+       o.order_number,
+       o.total_amount,
+       o.status,
+       o.ordered_at
+FROM users u
+INNER JOIN orders o ON u.id = o.user_id
+WHERE o.status IN ('delivered', 'shipped')
+ORDER BY o.ordered_at DESC;
+
+-- 3. Complex INNER JOIN (3+ jadval)
+SELECT u.username,
+       o.order_number,
+       p.name as product_name,
+       oi.quantity,
+       oi.unit_price,
+       oi.total_price
+FROM users u
+INNER JOIN orders o ON u.id = o.user_id
+INNER JOIN order_items oi ON o.id = oi.order_id
+INNER JOIN products p ON oi.product_id = p.id
+WHERE o.status = 'delivered'
+ORDER BY u.username, o.ordered_at;
+```
+
+### LEFT JOIN (LEFT OUTER JOIN)
+
+```sql
+-- 1. Barcha mahsulotlar va ularning sharhlari (sharhi bo'lmagan ham)
+SELECT p.name,
+       p.price,
+       pr.rating,
+       pr.title,
+       pr.comment,
+       u.username as reviewer
+FROM products p
+LEFT JOIN product_reviews pr ON p.id = pr.product_id AND pr.is_approved = true
+LEFT JOIN users u ON pr.user_id = u.id
+WHERE p.status = 'active'
+ORDER BY p.name, pr.created_at DESC;
+
+-- 2. Kategoriyalar va ularning mahsulotlari soni
+SELECT c.name as category_name,
+       COUNT(p.id) as products_count,
+       COUNT(CASE WHEN p.status = 'active' THEN 1 END) as active_count,
+       AVG(p.price) as average_price
+FROM categories c
+LEFT JOIN products p ON c.id = p.category_id
+WHERE c.is_active = true
+GROUP BY c.id, c.name
+ORDER BY products_count DESC;
+
+-- 3. Foydalanuvchilar va ularning buyurtmalari soni
+SELECT u.username,
+       u.email,
+       COUNT(o.id) as total_orders,
+       SUM(o.total_amount) as total_spent,
+       MAX(o.ordered_at) as last_order_date
+FROM users u
+LEFT JOIN orders o ON u.id = o.user_id AND o.status != 'cancelled'
+GROUP BY u.id, u.username, u.email
+HAVING COUNT(o.id) > 0
+ORDER BY total_spent DESC NULLS LAST;
+```
+
+### RIGHT JOIN va FULL OUTER JOIN
+
+```sql
+-- RIGHT JOIN (kam ishlatiladi)
+SELECT p.name,
+       c.name as category_name
+FROM products p
+RIGHT JOIN categories c ON p.category_id = c.id
+WHERE c.is_active = true;
+
+-- FULL OUTER JOIN - barcha ma'lumotlar
+SELECT p.name as product_name,
+       c.name as category_name,
+       CASE
+         WHEN p.id IS NULL THEN 'No products in category'
+         WHEN c.id IS NULL THEN 'Product without category'
+         ELSE 'Matched'
+       END as match_status
+FROM products p
+FULL OUTER JOIN categories c ON p.category_id = c.id;
+```
+
+### Self JOIN
+
+```sql
+-- Parent-child kategoriyalar
+SELECT child.name as child_category,
+       parent.name as parent_category
+FROM categories child
+LEFT JOIN categories parent ON child.parent_id = parent.id
+WHERE child.parent_id IS NOT NULL;
+
+-- Bir xil kategoriyada bir xil narxdagi mahsulotlar
+SELECT p1.name as product1,
+       p2.name as product2,
+       p1.price,
+       c.name as category_name
+FROM products p1
+JOIN products p2 ON p1.category_id = p2.category_id
+                AND p1.price = p2.price
+                AND p1.id < p2.id  -- Dublicates oldini olish
+JOIN categories c ON p1.category_id = c.id
+WHERE p1.status = 'active' AND p2.status = 'active';
+```
+
+---
+
+## 4. Aggregate Functions va Grouping 📊
+
+### Basic Aggregate Functions
+
+```sql
+-- 1. COUNT, SUM, AVG, MIN, MAX
+SELECT COUNT(*) as total_products,
+       COUNT(CASE WHEN status = 'active' THEN 1 END) as active_products,
+       SUM(stock_quantity) as total_stock,
+       AVG(price) as average_price,
+       MIN(price) as cheapest_price,
+       MAX(price) as most_expensive_price,
+       STDDEV(price) as price_deviation
+FROM products;
+
+-- 2. Kategoriya bo'yicha statistika
+SELECT c.name as category_name,
+       COUNT(p.id) as products_count,
+       SUM(p.stock_quantity) as total_stock,
+       ROUND(AVG(p.price), 2) as avg_price,
+       MIN(p.price) as min_price,
+       MAX(p.price) as max_price
+FROM categories c
+LEFT JOIN products p ON c.id = p.category_id AND p.status = 'active'
+GROUP BY c.id, c.name
+HAVING COUNT(p.id) > 0
+ORDER BY avg_price DESC;
+
+-- 3. Monthly sales statistikasi
+SELECT DATE_TRUNC('month', o.ordered_at) as month,
+       COUNT(o.id) as total_orders,
+       COUNT(DISTINCT o.user_id) as unique_customers,
+       SUM(o.total_amount) as revenue,
+       ROUND(AVG(o.total_amount), 2) as avg_order_value
+FROM orders o
+WHERE o.status IN ('delivered', 'shipped')
+  AND o.ordered_at >= NOW() - INTERVAL '1 year'
+GROUP BY DATE_TRUNC('month', o.ordered_at)
+ORDER BY month DESC;
+
+-- 4. Top selling products
+SELECT p.name,
+       SUM(oi.quantity) as total_sold,
+       SUM(oi.total_price) as total_revenue,
+       COUNT(DISTINCT oi.order_id) as orders_count,
+       ROUND(AVG(oi.unit_price), 2) as avg_selling_price
+FROM products p
+JOIN order_items oi ON p.id = oi.product_id
+JOIN orders o ON oi.order_id = o.id
+WHERE o.status IN ('delivered', 'shipped')
+GROUP BY p.id, p.name
+HAVING SUM(oi.quantity) > 5
+ORDER BY total_revenue DESC
+LIMIT 10;
+```
+
+### Window Functions
+
+```sql
+-- 1. ROW_NUMBER va RANK
+SELECT p.name,
+       p.price,
+       c.name as category_name,
+       ROW_NUMBER() OVER (PARTITION BY p.category_id ORDER BY p.price DESC) as price_rank,
+       RANK() OVER (ORDER BY p.price DESC) as overall_rank,
+       DENSE_RANK() OVER (PARTITION BY p.category_id ORDER BY p.price DESC) as dense_rank
+FROM products p
+JOIN categories c ON p.category_id = c.id
+WHERE p.status = 'active';
+
+-- 2. Running totals va percentages
+SELECT o.ordered_at,
+       o.total_amount,
+       SUM(o.total_amount) OVER (ORDER BY o.ordered_at) as running_total,
+       ROUND(
+         o.total_amount * 100.0 / SUM(o.total_amount) OVER (), 2
+       ) as percentage_of_total
+FROM orders o
+WHERE o.status IN ('delivered', 'shipped')
+ORDER BY o.ordered_at;
+
+-- 3. LAG va LEAD (oldingi va keyingi qiymatlar)
+SELECT o.ordered_at,
+       o.total_amount,
+       LAG(o.total_amount) OVER (ORDER BY o.ordered_at) as prev_order_amount,
+       LEAD(o.total_amount) OVER (ORDER BY o.ordered_at) as next_order_amount,
+       o.total_amount - LAG(o.total_amount) OVER (ORDER BY o.ordered_at) as diff_from_prev
+FROM orders o
+WHERE o.user_id = 1 AND o.status IN ('delivered', 'shipped')
+ORDER BY o.ordered_at;
+
+-- 4. NTILE (quartiles)
+SELECT p.name,
+       p.price,
+       NTILE(4) OVER (ORDER BY p.price) as price_quartile,
+       CASE NTILE(4) OVER (ORDER BY p.price)
+         WHEN 1 THEN 'Budget'
+         WHEN 2 THEN 'Mid-Range'
+         WHEN 3 THEN 'Premium'
+         WHEN 4 THEN 'Luxury'
+       END as price_category
+FROM products p
+WHERE p.status = 'active'
+ORDER BY p.price;
+```
+
+### HAVING va Complex Grouping
+
+```sql
+-- 1. HAVING bilan filterlash
+SELECT u.first_name || ' ' || u.last_name as customer_name,
+       COUNT(o.id) as total_orders,
+       SUM(o.total_amount) as total_spent,
+       ROUND(AVG(o.total_amount), 2) as avg_order_value
+FROM users u
+JOIN orders o ON u.id = o.user_id
+WHERE o.status IN ('delivered', 'shipped')
+GROUP BY u.id, u.first_name, u.last_name
+HAVING COUNT(o.id) >= 2 AND SUM(o.total_amount) > 500
+ORDER BY total_spent DESC;
+
+-- 2. ROLLUP va CUBE (summary statistics)
+SELECT c.name as category,
+       p.status,
+       COUNT(p.id) as products_count,
+       SUM(p.stock_quantity) as total_stock
+FROM categories c
+JOIN products p ON c.id = p.category_id
+GROUP BY ROLLUP(c.name, p.status)
+ORDER BY c.name, p.status;
+
+-- 3. GROUPING SETS
+SELECT c.name as category_name,
+       EXTRACT(YEAR FROM o.ordered_at) as year,
+       SUM(oi.total_price) as total_sales
+FROM categories c
+JOIN products p ON c.id = p.category_id
+JOIN order_items oi ON p.id = oi.product_id
+JOIN orders o ON oi.order_id = o.id
+WHERE o.status IN ('delivered', 'shipped')
+GROUP BY GROUPING SETS (
+    (c.name),  -- Per category
+    (EXTRACT(YEAR FROM o.ordered_at)),  -- Per year
+    ()  -- Grand total
+)
+ORDER BY category_name, year;
+```
+
+---
+
+## 5. Subqueries va Common Table Expressions (CTE) 🎯
+
+### Scalar Subqueries
+
+```sql
+-- 1. Subquery in SELECT
+SELECT p.name,
+       p.price,
+       (SELECT AVG(price) FROM products WHERE status = 'active') as avg_price,
+       p.price - (SELECT AVG(price) FROM products WHERE status = 'active') as price_diff
+FROM products p
+WHERE p.status = 'active'
+ORDER BY price_diff DESC;
+
+-- 2. Correlated subqueries
+SELECT p.name,
+       p.price,
+       c.name as category_name,
+       (SELECT COUNT(*)
+        FROM product_reviews pr
+        WHERE pr.product_id = p.id AND pr.is_approved = true) as review_count,
+       (SELECT AVG(rating)
+        FROM product_reviews pr
+        WHERE pr.product_id = p.id AND pr.is_approved = true) as avg_rating
+FROM products p
+JOIN categories c ON p.category_id = c.id
+WHERE p.status = 'active'
+ORDER BY avg_rating DESC NULLS LAST;
+```
+
+### EXISTS va NOT EXISTS
+
+```sql
+-- 1. Products with reviews
+SELECT p.name, p.price
+FROM products p
+WHERE EXISTS (
+    SELECT 1 FROM product_reviews pr
+    WHERE pr.product_id = p.id AND pr.is_approved = true
+)
+AND p.status = 'active'
+ORDER BY p.price DESC;
+
+-- 2. Users who never placed an order
+SELECT u.username, u.email, u.created_at
+FROM users u
+WHERE NOT EXISTS (
+    SELECT 1 FROM orders o
+    WHERE o.user_id = u.id
+)
+AND u.is_active = true
+ORDER BY u.created_at;
+
+-- 3. Products never sold
+SELECT p.name, p.price, p.stock_quantity
+FROM products p
+WHERE NOT EXISTS (
+    SELECT 1 FROM order_items oi
+    WHERE oi.product_id = p.id
+)
+AND p.status = 'active'
+ORDER BY p.created_at DESC;
+```
+
+### Common Table Expressions (CTE)
+
+```sql
+-- 1. Simple CTE
+WITH expensive_products AS (
+    SELECT id, name, price, category_id
+    FROM products
+    WHERE price > 500 AND status = 'active'
+),
+category_stats AS (
+    SELECT category_id,
+           COUNT(*) as product_count,
+           AVG(price) as avg_price
+    FROM expensive_products
+    GROUP BY category_id
+)
+SELECT c.name as category_name,
+       cs.product_count,
+       ROUND(cs.avg_price, 2) as avg_price,
+       STRING_AGG(ep.name, ', ') as products
+FROM category_stats cs
+JOIN categories c ON cs.category_id = c.id
+JOIN expensive_products ep ON cs.category_id = ep.category_id
+GROUP BY c.id, c.name, cs.product_count, cs.avg_price
+ORDER BY cs.avg_price DESC;
+
+-- 2. Recursive CTE (Category hierarchy)
+WITH RECURSIVE category_hierarchy AS (
+    -- Base case: parent categories
+    SELECT id, name, parent_id, 0 as level, name as path
+    FROM categories
+    WHERE parent_id IS NULL
+
+    UNION ALL
+
+    -- Recursive case: child categories
+    SELECT c.id, c.name, c.parent_id, ch.level + 1,
+           ch.path || ' > ' || c.name
+    FROM categories c
+    JOIN category_hierarchy ch ON c.parent_id = ch.id
+)
+SELECT level, path, name
+FROM category_hierarchy
+ORDER BY path;
+
+-- 3. Multiple CTEs bilan complex analytics
+WITH monthly_sales AS (
+    SELECT DATE_TRUNC('month', o.ordered_at) as month,
+           SUM(o.total_amount) as revenue
+    FROM orders o
+    WHERE o.status IN ('delivered', 'shipped')
+      AND o.ordered_at >= NOW() - INTERVAL '12 months'
+    GROUP BY DATE_TRUNC('month', o.ordered_at)
+),
+sales_with_growth AS (
+    SELECT month,
+           revenue,
+           LAG(revenue) OVER (ORDER BY month) as prev_revenue,
+           ROUND(
+             ((revenue - LAG(revenue) OVER (ORDER BY month)) /
+              LAG(revenue) OVER (ORDER BY month) * 100), 2
+           ) as growth_rate
+    FROM monthly_sales
+)
+SELECT month,
+       revenue,
+       prev_revenue,
+       growth_rate,
+       CASE
+         WHEN growth_rate > 10 THEN 'High Growth'
+         WHEN growth_rate > 0 THEN 'Positive Growth'
+         WHEN growth_rate > -10 THEN 'Slight Decline'
+         ELSE 'Significant Decline'
+       END as performance
+FROM sales_with_growth
+ORDER BY month;
+```
+
+---
+
+## 6. Advanced Queries va Performance Optimization 🚀
+
+### EXPLAIN va Query Analysis
+
+```sql
+-- 1. Query performance analysis
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
+SELECT p.name, c.name as category, COUNT(pr.id) as review_count
+FROM products p
+JOIN categories c ON p.category_id = c.id
+LEFT JOIN product_reviews pr ON p.id = pr.product_id AND pr.is_approved = true
+WHERE p.status = 'active' AND p.price > 100
+GROUP BY p.id, p.name, c.name
+HAVING COUNT(pr.id) > 2
+ORDER BY review_count DESC
+LIMIT 20;
+
+-- 2. Index usage analysis
+EXPLAIN (ANALYZE)
+SELECT * FROM products
+WHERE category_id = 6 AND price BETWEEN 500 AND 1500;
+
+-- Agar index bo'lmasa, yaratamiz
+CREATE INDEX idx_products_category_price ON products(category_id, price)
+WHERE status = 'active';
+```
+
+### Index Management
+
+```sql
+-- 1. Composite indexes
+CREATE INDEX idx_orders_user_status_date ON orders(user_id, status, ordered_at)
+WHERE status IN ('delivered', 'shipped');
+
+-- 2. Partial indexes
+CREATE INDEX idx_active_products_featured ON products(featured, price)
+WHERE status = 'active';
+
+-- 3. Functional indexes
+CREATE INDEX idx_products_name_lower ON products(LOWER(name));
+CREATE INDEX idx_orders_month ON orders(DATE_TRUNC('month', ordered_at));
+
+-- 4. Unique indexes
+CREATE UNIQUE INDEX idx_products_sku_active ON products(sku)
+WHERE status != 'inactive';
+
+-- 5. Index monitoring
+SELECT schemaname, tablename, indexname, idx_scan, idx_tup_read, idx_tup_fetch
+FROM pg_stat_user_indexes
+ORDER BY idx_scan DESC;
+
+-- Ishlatilmayotgan indexlar
+SELECT schemaname, tablename, indexname, idx_scan
+FROM pg_stat_user_indexes
+WHERE idx_scan = 0 AND schemaname = 'public';
+```
+
+### Query Optimization Techniques
+
+```sql
+-- 1. LIMIT bilan pagination (efficient)
+-- ❌ NOTO'G'RI: OFFSET ishlatish
+SELECT * FROM products
+ORDER BY created_at DESC
+LIMIT 20 OFFSET 1000;  -- Sekin!
+
+-- ✅ TO'G'RI: Cursor-based pagination
+SELECT * FROM products
+WHERE created_at < '2024-01-15 10:00:00'
+ORDER BY created_at DESC
+LIMIT 20;
+
+-- 2. EXISTS vs IN performance
+-- EXISTS ko'pincha tezroq
+SELECT u.username
+FROM users u
+WHERE EXISTS (
+    SELECT 1 FROM orders o
+    WHERE o.user_id = u.id AND o.total_amount > 1000
+);
+
+-- 3. JOINs vs Subqueries
+-- JOIN ko'pincha tezroq
+SELECT DISTINCT u.username
+FROM users u
+JOIN orders o ON u.id = o.user_id
+WHERE o.total_amount > 1000;
+
+-- 4. Prepared statements (Node.js da)
+```
+
+### Performance Testing
+
+```javascript
+// Node.js performance testing
+const pool = require('../config/database');
+
+class QueryPerformance {
+  static async testQuery(name, query, params = []) {
+    const start = Date.now();
+    try {
+      const result = await pool.query(query, params);
+      const duration = Date.now() - start;
+
+      console.log(`${name}: ${duration}ms (${result.rows.length} rows)`);
+      return { duration, rows: result.rows.length };
+    } catch (error) {
+      console.error(`${name} failed:`, error.message);
+      throw error;
+    }
+  }
+
+  static async compareQueries() {
+    // Test 1: Simple vs optimized product search
+    await this.testQuery(
+      'Unoptimized search',
+      `SELECT p.*, c.name as category_name
+       FROM products p, categories c
+       WHERE p.category_id = c.id
+         AND p.name ILIKE '%phone%'`
+    );
+
+    await this.testQuery(
+      'Optimized search',
+      `SELECT p.*, c.name as category_name
+       FROM products p
+       JOIN categories c ON p.category_id = c.id
+       WHERE p.status = 'active'
+         AND p.name ILIKE $1`,
+      ['%phone%']
+    );
+
+    // Test 2: Subquery vs JOIN
+    await this.testQuery(
+      'Subquery approach',
+      `SELECT * FROM products p
+       WHERE p.id IN (
+         SELECT DISTINCT oi.product_id
+         FROM order_items oi
+         JOIN orders o ON oi.order_id = o.id
+         WHERE o.status = 'delivered'
+       )`
+    );
+
+    await this.testQuery(
+      'JOIN approach',
+      `SELECT DISTINCT p.*
+       FROM products p
+       JOIN order_items oi ON p.id = oi.product_id
+       JOIN orders o ON oi.order_id = o.id
+       WHERE o.status = 'delivered'`
+    );
+  }
+}
+
+// Test ishga tushirish
+QueryPerformance.compareQueries();
+```
+
+---
+
+## 7. Real-world Complex Queries 💡
+
+### E-commerce Analytics Dashboard
+
+```sql
+-- 1. Sales summary dashboard
+WITH sales_summary AS (
+    SELECT
+        COUNT(DISTINCT o.id) as total_orders,
+        COUNT(DISTINCT o.user_id) as unique_customers,
+        SUM(o.total_amount) as total_revenue,
+        AVG(o.total_amount) as avg_order_value
+    FROM orders o
+    WHERE o.status IN ('delivered', 'shipped')
+      AND o.ordered_at >= CURRENT_DATE - INTERVAL '30 days'
+),
+product_performance AS (
+    SELECT
+        p.name,
+        SUM(oi.quantity) as units_sold,
+        SUM(oi.total_price) as revenue,
+        COUNT(DISTINCT oi.order_id) as orders_count
+    FROM products p
+    JOIN order_items oi ON p.id = oi.product_id
+    JOIN orders o ON oi.order_id = o.id
+    WHERE o.status IN ('delivered', 'shipped')
+      AND o.ordered_at >= CURRENT_DATE - INTERVAL '30 days'
+    GROUP BY p.id, p.name
+    ORDER BY revenue DESC
+    LIMIT 5
+),
+customer_segments AS (
+    SELECT
+        CASE
+            WHEN total_spent > 1000 THEN 'VIP'
+            WHEN total_spent > 500 THEN 'Premium'
+            WHEN total_spent > 100 THEN 'Regular'
+            ELSE 'New'
+        END as segment,
+        COUNT(*) as customer_count,
+        AVG(total_spent) as avg_spent_per_customer
+    FROM (
+        SELECT o.user_id, SUM(o.total_amount) as total_spent
+        FROM orders o
+        WHERE o.status IN ('delivered', 'shipped')
+        GROUP BY o.user_id
+    ) customer_totals
+    GROUP BY segment
+)
+SELECT 'Sales Summary' as report_type,
+       json_build_object(
+           'total_orders', ss.total_orders,
+           'unique_customers', ss.unique_customers,
+           'total_revenue', ss.total_revenue,
+           'avg_order_value', ROUND(ss.avg_order_value, 2)
+       ) as data
+FROM sales_summary ss
+
+UNION ALL
+
+SELECT 'Top Products' as report_type,
+       json_agg(
+           json_build_object(
+               'name', pp.name,
+               'units_sold', pp.units_sold,
+               'revenue', pp.revenue
+           )
+       ) as data
+FROM product_performance pp
+
+UNION ALL
+
+SELECT 'Customer Segments' as report_type,
+       json_agg(
+           json_build_object(
+               'segment', cs.segment,
+               'customer_count', cs.customer_count,
+               'avg_spent', ROUND(cs.avg_spent_per_customer, 2)
+           )
+       ) as data
+FROM customer_segments cs;
+```
+
+### Inventory Management
+
+```sql
+-- 2. Stock analysis va reorder alerts
+WITH inventory_analysis AS (
+    SELECT
+        p.id,
+        p.name,
+        p.sku,
+        c.name as category_name,
+        p.stock_quantity,
+        p.low_stock_threshold,
+        COALESCE(sales.units_sold_30d, 0) as units_sold_30d,
+        CASE
+            WHEN p.stock_quantity = 0 THEN 'OUT_OF_STOCK'
+            WHEN p.stock_quantity <= p.low_stock_threshold THEN 'LOW_STOCK'
+            WHEN COALESCE(sales.units_sold_30d, 0) = 0 THEN 'NO_SALES'
+            ELSE 'NORMAL'
+        END as stock_status,
+        CASE
+            WHEN COALESCE(sales.units_sold_30d, 0) > 0
+            THEN p.stock_quantity::float / (sales.units_sold_30d / 30.0)
+            ELSE NULL
+        END as days_of_inventory
+    FROM products p
+    JOIN categories c ON p.category_id = c.id
+    LEFT JOIN (
+        SELECT
+            oi.product_id,
+            SUM(oi.quantity) as units_sold_30d
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        WHERE o.status IN ('delivered', 'shipped')
+          AND o.ordered_at >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY oi.product_id
+    ) sales ON p.id = sales.product_id
+    WHERE p.status = 'active'
+)
+SELECT
+    stock_status,
+    COUNT(*) as product_count,
+    STRING_AGG(
+        name || ' (' || sku || ')',
+        ', '
+        ORDER BY stock_quantity
+    ) FILTER (WHERE stock_status IN ('OUT_OF_STOCK', 'LOW_STOCK')) as products_needing_attention
+FROM inventory_analysis
+GROUP BY stock_status
+ORDER BY
+    CASE stock_status
+        WHEN 'OUT_OF_STOCK' THEN 1
+        WHEN 'LOW_STOCK' THEN 2
+        WHEN 'NO_SALES' THEN 3
+        ELSE 4
+    END;
+```
+
+### Customer Lifetime Value (CLV)
+
+```sql
+-- 3. Customer analytics va CLV
+WITH customer_metrics AS (
+    SELECT
+        u.id,
+        u.username,
+        u.email,
+        EXTRACT(EPOCH FROM (CURRENT_DATE - u.created_at::date)) / 86400 as days_as_customer,
+        COUNT(o.id) as total_orders,
+        SUM(o.total_amount) as total_spent,
+        AVG(o.total_amount) as avg_order_value,
+        MAX(o.ordered_at) as last_order_date,
+        EXTRACT(EPOCH FROM (CURRENT_DATE - MAX(o.ordered_at)::date)) / 86400 as days_since_last_order,
+        COUNT(o.id)::float / NULLIF(EXTRACT(EPOCH FROM (CURRENT_DATE - MIN(o.ordered_at)::date)) / 86400, 0) as order_frequency_per_day
+    FROM users u
+    LEFT JOIN orders o ON u.id = o.user_id AND o.status IN ('delivered', 'shipped')
+    WHERE u.is_active = true
+    GROUP BY u.id, u.username, u.email, u.created_at
+    HAVING COUNT(o.id) > 0
+),
+clv_calculation AS (
+    SELECT
+        *,
+        -- Simple CLV: avg_order_value * order_frequency * customer_lifespan (projected)
+        ROUND((avg_order_value * order_frequency_per_day * 365), 2) as projected_annual_value,
+        CASE
+            WHEN days_since_last_order > 90 THEN 'At Risk'
+            WHEN days_since_last_order > 30 THEN 'Inactive'
+            WHEN total_spent > 1000 THEN 'VIP'
+            WHEN total_orders > 5 THEN 'Loyal'
+            ELSE 'Regular'
+        END as customer_segment
+    FROM customer_metrics
+)
+SELECT
+    customer_segment,
+    COUNT(*) as customer_count,
+    ROUND(AVG(total_spent), 2) as avg_total_spent,
+    ROUND(AVG(avg_order_value), 2) as avg_order_value,
+    ROUND(AVG(projected_annual_value), 2) as avg_projected_annual_value,
+    ROUND(AVG(days_since_last_order), 2) as avg_days_since_last_order
+FROM clv_calculation
+GROUP BY customer_segment
+ORDER BY avg_projected_annual_value DESC;
+```
+
+---
+
+## Xulosa 🎯
+
+Bu darsda biz SQL'ning barcha asosiy qismlarini o'rgandik:
+
+✅ **CRUD Operations** - CREATE, READ, UPDATE, DELETE
+✅ **JOIN'lar** - INNER, LEFT, RIGHT, FULL OUTER, Self JOIN
+✅ **Aggregate Functions** - COUNT, SUM, AVG, Window functions
+✅ **Subqueries va CTE** - Complex data analysis
+✅ **Performance Optimization** - Indexes va query tuning
+✅ **Real-world Examples** - E-commerce analytics
+
+### Keyingi darsda:
+
+🎯 **Database Design va Schema Planning**
+- Normalization va denormalization
+- Entity-Relationship modeling
+- Database constraints va validation
+- Professional schema design patterns
+
+### Uyga vazifa:
+
+1. **E-commerce database'ni** to'liq o'rnating va test ma'lumotlar kiriting
+2. **10 ta complex query** yozing - JOIN, subquery, window functions bilan
+3. **Performance test** - EXPLAIN bilan query'larni tahlil qiling
+4. **Simple analytics dashboard** yarating - sales, inventory, customer metrics
+
+### Bu darsda o'rgangan asosiy concepts:
+
+```sql
+-- CRUD summary
+SELECT 'Learned' as topic, COUNT(*) as queries_mastered FROM skills
+WHERE topic IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE');
+
+-- JOIN mastery ladder
+WITH join_types AS (
+    VALUES ('INNER JOIN'), ('LEFT JOIN'), ('RIGHT JOIN'), ('FULL OUTER JOIN'), ('SELF JOIN')
+)
+SELECT * FROM join_types ORDER BY RANDOM();
+
+-- Performance optimization checklist
+-- ✅ Proper indexes
+-- ✅ Query optimization
+-- ✅ EXPLAIN analysis
+-- ✅ Cursor-based pagination
+-- ✅ EXISTS vs IN usage
+```
+
+---
+
+### Qo'shimcha resurslar:
+
+- 📊 [PostgreSQL Performance Tips](https://wiki.postgresql.org/wiki/Performance_Optimization)
+- 🔍 [SQL Query Optimization](https://use-the-index-luke.com/)
+- 📈 [Window Functions Tutorial](https://www.postgresql.org/docs/current/tutorial-window.html)
+- 🎯 [SQL Practice Problems](https://sqlzoo.net/)
+
+**Keyingi dars:** Database Design va Professional Schema Planning 🏗️

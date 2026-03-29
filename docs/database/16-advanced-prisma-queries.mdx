@@ -1,0 +1,1663 @@
+---
+title: "Advanced Prisma Queries va Performance"
+description: "Complex relationships, query optimization, caching strategies va production-ready Prisma patterns"
+difficulty: "Advanced"
+readTime: "45 daqiqa"
+tags: ["prisma", "performance", "optimization", "caching", "advanced-queries", "production"]
+category: "database"
+---
+
+# Advanced Prisma Queries va Performance
+
+Salom! Bu darsda biz Prisma ORM'ning advanced qismlarini o'rganamiz va production-ready applications uchun optimization texnikalarini o'zlashtramiz.
+
+## Bu darsdan nimani o'rganasiz?
+
+- 🔍 **Complex Relationship Queries** - Chuqur nested relationships va joins
+- ⚡ **Query Optimization** - Performance tuning va N+1 problem yechimi
+- 📊 **Advanced Filtering** - Complex where conditions va conditional logic
+- 🔢 **Aggregations va Analytics** - Complex calculations va reporting
+- 📄 **Pagination Strategies** - Cursor-based, offset, infinite scroll
+- 🚀 **Caching Integration** - Redis va in-memory caching
+- 💡 **Production Patterns** - Connection pooling, monitoring, debugging
+
+---
+
+## 1. Complex Relationship Queries 🔍
+
+### Deep Nested Relationships
+
+```typescript
+// Complex nested relationships with conditional loading
+export class PostService {
+  static async getPostWithFullDetails(postId: number, userId?: number) {
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        // Author with profile
+        author: {
+          include: {
+            profile: {
+              select: {
+                bio: true,
+                avatarUrl: true,
+                socialLinks: true,
+                website: true
+              }
+            },
+            _count: {
+              select: {
+                posts: {
+                  where: { status: 'PUBLISHED' }
+                },
+                followers: true
+              }
+            }
+          }
+        },
+        // Category with parent hierarchy
+        category: {
+          include: {
+            parent: {
+              include: {
+                parent: true // 3-level hierarchy
+              }
+            },
+            _count: {
+              select: {
+                posts: {
+                  where: { status: 'PUBLISHED' }
+                }
+              }
+            }
+          }
+        },
+        // Tags with popularity metrics
+        tags: {
+          include: {
+            tag: {
+              include: {
+                _count: {
+                  select: {
+                    posts: {
+                      where: { status: 'PUBLISHED' }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          orderBy: {
+            tag: {
+              posts: {
+                _count: 'desc'
+              }
+            }
+          }
+        },
+        // Hierarchical comments (only approved, 2 levels deep)
+        comments: {
+          where: {
+            status: 'APPROVED',
+            parentId: null // Only top-level comments
+          },
+          include: {
+            author: {
+              select: {
+                id: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+                profile: {
+                  select: {
+                    avatarUrl: true
+                  }
+                }
+              }
+            },
+            replies: {
+              where: { status: 'APPROVED' },
+              include: {
+                author: {
+                  select: {
+                    id: true,
+                    username: true,
+                    firstName: true,
+                    lastName: true,
+                    profile: {
+                      select: {
+                        avatarUrl: true
+                      }
+                    }
+                  }
+                },
+                _count: {
+                  select: {
+                    likes: true
+                  }
+                }
+              },
+              orderBy: { createdAt: 'asc' },
+              take: 3 // Limit nested replies
+            },
+            _count: {
+              select: {
+                replies: { where: { status: 'APPROVED' } },
+                likes: true
+              }
+            }
+          },
+          orderBy: [
+            { isPinned: 'desc' }, // Pinned comments first
+            { createdAt: 'desc' }
+          ],
+          take: 10
+        },
+        // Conditional user-specific data
+        ...(userId && {
+          likes: {
+            where: { userId },
+            select: { userId: true }
+          },
+          bookmarks: {
+            where: { userId },
+            select: { userId: true }
+          }
+        }),
+        // Related posts (same category, similar tags)
+        _count: {
+          select: {
+            comments: { where: { status: 'APPROVED' } },
+            likes: true,
+            views: true,
+            bookmarks: true
+          }
+        }
+      }
+    })
+
+    if (!post) return null
+
+    // Add computed fields
+    return {
+      ...post,
+      isLikedByUser: userId ? post.likes.length > 0 : false,
+      isBookmarkedByUser: userId ? (post as any).bookmarks?.length > 0 : false,
+      readingTime: Math.ceil(post.content.split(' ').length / 200), // ~200 WPM
+      categoryPath: buildCategoryPath(post.category),
+      relatedPosts: await getRelatedPosts(post.id, post.categoryId, post.tags.map(t => t.tag.id))
+    }
+  }
+}
+
+// Helper function for category breadcrumbs
+function buildCategoryPath(category: any): string[] {
+  const path = [category.name]
+  let current = category.parent
+
+  while (current) {
+    path.unshift(current.name)
+    current = current.parent
+  }
+
+  return path
+}
+
+// Get related posts using tag similarity
+async function getRelatedPosts(postId: number, categoryId: number, tagIds: number[]) {
+  return await prisma.post.findMany({
+    where: {
+      id: { not: postId },
+      status: 'PUBLISHED',
+      OR: [
+        { categoryId },
+        {
+          tags: {
+            some: {
+              tagId: { in: tagIds }
+            }
+          }
+        }
+      ]
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          username: true,
+          firstName: true,
+          lastName: true
+        }
+      },
+      _count: {
+        select: {
+          comments: { where: { status: 'APPROVED' } },
+          likes: true
+        }
+      }
+    },
+    orderBy: [
+      { views: { _count: 'desc' } },
+      { publishedAt: 'desc' }
+    ],
+    take: 5
+  })
+}
+```
+
+### Dynamic Query Building
+
+```typescript
+// Dynamic query builder for flexible filtering
+interface PostFilters {
+  authorId?: number
+  categoryId?: number
+  tagIds?: number[]
+  status?: string[]
+  search?: string
+  dateFrom?: Date
+  dateTo?: Date
+  featured?: boolean
+  minViews?: number
+  hasComments?: boolean
+  sortBy?: 'latest' | 'popular' | 'trending' | 'comments'
+}
+
+export class PostQueryBuilder {
+  static async findPosts(filters: PostFilters, pagination: any, userId?: number) {
+    // Build dynamic where clause
+    const where: any = {}
+
+    // Basic filters
+    if (filters.authorId) {
+      where.authorId = filters.authorId
+    }
+
+    if (filters.categoryId) {
+      where.categoryId = filters.categoryId
+    }
+
+    if (filters.status && filters.status.length > 0) {
+      where.status = { in: filters.status }
+    } else {
+      where.status = 'PUBLISHED' // Default to published only
+    }
+
+    if (filters.featured !== undefined) {
+      where.featured = filters.featured
+    }
+
+    // Date range filter
+    if (filters.dateFrom || filters.dateTo) {
+      where.publishedAt = {}
+      if (filters.dateFrom) where.publishedAt.gte = filters.dateFrom
+      if (filters.dateTo) where.publishedAt.lte = filters.dateTo
+    }
+
+    // Tag filtering
+    if (filters.tagIds && filters.tagIds.length > 0) {
+      where.tags = {
+        some: {
+          tagId: { in: filters.tagIds }
+        }
+      }
+    }
+
+    // Search functionality
+    if (filters.search) {
+      where.OR = [
+        {
+          title: {
+            contains: filters.search,
+            mode: 'insensitive'
+          }
+        },
+        {
+          content: {
+            contains: filters.search,
+            mode: 'insensitive'
+          }
+        },
+        {
+          author: {
+            OR: [
+              {
+                username: {
+                  contains: filters.search,
+                  mode: 'insensitive'
+                }
+              },
+              {
+                firstName: {
+                  contains: filters.search,
+                  mode: 'insensitive'
+                }
+              },
+              {
+                lastName: {
+                  contains: filters.search,
+                  mode: 'insensitive'
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+
+    // Comments filter
+    if (filters.hasComments) {
+      where.comments = {
+        some: {
+          status: 'APPROVED'
+        }
+      }
+    }
+
+    // Views filter
+    if (filters.minViews) {
+      where.views = {
+        _count: {
+          gte: filters.minViews
+        }
+      }
+    }
+
+    // Build dynamic orderBy
+    let orderBy: any = []
+
+    switch (filters.sortBy) {
+      case 'latest':
+        orderBy = [{ publishedAt: 'desc' }]
+        break
+      case 'popular':
+        orderBy = [
+          { likes: { _count: 'desc' } },
+          { views: { _count: 'desc' } },
+          { publishedAt: 'desc' }
+        ]
+        break
+      case 'trending':
+        // Posts with high engagement in the last 7 days
+        orderBy = [
+          { createdAt: 'desc' }, // Recent posts first
+          { likes: { _count: 'desc' } },
+          { comments: { _count: 'desc' } }
+        ]
+        where.createdAt = {
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        }
+        break
+      case 'comments':
+        orderBy = [
+          { comments: { _count: 'desc' } },
+          { publishedAt: 'desc' }
+        ]
+        break
+      default:
+        orderBy = [{ publishedAt: 'desc' }]
+    }
+
+    // Include clause
+    const include = {
+      author: {
+        select: {
+          id: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          profile: {
+            select: {
+              avatarUrl: true
+            }
+          }
+        }
+      },
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          color: true
+        }
+      },
+      tags: {
+        include: {
+          tag: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              color: true
+            }
+          }
+        },
+        take: 5 // Limit tags shown
+      },
+      _count: {
+        select: {
+          comments: { where: { status: 'APPROVED' } },
+          likes: true,
+          views: true,
+          bookmarks: true
+        }
+      },
+      // Include user-specific data if authenticated
+      ...(userId && {
+        likes: {
+          where: { userId },
+          select: { createdAt: true }
+        },
+        bookmarks: {
+          where: { userId },
+          select: { createdAt: true }
+        }
+      })
+    }
+
+    // Execute queries
+    const [posts, totalCount] = await Promise.all([
+      prisma.post.findMany({
+        where,
+        include,
+        orderBy,
+        ...pagination
+      }),
+      prisma.post.count({ where })
+    ])
+
+    // Add computed fields
+    const enrichedPosts = posts.map(post => ({
+      ...post,
+      isLikedByUser: userId ? post.likes.length > 0 : false,
+      isBookmarkedByUser: userId ? (post as any).bookmarks?.length > 0 : false,
+      readingTime: Math.ceil(post.content.split(' ').length / 200),
+      popularityScore: calculatePopularityScore(post._count)
+    }))
+
+    return {
+      data: enrichedPosts,
+      total: totalCount,
+      hasMore: posts.length === pagination.take
+    }
+  }
+}
+
+// Popularity scoring algorithm
+function calculatePopularityScore(counts: any): number {
+  const { likes, comments, views, bookmarks } = counts
+  return (likes * 3) + (comments * 2) + (views * 0.1) + (bookmarks * 4)
+}
+```
+
+---
+
+## 2. Query Optimization va Performance 🚀
+
+### N+1 Problem ni Oldini Olish
+
+```typescript
+// ❌ N+1 Problem: Har bir category uchun alohida query
+async function getBadCategoriesWithPosts() {
+  const categories = await prisma.category.findMany()
+
+  const categoriesWithPosts = await Promise.all(
+    categories.map(async (category) => {
+      const posts = await prisma.post.findMany({
+        where: { categoryId: category.id }
+      })
+      return { ...category, posts }
+    })
+  )
+
+  return categoriesWithPosts
+}
+
+// ✅ Optimized: Single query with includes
+async function getOptimizedCategoriesWithPosts() {
+  return await prisma.category.findMany({
+    include: {
+      posts: {
+        where: { status: 'PUBLISHED' },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true
+            }
+          },
+          _count: {
+            select: {
+              comments: { where: { status: 'APPROVED' } },
+              likes: true
+            }
+          }
+        },
+        orderBy: { publishedAt: 'desc' },
+        take: 5 // Limit posts per category
+      },
+      _count: {
+        select: {
+          posts: { where: { status: 'PUBLISHED' } }
+        }
+      }
+    },
+    orderBy: { name: 'asc' }
+  })
+}
+```
+
+### DataLoader Pattern Implementation
+
+```typescript
+// DataLoader for batching queries
+import DataLoader from 'dataloader'
+
+class PostDataLoaders {
+  // User loader
+  userLoader = new DataLoader<number, any>(async (userIds: number[]) => {
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: {
+        id: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        profile: {
+          select: {
+            avatarUrl: true,
+            bio: true
+          }
+        }
+      }
+    })
+
+    // Return in the same order as requested
+    const userMap = new Map(users.map(user => [user.id, user]))
+    return userIds.map(id => userMap.get(id) || null)
+  })
+
+  // Category loader
+  categoryLoader = new DataLoader<number, any>(async (categoryIds: number[]) => {
+    const categories = await prisma.category.findMany({
+      where: { id: { in: categoryIds } },
+      include: {
+        _count: {
+          select: {
+            posts: { where: { status: 'PUBLISHED' } }
+          }
+        }
+      }
+    })
+
+    const categoryMap = new Map(categories.map(cat => [cat.id, cat]))
+    return categoryIds.map(id => categoryMap.get(id) || null)
+  })
+
+  // Comments count loader
+  commentsCountLoader = new DataLoader<number, number>(async (postIds: number[]) => {
+    const counts = await prisma.comment.groupBy({
+      by: ['postId'],
+      where: {
+        postId: { in: postIds },
+        status: 'APPROVED'
+      },
+      _count: { id: true }
+    })
+
+    const countMap = new Map(counts.map(c => [c.postId, c._count.id]))
+    return postIds.map(id => countMap.get(id) || 0)
+  })
+}
+
+// Request context ile DataLoader
+interface RequestContext {
+  userId?: number
+  dataLoaders: PostDataLoaders
+}
+
+export function createContext(req: any): RequestContext {
+  return {
+    userId: req.user?.id,
+    dataLoaders: new PostDataLoaders()
+  }
+}
+
+// Usage in resolvers/controllers
+export class PostController {
+  static async getPostsWithDataLoaders(req: Request, res: Response) {
+    const context = createContext(req)
+
+    const posts = await prisma.post.findMany({
+      where: { status: 'PUBLISHED' },
+      orderBy: { publishedAt: 'desc' },
+      take: 20
+    })
+
+    // Use DataLoaders for related data
+    const enrichedPosts = await Promise.all(
+      posts.map(async (post) => {
+        const [author, category, commentsCount] = await Promise.all([
+          context.dataLoaders.userLoader.load(post.authorId),
+          post.categoryId ? context.dataLoaders.categoryLoader.load(post.categoryId) : null,
+          context.dataLoaders.commentsCountLoader.load(post.id)
+        ])
+
+        return {
+          ...post,
+          author,
+          category,
+          commentsCount,
+          readingTime: Math.ceil(post.content.split(' ').length / 200)
+        }
+      })
+    )
+
+    res.json({ data: enrichedPosts })
+  }
+}
+```
+
+### Query Performance Monitoring
+
+```typescript
+// Query performance middleware
+class QueryPerformanceMonitor {
+  private static queryTimes: Map<string, number[]> = new Map()
+
+  static middleware() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      const startTime = Date.now()
+
+      // Override res.json to capture response time
+      const originalJson = res.json
+      res.json = function (body: any) {
+        const endTime = Date.now()
+        const duration = endTime - startTime
+
+        // Log slow queries
+        if (duration > 1000) {
+          console.warn(`🐌 Slow query detected: ${req.method} ${req.path} - ${duration}ms`)
+        }
+
+        // Store metrics
+        const key = `${req.method}:${req.path}`
+        if (!QueryPerformanceMonitor.queryTimes.has(key)) {
+          QueryPerformanceMonitor.queryTimes.set(key, [])
+        }
+        QueryPerformanceMonitor.queryTimes.get(key)!.push(duration)
+
+        // Add performance headers
+        res.set('X-Response-Time', `${duration}ms`)
+
+        return originalJson.call(this, body)
+      }
+
+      next()
+    }
+  }
+
+  static getMetrics() {
+    const metrics: any = {}
+
+    for (const [route, times] of this.queryTimes) {
+      const avg = times.reduce((a, b) => a + b, 0) / times.length
+      const min = Math.min(...times)
+      const max = Math.max(...times)
+      const p95 = times.sort((a, b) => a - b)[Math.floor(times.length * 0.95)]
+
+      metrics[route] = {
+        count: times.length,
+        average: Math.round(avg),
+        min,
+        max,
+        p95: p95 || 0
+      }
+    }
+
+    return metrics
+  }
+}
+
+// Prisma query logging
+const prisma = new PrismaClient({
+  log: [
+    { level: 'query', emit: 'event' },
+    { level: 'error', emit: 'stdout' },
+    { level: 'warn', emit: 'stdout' }
+  ]
+})
+
+prisma.$on('query', (e) => {
+  if (e.duration > 1000) {
+    console.log(`🐌 Slow Prisma query (${e.duration}ms): ${e.query}`)
+  }
+})
+```
+
+---
+
+## 3. Advanced Pagination Strategies 📄
+
+### Cursor-based Pagination (Recommended)
+
+```typescript
+interface CursorPaginationParams {
+  take: number // Number of items to fetch
+  cursor?: string // Cursor for pagination
+  direction?: 'forward' | 'backward'
+}
+
+export class PaginationService {
+  // Cursor-based pagination for better performance
+  static async getPaginatedPosts(params: CursorPaginationParams, filters?: PostFilters) {
+    const { take, cursor, direction = 'forward' } = params
+
+    // Build where clause
+    const where: any = {
+      status: 'PUBLISHED',
+      ...filters
+    }
+
+    // Add cursor condition
+    if (cursor) {
+      const cursorData = JSON.parse(Buffer.from(cursor, 'base64').toString())
+
+      if (direction === 'forward') {
+        where.OR = [
+          {
+            publishedAt: { lt: new Date(cursorData.publishedAt) }
+          },
+          {
+            publishedAt: new Date(cursorData.publishedAt),
+            id: { lt: cursorData.id }
+          }
+        ]
+      } else {
+        where.OR = [
+          {
+            publishedAt: { gt: new Date(cursorData.publishedAt) }
+          },
+          {
+            publishedAt: new Date(cursorData.publishedAt),
+            id: { gt: cursorData.id }
+          }
+        ]
+      }
+    }
+
+    const posts = await prisma.post.findMany({
+      where,
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            profile: { select: { avatarUrl: true } }
+          }
+        },
+        category: {
+          select: { id: true, name: true, slug: true, color: true }
+        },
+        _count: {
+          select: {
+            comments: { where: { status: 'APPROVED' } },
+            likes: true
+          }
+        }
+      },
+      orderBy: [
+        { publishedAt: direction === 'forward' ? 'desc' : 'asc' },
+        { id: direction === 'forward' ? 'desc' : 'asc' }
+      ],
+      take: take + 1 // Fetch one extra to check if there's a next page
+    })
+
+    const hasMore = posts.length > take
+    const items = hasMore ? posts.slice(0, take) : posts
+
+    // Generate cursors
+    const edges = items.map(post => ({
+      node: post,
+      cursor: Buffer.from(JSON.stringify({
+        publishedAt: post.publishedAt,
+        id: post.id
+      })).toString('base64')
+    }))
+
+    return {
+      edges,
+      pageInfo: {
+        hasNextPage: direction === 'forward' ? hasMore : false,
+        hasPreviousPage: direction === 'backward' ? hasMore : false,
+        startCursor: edges.length > 0 ? edges[0].cursor : null,
+        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
+      },
+      totalCount: await prisma.post.count({ where: { status: 'PUBLISHED', ...filters } })
+    }
+  }
+
+  // Infinite scroll pagination
+  static async getInfiniteScrollPosts(lastPostId?: number, take: number = 10) {
+    const posts = await prisma.post.findMany({
+      where: {
+        status: 'PUBLISHED',
+        ...(lastPostId && { id: { lt: lastPostId } })
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            profile: { select: { avatarUrl: true } }
+          }
+        },
+        category: {
+          select: { id: true, name: true, slug: true, color: true }
+        },
+        _count: {
+          select: {
+            comments: { where: { status: 'APPROVED' } },
+            likes: true
+          }
+        }
+      },
+      orderBy: [
+        { publishedAt: 'desc' },
+        { id: 'desc' }
+      ],
+      take: take + 1
+    })
+
+    const hasMore = posts.length > take
+    const data = hasMore ? posts.slice(0, take) : posts
+
+    return {
+      data,
+      hasMore,
+      nextCursor: data.length > 0 ? data[data.length - 1].id : null
+    }
+  }
+}
+```
+
+### Advanced Filtering with Search
+
+```typescript
+// Full-text search with ranking
+export class SearchService {
+  static async fullTextSearch(query: string, filters?: any, pagination?: any) {
+    // Use raw SQL for advanced full-text search
+    const searchResults = await prisma.$queryRaw`
+      SELECT
+        p.*,
+        ts_rank(
+          to_tsvector('english', p.title || ' ' || p.content),
+          plainto_tsquery('english', ${query})
+        ) as rank,
+        ts_headline(
+          'english',
+          p.content,
+          plainto_tsquery('english', ${query}),
+          'MaxWords=50, MinWords=20, ShortWord=3'
+        ) as highlight
+      FROM posts p
+      WHERE p.status = 'PUBLISHED'
+        AND to_tsvector('english', p.title || ' ' || p.content) @@ plainto_tsquery('english', ${query})
+      ORDER BY rank DESC, p."publishedAt" DESC
+      LIMIT ${pagination?.take || 20}
+      OFFSET ${pagination?.skip || 0}
+    `
+
+    // Get related data with DataLoader or includes
+    const enrichedResults = await Promise.all(
+      (searchResults as any[]).map(async (post) => {
+        const [author, category, stats] = await Promise.all([
+          prisma.user.findUnique({
+            where: { id: post.authorId },
+            select: { id: true, username: true, firstName: true, lastName: true }
+          }),
+          post.categoryId ? prisma.category.findUnique({
+            where: { id: post.categoryId },
+            select: { id: true, name: true, slug: true }
+          }) : null,
+          prisma.post.findUnique({
+            where: { id: post.id },
+            select: {
+              _count: {
+                select: {
+                  comments: { where: { status: 'APPROVED' } },
+                  likes: true
+                }
+              }
+            }
+          })
+        ])
+
+        return {
+          ...post,
+          author,
+          category,
+          commentsCount: stats?._count.comments || 0,
+          likesCount: stats?._count.likes || 0,
+          relevanceScore: post.rank
+        }
+      })
+    )
+
+    return {
+      results: enrichedResults,
+      query,
+      total: enrichedResults.length
+    }
+  }
+
+  // Autocomplete/suggestions
+  static async getSearchSuggestions(query: string, limit: number = 10) {
+    // Search in titles, usernames, and categories
+    const [postSuggestions, authorSuggestions, categorySuggestions] = await Promise.all([
+      // Post titles
+      prisma.post.findMany({
+        where: {
+          status: 'PUBLISHED',
+          title: {
+            contains: query,
+            mode: 'insensitive'
+          }
+        },
+        select: {
+          id: true,
+          title: true,
+          slug: true
+        },
+        take: limit
+      }),
+      // Author names
+      prisma.user.findMany({
+        where: {
+          OR: [
+            { username: { contains: query, mode: 'insensitive' } },
+            { firstName: { contains: query, mode: 'insensitive' } },
+            { lastName: { contains: query, mode: 'insensitive' } }
+          ]
+        },
+        select: {
+          id: true,
+          username: true,
+          firstName: true,
+          lastName: true
+        },
+        take: limit
+      }),
+      // Categories
+      prisma.category.findMany({
+        where: {
+          name: {
+            contains: query,
+            mode: 'insensitive'
+          }
+        },
+        select: {
+          id: true,
+          name: true,
+          slug: true
+        },
+        take: limit
+      })
+    ])
+
+    return {
+      posts: postSuggestions,
+      authors: authorSuggestions,
+      categories: categorySuggestions
+    }
+  }
+}
+```
+
+---
+
+## 4. Caching Strategies 🚀
+
+### Redis Integration
+
+```typescript
+import Redis from 'ioredis'
+
+class CacheService {
+  private redis: Redis
+
+  constructor() {
+    this.redis = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      retryDelayOnFailover: 100,
+      maxRetriesPerRequest: 3
+    })
+  }
+
+  // Generic cache methods
+  async get<T>(key: string): Promise<T | null> {
+    try {
+      const cached = await this.redis.get(key)
+      return cached ? JSON.parse(cached) : null
+    } catch (error) {
+      console.error('Cache get error:', error)
+      return null
+    }
+  }
+
+  async set(key: string, value: any, ttl: number = 3600): Promise<void> {
+    try {
+      await this.redis.setex(key, ttl, JSON.stringify(value))
+    } catch (error) {
+      console.error('Cache set error:', error)
+    }
+  }
+
+  async del(key: string): Promise<void> {
+    try {
+      await this.redis.del(key)
+    } catch (error) {
+      console.error('Cache delete error:', error)
+    }
+  }
+
+  async invalidatePattern(pattern: string): Promise<void> {
+    try {
+      const keys = await this.redis.keys(pattern)
+      if (keys.length > 0) {
+        await this.redis.del(...keys)
+      }
+    } catch (error) {
+      console.error('Cache invalidation error:', error)
+    }
+  }
+}
+
+const cache = new CacheService()
+
+// Cached repository pattern
+export class CachedPostService {
+  // Cache popular posts
+  static async getPopularPosts(limit: number = 10) {
+    const cacheKey = `popular_posts:${limit}`
+
+    let posts = await cache.get(cacheKey)
+
+    if (!posts) {
+      posts = await prisma.post.findMany({
+        where: { status: 'PUBLISHED' },
+        include: {
+          author: {
+            select: { id: true, username: true, firstName: true, lastName: true }
+          },
+          category: {
+            select: { id: true, name: true, slug: true }
+          },
+          _count: {
+            select: {
+              likes: true,
+              comments: { where: { status: 'APPROVED' } },
+              views: true
+            }
+          }
+        },
+        orderBy: [
+          { likes: { _count: 'desc' } },
+          { views: { _count: 'desc' } },
+          { publishedAt: 'desc' }
+        ],
+        take: limit
+      })
+
+      // Cache for 1 hour
+      await cache.set(cacheKey, posts, 3600)
+    }
+
+    return posts
+  }
+
+  // Cache single post with tags for cache invalidation
+  static async getCachedPost(slug: string) {
+    const cacheKey = `post:${slug}`
+
+    let post = await cache.get(cacheKey)
+
+    if (!post) {
+      post = await prisma.post.findUnique({
+        where: { slug },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              profile: { select: { avatarUrl: true, bio: true } }
+            }
+          },
+          category: true,
+          tags: { include: { tag: true } },
+          _count: {
+            select: {
+              comments: { where: { status: 'APPROVED' } },
+              likes: true,
+              views: true
+            }
+          }
+        }
+      })
+
+      if (post) {
+        // Cache for 6 hours
+        await cache.set(cacheKey, post, 21600)
+
+        // Add to cache tags for easier invalidation
+        await cache.set(`post:id:${post.id}`, slug, 21600)
+      }
+    }
+
+    return post
+  }
+
+  // Invalidate post caches
+  static async invalidatePostCaches(postId: number) {
+    // Get slug from cache
+    const slug = await cache.get(`post:id:${postId}`)
+
+    // Invalidate specific post
+    if (slug) {
+      await cache.del(`post:${slug}`)
+      await cache.del(`post:id:${postId}`)
+    }
+
+    // Invalidate lists that might include this post
+    await cache.invalidatePattern('popular_posts:*')
+    await cache.invalidatePattern('latest_posts:*')
+    await cache.invalidatePattern('category_posts:*')
+  }
+
+  // Cache category with posts
+  static async getCategoryWithPosts(categorySlug: string, limit: number = 10) {
+    const cacheKey = `category_posts:${categorySlug}:${limit}`
+
+    let result = await cache.get(cacheKey)
+
+    if (!result) {
+      result = await prisma.category.findUnique({
+        where: { slug: categorySlug },
+        include: {
+          posts: {
+            where: { status: 'PUBLISHED' },
+            include: {
+              author: {
+                select: { id: true, username: true, firstName: true, lastName: true }
+              },
+              _count: {
+                select: {
+                  comments: { where: { status: 'APPROVED' } },
+                  likes: true
+                }
+              }
+            },
+            orderBy: { publishedAt: 'desc' },
+            take: limit
+          },
+          _count: {
+            select: {
+              posts: { where: { status: 'PUBLISHED' } }
+            }
+          }
+        }
+      })
+
+      if (result) {
+        // Cache for 2 hours
+        await cache.set(cacheKey, result, 7200)
+      }
+    }
+
+    return result
+  }
+}
+
+// Cache middleware
+export function cacheMiddleware(ttl: number = 3600) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const cacheKey = `route:${req.method}:${req.path}:${JSON.stringify(req.query)}`
+
+    const cached = await cache.get(cacheKey)
+
+    if (cached) {
+      res.set('X-Cache', 'HIT')
+      return res.json(cached)
+    }
+
+    // Override res.json to cache response
+    const originalJson = res.json
+    res.json = function (body: any) {
+      // Cache successful responses
+      if (res.statusCode === 200) {
+        cache.set(cacheKey, body, ttl)
+        res.set('X-Cache', 'MISS')
+      }
+
+      return originalJson.call(this, body)
+    }
+
+    next()
+  }
+}
+```
+
+### In-Memory Caching
+
+```typescript
+// Simple in-memory cache for frequently accessed data
+class InMemoryCache {
+  private cache = new Map<string, { data: any; expires: number }>()
+  private maxSize: number = 1000
+
+  set(key: string, value: any, ttl: number = 3600000): void { // default 1 hour
+    // Remove oldest entries if cache is full
+    if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value
+      this.cache.delete(firstKey)
+    }
+
+    this.cache.set(key, {
+      data: value,
+      expires: Date.now() + ttl
+    })
+  }
+
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key)
+
+    if (!entry) return null
+
+    // Check if expired
+    if (Date.now() > entry.expires) {
+      this.cache.delete(key)
+      return null
+    }
+
+    return entry.data
+  }
+
+  delete(key: string): boolean {
+    return this.cache.delete(key)
+  }
+
+  clear(): void {
+    this.cache.clear()
+  }
+
+  size(): number {
+    return this.cache.size
+  }
+}
+
+const memoryCache = new InMemoryCache()
+
+// Usage for frequently accessed configs
+export class ConfigCache {
+  static async getCategories() {
+    let categories = memoryCache.get<any[]>('categories')
+
+    if (!categories) {
+      categories = await prisma.category.findMany({
+        where: { isActive: true },
+        orderBy: { name: 'asc' },
+        include: {
+          _count: {
+            select: {
+              posts: { where: { status: 'PUBLISHED' } }
+            }
+          }
+        }
+      })
+
+      // Cache for 30 minutes
+      memoryCache.set('categories', categories, 30 * 60 * 1000)
+    }
+
+    return categories
+  }
+
+  static invalidateCategories() {
+    memoryCache.delete('categories')
+  }
+}
+```
+
+---
+
+## 5. Real-time Features va Subscriptions 📡
+
+### WebSocket Integration
+
+```typescript
+import { Server as SocketServer } from 'socket.io'
+import { Server as HttpServer } from 'http'
+
+export class RealTimeService {
+  private io: SocketServer
+
+  constructor(server: HttpServer) {
+    this.io = new SocketServer(server, {
+      cors: {
+        origin: process.env.FRONTEND_URL || "http://localhost:3000",
+        methods: ["GET", "POST"]
+      }
+    })
+
+    this.setupEventHandlers()
+  }
+
+  private setupEventHandlers() {
+    this.io.on('connection', (socket) => {
+      console.log(`User connected: ${socket.id}`)
+
+      // Join post-specific room
+      socket.on('join_post', (postId: string) => {
+        socket.join(`post:${postId}`)
+        console.log(`User ${socket.id} joined post ${postId}`)
+      })
+
+      // Leave post room
+      socket.on('leave_post', (postId: string) => {
+        socket.leave(`post:${postId}`)
+      })
+
+      // Join user-specific room for notifications
+      socket.on('join_user', (userId: string) => {
+        socket.join(`user:${userId}`)
+      })
+
+      socket.on('disconnect', () => {
+        console.log(`User disconnected: ${socket.id}`)
+      })
+    })
+  }
+
+  // Emit new comment to post watchers
+  notifyNewComment(postId: number, comment: any) {
+    this.io.to(`post:${postId}`).emit('new_comment', comment)
+  }
+
+  // Emit like update
+  notifyLikeUpdate(postId: number, likesCount: number) {
+    this.io.to(`post:${postId}`).emit('like_update', { postId, likesCount })
+  }
+
+  // Notify user about new follower, like, comment
+  notifyUser(userId: number, notification: any) {
+    this.io.to(`user:${userId}`).emit('notification', notification)
+  }
+
+  // Broadcast new post to followers
+  broadcastNewPost(authorId: number, post: any) {
+    // Get author's followers and notify them
+    this.notifyFollowers(authorId, 'new_post', post)
+  }
+
+  private async notifyFollowers(authorId: number, event: string, data: any) {
+    // Get followers
+    const followers = await prisma.userFollower.findMany({
+      where: { followingId: authorId },
+      select: { followerId: true }
+    })
+
+    // Notify each follower
+    followers.forEach(follower => {
+      this.io.to(`user:${follower.followerId}`).emit(event, data)
+    })
+  }
+}
+
+// Usage in controllers
+export class CommentController {
+  static async createComment(req: Request, res: Response) {
+    try {
+      const { postId, content, parentId } = req.body
+      const userId = req.user!.id
+
+      const comment = await prisma.comment.create({
+        data: {
+          content,
+          postId: parseInt(postId),
+          userId,
+          parentId: parentId ? parseInt(parentId) : null
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              profile: { select: { avatarUrl: true } }
+            }
+          },
+          _count: {
+            select: { likes: true, replies: true }
+          }
+        }
+      })
+
+      // Real-time notification
+      const realTimeService = req.app.get('realTimeService')
+      realTimeService.notifyNewComment(parseInt(postId), comment)
+
+      // Create notification for post author
+      const post = await prisma.post.findUnique({
+        where: { id: parseInt(postId) },
+        select: { authorId: true, title: true }
+      })
+
+      if (post && post.authorId !== userId) {
+        const notification = await prisma.notification.create({
+          data: {
+            type: 'NEW_COMMENT',
+            userId: post.authorId,
+            fromUserId: userId,
+            postId: parseInt(postId),
+            message: `${req.user!.username} commented on your post "${post.title}"`
+          }
+        })
+
+        realTimeService.notifyUser(post.authorId, notification)
+      }
+
+      res.status(201).json({
+        message: 'Comment created successfully',
+        comment
+      })
+
+    } catch (error) {
+      console.error('Error creating comment:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+}
+```
+
+### Live Statistics Dashboard
+
+```typescript
+// Real-time analytics dashboard
+export class AnalyticsDashboard {
+  private io: SocketServer
+  private updateInterval: NodeJS.Timeout
+
+  constructor(io: SocketServer) {
+    this.io = io
+    this.startLiveUpdates()
+  }
+
+  private startLiveUpdates() {
+    // Update every 30 seconds
+    this.updateInterval = setInterval(async () => {
+      const stats = await this.getLiveStats()
+      this.io.to('admin_dashboard').emit('stats_update', stats)
+    }, 30000)
+  }
+
+  private async getLiveStats() {
+    const [
+      totalUsers,
+      activeUsers,
+      totalPosts,
+      recentPosts,
+      totalComments,
+      recentComments,
+      topCategories
+    ] = await Promise.all([
+      // Total users
+      prisma.user.count(),
+
+      // Active users (last 24 hours)
+      prisma.user.count({
+        where: {
+          lastLoginAt: {
+            gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+          }
+        }
+      }),
+
+      // Total published posts
+      prisma.post.count({ where: { status: 'PUBLISHED' } }),
+
+      // Posts created today
+      prisma.post.count({
+        where: {
+          status: 'PUBLISHED',
+          createdAt: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0))
+          }
+        }
+      }),
+
+      // Total approved comments
+      prisma.comment.count({ where: { status: 'APPROVED' } }),
+
+      // Comments created today
+      prisma.comment.count({
+        where: {
+          status: 'APPROVED',
+          createdAt: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0))
+          }
+        }
+      }),
+
+      // Top categories by post count
+      prisma.category.findMany({
+        include: {
+          _count: {
+            select: {
+              posts: { where: { status: 'PUBLISHED' } }
+            }
+          }
+        },
+        orderBy: {
+          posts: { _count: 'desc' }
+        },
+        take: 5
+      })
+    ])
+
+    return {
+      users: {
+        total: totalUsers,
+        active: activeUsers,
+        growth: activeUsers / totalUsers
+      },
+      posts: {
+        total: totalPosts,
+        today: recentPosts,
+        avgPerDay: recentPosts / 1 // simplified
+      },
+      comments: {
+        total: totalComments,
+        today: recentComments,
+        avgPerPost: totalComments / (totalPosts || 1)
+      },
+      categories: topCategories.map(cat => ({
+        name: cat.name,
+        postsCount: cat._count.posts,
+        color: cat.color
+      })),
+      timestamp: new Date()
+    }
+  }
+
+  stop() {
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval)
+    }
+  }
+}
+```
+
+---
+
+## Xulosa 🎯
+
+Bu darsda biz Prisma ORM'ning advanced qismlarini o'rgandik:
+
+✅ **Complex Relationships** - Chuqur nested queries va dynamic filtering
+✅ **Query Optimization** - N+1 problem, DataLoader, performance monitoring
+✅ **Advanced Pagination** - Cursor-based, infinite scroll strategies
+✅ **Caching Integration** - Redis va in-memory caching patterns
+✅ **Real-time Features** - WebSocket integration va live updates
+✅ **Production Patterns** - Performance tuning va monitoring
+
+### Keyingi darsda:
+
+🔄 **Database Migrations va Version Control**
+- Advanced migration strategies
+- Schema evolution patterns
+- Production deployment best practices
+
+### Uyga vazifa:
+
+1. **Complex queries** implement qiling - deep relationships va filtering
+2. **Caching layer** qo'shing - Redis yoki in-memory cache
+3. **Real-time features** qo'shing - WebSocket notifications
+4. **Performance monitoring** setup qiling - slow query detection
+
+### Advanced Prisma patterns summary:
+
+```typescript
+// Production-ready patterns checklist
+✅ Use DataLoaders to avoid N+1 problems
+✅ Implement cursor-based pagination
+✅ Cache frequently accessed data
+✅ Monitor query performance
+✅ Use transactions for consistency
+✅ Implement real-time features strategically
+✅ Optimize includes and selects
+✅ Handle errors gracefully
+✅ Use connection pooling
+✅ Regular performance audits
+```
+
+---
+
+### Qo'shimcha resurslar:
+
+- 🚀 [Prisma Performance Guide](https://prisma.io/docs/guides/performance-and-optimization)
+- 📊 [DataLoader Pattern](https://github.com/graphql/dataloader)
+- 🔄 [Cursor Pagination](https://relay.dev/graphql/connections.htm)
+- ⚡ [Redis Caching Strategies](https://redis.io/docs/manual/patterns/)
+
+**Keyingi dars:** Database Migrations va Production Deployment 🔄

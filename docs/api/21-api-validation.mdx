@@ -1,0 +1,989 @@
+---
+title: "API Validation va Error Handling"
+description: "Zod, Joi bilan input validation, professional error handling va API data sanitization'ni o'rganamiz"
+category: "api"
+order: 21
+difficulty: "advanced"
+readTime: "35 daqiqa"
+tags:
+  - validation
+  - zod
+  - error-handling
+  - sanitization
+  - middleware
+  - joi
+---
+
+# API Validation va Error Handling
+
+Assalom aleykum! API authentication'ni o'rgangach, endi **Data Validation** va **Error Handling** - professional API development'ning poydevorini o'rganamiz. Bu darsda Zod, error handling va input sanitization'ni o'zlashtiramiz.
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- ✅ **Input Validation** - ma'lumotlarni tekshirish
+- 🛡️ **Data Sanitization** - XSS, injection prevention
+- 📚 **Zod library** - TypeScript-first validation
+- 🎯 **Error Handling** - professional error management
+- 🔧 **Custom middleware** - validation middleware yaratish
+- 💼 **Real loyiha** - Validated Blog API
+
+---
+
+## Nima uchun Validation muhim?
+
+### Validation'siz muammolar:
+
+```javascript
+// XAVFLI KOD ❌
+app.post('/api/blogs', (req, res) => {
+  const { title, content, authorId } = req.body;
+
+  // ❌ Hech qanday tekshirish yo'q!
+  const newBlog = {
+    id: blogs.length + 1,
+    title: title,           // undefined bo'lishi mumkin
+    content: content,       // XSS attack bo'lishi mumkin
+    authorId: authorId      // SQL injection riski
+  };
+
+  blogs.push(newBlog);
+  res.json(newBlog);
+});
+
+// Mumkin bo'lgan muammolar:
+// 1. title = undefined → blog yaroqsiz
+// 2. content = "<script>alert('XSS')</script>" → XSS attack
+// 3. authorId = "'; DROP TABLE users; --" → SQL injection
+// 4. Noto'g'ri data types → server crash
+```
+
+### Validation bilan himoyalangan kod:
+
+```javascript
+// XAVFSIZ KOD ✅
+const { z } = require('zod');
+
+const BlogSchema = z.object({
+  title: z.string()
+    .min(3, 'Sarlavha kamida 3 ta belgidan iborat bo\'lishi kerak')
+    .max(100, 'Sarlavha 100 ta belgidan oshmasligi kerak')
+    .trim(),
+  content: z.string()
+    .min(10, 'Content kamida 10 ta belgidan iborat bo\'lishi kerak')
+    .max(10000, 'Content 10000 ta belgidan oshmasligi kerak'),
+  authorId: z.number()
+    .positive('Author ID musbat son bo\'lishi kerak')
+});
+
+app.post('/api/blogs', (req, res) => {
+  try {
+    // ✅ Ma'lumotlarni tekshirish va tozalash
+    const validatedData = BlogSchema.parse(req.body);
+
+    const newBlog = {
+      id: blogs.length + 1,
+      ...validatedData,
+      createdAt: new Date().toISOString()
+    };
+
+    blogs.push(newBlog);
+    res.status(201).json({
+      success: true,
+      data: newBlog
+    });
+  } catch (error) {
+    // ✅ Professional error handling
+    res.status(400).json({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Ma\'lumotlar noto\'g\'ri',
+        details: error.errors
+      }
+    });
+  }
+});
+```
+
+---
+
+## Zod Library - TypeScript-first validation
+
+### Zod setup:
+
+```bash
+npm install zod
+```
+
+### Asosiy Zod types:
+
+```javascript
+const { z } = require('zod');
+
+// String validation
+const nameSchema = z.string()
+  .min(2, 'Nom kamida 2 ta harf')
+  .max(50, 'Nom 50 ta harfdan oshmasin')
+  .trim()                        // Bo'shliqlarni olib tashlash
+  .toLowerCase();                // Kichik harfga
+
+// Number validation
+const ageSchema = z.number()
+  .int('Butun son bo\'lishi kerak')
+  .positive('Musbat son bo\'lishi kerak')
+  .min(13, 'Kamida 13 yosh')
+  .max(120, 'Maksimal 120 yosh');
+
+// Email validation
+const emailSchema = z.string()
+  .email('To\'g\'ri email formatini kiriting')
+  .toLowerCase()
+  .trim();
+
+// Password validation
+const passwordSchema = z.string()
+  .min(8, 'Password kamida 8 ta belgi')
+  .regex(/[A-Z]/, 'Kamida bitta katta harf')
+  .regex(/[a-z]/, 'Kamida bitta kichik harf')
+  .regex(/[0-9]/, 'Kamida bitta raqam')
+  .regex(/[^A-Za-z0-9]/, 'Kamida bitta maxsus belgi');
+
+// Date validation
+const birthdateSchema = z.string()
+  .datetime('ISO 8601 formatida sana')
+  .transform(str => new Date(str));
+
+// URL validation
+const websiteSchema = z.string()
+  .url('To\'g\'ri URL formatini kiriting')
+  .optional();
+
+// Array validation
+const tagsSchema = z.array(z.string())
+  .min(1, 'Kamida bitta tag')
+  .max(5, 'Maksimal 5 ta tag');
+
+// Enum validation
+const statusSchema = z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']);
+
+// Optional fields
+const optionalSchema = z.string().optional();
+
+// Default values
+const categorySchema = z.string().default('general');
+```
+
+### Complex object validation:
+
+```javascript
+// User registration schema
+const UserRegistrationSchema = z.object({
+  name: z.string()
+    .min(2, 'Ism kamida 2 ta harf')
+    .max(50, 'Ism 50 ta harfdan oshmasin')
+    .regex(/^[a-zA-Z\s]+$/, 'Ismda faqat harflar va bo\'shliq bo\'lishi mumkin')
+    .trim(),
+
+  email: z.string()
+    .email('To\'g\'ri email formatini kiriting')
+    .toLowerCase()
+    .trim(),
+
+  password: z.string()
+    .min(8, 'Password kamida 8 ta belgi')
+    .regex(/[A-Z]/, 'Kamida bitta katta harf')
+    .regex(/[a-z]/, 'Kamida bitta kichik harf')
+    .regex(/[0-9]/, 'Kamida bitta raqam')
+    .regex(/[^A-Za-z0-9]/, 'Kamida bitta maxsus belgi (!@#$%^&*)'),
+
+  confirmPassword: z.string(),
+
+  age: z.number()
+    .int('Butun son bo\'lishi kerak')
+    .min(13, 'Kamida 13 yosh bo\'lishi kerak')
+    .max(120, 'Maksimal 120 yosh'),
+
+  website: z.string()
+    .url('To\'g\'ri URL formatini kiriting')
+    .optional()
+    .or(z.literal('')),
+
+  bio: z.string()
+    .max(500, 'Bio 500 ta belgidan oshmasligi kerak')
+    .optional(),
+
+  interests: z.array(z.string())
+    .min(1, 'Kamida bitta qiziqish mavzusi')
+    .max(10, 'Maksimal 10 ta qiziqish mavzusi')
+}).refine(data => data.password === data.confirmPassword, {
+  message: 'Passwordlar mos kelmaydi',
+  path: ['confirmPassword']
+});
+
+// Blog creation schema
+const BlogCreationSchema = z.object({
+  title: z.string()
+    .min(3, 'Sarlavha kamida 3 ta belgi')
+    .max(100, 'Sarlavha 100 ta belgidan oshmasligi kerak')
+    .trim(),
+
+  content: z.string()
+    .min(50, 'Content kamida 50 ta belgi')
+    .max(50000, 'Content 50000 ta belgidan oshmasligi kerak'),
+
+  excerpt: z.string()
+    .min(10, 'Excerpt kamida 10 ta belgi')
+    .max(200, 'Excerpt 200 ta belgidan oshmasligi kerak')
+    .optional(),
+
+  category: z.enum(['technology', 'lifestyle', 'business', 'health', 'education']),
+
+  tags: z.array(z.string().trim().toLowerCase())
+    .min(1, 'Kamida bitta tag')
+    .max(5, 'Maksimal 5 ta tag')
+    .refine(tags => new Set(tags).size === tags.length, {
+      message: 'Bir xil taglar bo\'lmasligi kerak'
+    }),
+
+  isPublished: z.boolean().default(false),
+
+  publishDate: z.string()
+    .datetime('ISO 8601 formatida sana')
+    .optional()
+    .transform(str => str ? new Date(str) : new Date()),
+
+  featuredImage: z.string()
+    .url('To\'g\'ri rasm URL\'ini kiriting')
+    .optional()
+});
+```
+
+---
+
+## Validation Middleware yaratish
+
+### Universal validation middleware:
+
+```javascript
+// middleware/validation.js
+const { z } = require('zod');
+
+const validateData = (schema) => {
+  return (req, res, next) => {
+    try {
+      // Request body'ni tekshirish
+      const validatedData = schema.parse(req.body);
+
+      // Tekshirilgan ma'lumotlarni req.body'ga qaytarish
+      req.body = validatedData;
+
+      next();
+    } catch (error) {
+      // Zod error handling
+      if (error instanceof z.ZodError) {
+        const errorMessages = error.errors.map(err => ({
+          field: err.path.join('.'),
+          message: err.message,
+          value: err.input
+        }));
+
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Ma\'lumotlarda xatoliklar mavjud',
+            details: errorMessages
+          }
+        });
+      }
+
+      // Other errors
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_FAILED',
+          message: 'Ma\'lumotlarni tekshirishda xatolik yuz berdi'
+        }
+      });
+    }
+  };
+};
+
+// Query params validation
+const validateQuery = (schema) => {
+  return (req, res, next) => {
+    try {
+      const validatedQuery = schema.parse(req.query);
+      req.query = validatedQuery;
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'QUERY_VALIDATION_ERROR',
+            message: 'Query parametrlarida xatolik',
+            details: error.errors
+          }
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        error: { message: 'Query validation failed' }
+      });
+    }
+  };
+};
+
+// URL params validation
+const validateParams = (schema) => {
+  return (req, res, next) => {
+    try {
+      const validatedParams = schema.parse(req.params);
+      req.params = validatedParams;
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'PARAMS_VALIDATION_ERROR',
+            message: 'URL parametrlarida xatolik',
+            details: error.errors
+          }
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        error: { message: 'Params validation failed' }
+      });
+    }
+  };
+};
+
+module.exports = {
+  validateData,
+  validateQuery,
+  validateParams
+};
+```
+
+### Middleware'dan foydalanish:
+
+```javascript
+// routes/blogs.js
+const express = require('express');
+const { validateData, validateQuery, validateParams } = require('../middleware/validation');
+
+const router = express.Router();
+
+// Schemas
+const BlogCreationSchema = z.object({
+  title: z.string().min(3).max(100).trim(),
+  content: z.string().min(50).max(50000),
+  category: z.enum(['technology', 'lifestyle', 'business']),
+  tags: z.array(z.string()).min(1).max(5)
+});
+
+const BlogUpdateSchema = BlogCreationSchema.partial(); // Barcha field'lar optional
+
+const BlogQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).transform(Number).default('1'),
+  limit: z.string().regex(/^\d+$/).transform(Number).default('10'),
+  category: z.enum(['technology', 'lifestyle', 'business']).optional(),
+  search: z.string().max(100).optional()
+});
+
+const BlogParamsSchema = z.object({
+  id: z.string().regex(/^\d+$/, 'Blog ID raqam bo\'lishi kerak').transform(Number)
+});
+
+// Routes with validation
+router.post('/blogs',
+  validateData(BlogCreationSchema),
+  (req, res) => {
+    // req.body allaqachon validated va transformed
+    console.log('Validated data:', req.body);
+
+    const newBlog = {
+      id: blogs.length + 1,
+      ...req.body,
+      createdAt: new Date().toISOString()
+    };
+
+    blogs.push(newBlog);
+    res.status(201).json({
+      success: true,
+      data: newBlog
+    });
+  }
+);
+
+router.get('/blogs',
+  validateQuery(BlogQuerySchema),
+  (req, res) => {
+    const { page, limit, category, search } = req.query;
+
+    let filteredBlogs = [...blogs];
+
+    // Category filter
+    if (category) {
+      filteredBlogs = filteredBlogs.filter(blog => blog.category === category);
+    }
+
+    // Search filter
+    if (search) {
+      filteredBlogs = filteredBlogs.filter(blog =>
+        blog.title.toLowerCase().includes(search.toLowerCase()) ||
+        blog.content.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    // Pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedBlogs = filteredBlogs.slice(startIndex, endIndex);
+
+    res.json({
+      success: true,
+      data: paginatedBlogs,
+      pagination: {
+        page,
+        limit,
+        total: filteredBlogs.length,
+        totalPages: Math.ceil(filteredBlogs.length / limit)
+      }
+    });
+  }
+);
+
+router.put('/blogs/:id',
+  validateParams(BlogParamsSchema),
+  validateData(BlogUpdateSchema),
+  (req, res) => {
+    const { id } = req.params; // Already converted to number
+    const updates = req.body;   // Already validated
+
+    const blogIndex = blogs.findIndex(blog => blog.id === id);
+
+    if (blogIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'BLOG_NOT_FOUND',
+          message: 'Blog topilmadi'
+        }
+      });
+    }
+
+    // Update blog
+    blogs[blogIndex] = {
+      ...blogs[blogIndex],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+
+    res.json({
+      success: true,
+      data: blogs[blogIndex]
+    });
+  }
+);
+```
+
+---
+
+## Professional Error Handling
+
+### Custom error classes:
+
+```javascript
+// errors/ApiError.js
+class ApiError extends Error {
+  constructor(statusCode, message, code = null, details = null) {
+    super(message);
+    this.statusCode = statusCode;
+    this.code = code;
+    this.details = details;
+    this.isOperational = true;
+
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+class ValidationError extends ApiError {
+  constructor(message, details = null) {
+    super(400, message, 'VALIDATION_ERROR', details);
+  }
+}
+
+class NotFoundError extends ApiError {
+  constructor(resource = 'Resource') {
+    super(404, `${resource} topilmadi`, 'NOT_FOUND');
+  }
+}
+
+class UnauthorizedError extends ApiError {
+  constructor(message = 'Authentication talab qilinadi') {
+    super(401, message, 'UNAUTHORIZED');
+  }
+}
+
+class ForbiddenError extends ApiError {
+  constructor(message = 'Ruxsat yo\'q') {
+    super(403, message, 'FORBIDDEN');
+  }
+}
+
+class ConflictError extends ApiError {
+  constructor(message) {
+    super(409, message, 'CONFLICT');
+  }
+}
+
+class TooManyRequestsError extends ApiError {
+  constructor(message = 'Juda ko\'p request') {
+    super(429, message, 'TOO_MANY_REQUESTS');
+  }
+}
+
+module.exports = {
+  ApiError,
+  ValidationError,
+  NotFoundError,
+  UnauthorizedError,
+  ForbiddenError,
+  ConflictError,
+  TooManyRequestsError
+};
+```
+
+### Global error handler:
+
+```javascript
+// middleware/errorHandler.js
+const { ApiError } = require('../errors/ApiError');
+const { ZodError } = require('zod');
+
+const errorHandler = (err, req, res, next) => {
+  console.error('Error:', {
+    message: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+    ip: req.ip,
+    userAgent: req.get('User-Agent')
+  });
+
+  // Operational errors
+  if (err.isOperational) {
+    return res.status(err.statusCode).json({
+      success: false,
+      error: {
+        code: err.code,
+        message: err.message,
+        details: err.details
+      }
+    });
+  }
+
+  // Zod validation errors
+  if (err instanceof ZodError) {
+    const validationErrors = err.errors.map(error => ({
+      field: error.path.join('.'),
+      message: error.message,
+      value: error.input
+    }));
+
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Ma\'lumotlarda xatoliklar mavjud',
+        details: validationErrors
+      }
+    });
+  }
+
+  // Database errors
+  if (err.code === 'ECONNREFUSED') {
+    return res.status(503).json({
+      success: false,
+      error: {
+        code: 'DATABASE_CONNECTION_ERROR',
+        message: 'Ma\'lumotlar bazasiga ulanishda xatolik'
+      }
+    });
+  }
+
+  // JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({
+      success: false,
+      error: {
+        code: 'INVALID_TOKEN',
+        message: 'Token yaroqsiz'
+      }
+    });
+  }
+
+  if (err.name === 'TokenExpiredError') {
+    return res.status(401).json({
+      success: false,
+      error: {
+        code: 'TOKEN_EXPIRED',
+        message: 'Token muddati tugagan'
+      }
+    });
+  }
+
+  // Unexpected errors
+  res.status(500).json({
+    success: false,
+    error: {
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Server ichki xatosi',
+      ...(process.env.NODE_ENV === 'development' && {
+        details: err.message,
+        stack: err.stack
+      })
+    }
+  });
+};
+
+// 404 handler
+const notFoundHandler = (req, res, next) => {
+  res.status(404).json({
+    success: false,
+    error: {
+      code: 'ENDPOINT_NOT_FOUND',
+      message: `${req.method} ${req.path} yo'li topilmadi`
+    }
+  });
+};
+
+module.exports = {
+  errorHandler,
+  notFoundHandler
+};
+```
+
+---
+
+## Async error handling
+
+### Async wrapper utility:
+
+```javascript
+// utils/asyncHandler.js
+const asyncHandler = (fn) => {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
+module.exports = asyncHandler;
+```
+
+### Usage with async routes:
+
+```javascript
+const asyncHandler = require('../utils/asyncHandler');
+const { NotFoundError, ConflictError } = require('../errors/ApiError');
+
+// Async route example
+router.post('/blogs',
+  validateData(BlogCreationSchema),
+  asyncHandler(async (req, res) => {
+    const { title, content, category, tags } = req.body;
+
+    // Check if blog with same title exists
+    const existingBlog = await Blog.findOne({ title });
+    if (existingBlog) {
+      throw new ConflictError('Bu sarlavha bilan blog allaqachon mavjud');
+    }
+
+    // Create blog
+    const newBlog = await Blog.create({
+      title,
+      content,
+      category,
+      tags,
+      authorId: req.user.id,
+      createdAt: new Date()
+    });
+
+    res.status(201).json({
+      success: true,
+      data: newBlog,
+      message: 'Blog muvaffaqiyatli yaratildi'
+    });
+  })
+);
+
+router.get('/blogs/:id',
+  validateParams(BlogParamsSchema),
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const blog = await Blog.findById(id).populate('author', 'name email');
+
+    if (!blog) {
+      throw new NotFoundError('Blog');
+    }
+
+    res.json({
+      success: true,
+      data: blog
+    });
+  })
+);
+```
+
+---
+
+## Input Sanitization
+
+### XSS va injection prevention:
+
+```javascript
+// npm install dompurify jsdom validator
+const DOMPurify = require('dompurify');
+const { JSDOM } = require('jsdom');
+const validator = require('validator');
+
+const window = new JSDOM('').window;
+const purify = DOMPurify(window);
+
+// HTML content sanitization
+const sanitizeHTML = (content) => {
+  // XSS preventionni o'z ichiga oladi
+  const clean = purify.sanitize(content, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'a'],
+    ALLOWED_ATTR: ['href', 'title'],
+    ALLOWED_URI_REGEXP: /^https?:\/\//
+  });
+
+  return clean;
+};
+
+// Text sanitization middleware
+const sanitizeInput = (req, res, next) => {
+  const sanitizeValue = (value) => {
+    if (typeof value === 'string') {
+      // HTML tags olib tashlash
+      return validator.escape(value.trim());
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(sanitizeValue);
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      const sanitized = {};
+      for (const [key, val] of Object.entries(value)) {
+        sanitized[key] = sanitizeValue(val);
+      }
+      return sanitized;
+    }
+
+    return value;
+  };
+
+  if (req.body) {
+    req.body = sanitizeValue(req.body);
+  }
+
+  if (req.query) {
+    req.query = sanitizeValue(req.query);
+  }
+
+  next();
+};
+
+// Content-specific sanitization
+const BlogContentSchema = z.object({
+  title: z.string()
+    .min(3).max(100)
+    .transform(title => validator.escape(title.trim())),
+
+  content: z.string()
+    .min(50).max(50000)
+    .transform(content => sanitizeHTML(content)), // HTML allowed but sanitized
+
+  excerpt: z.string()
+    .max(200)
+    .transform(text => validator.escape(text.trim()))
+    .optional()
+});
+
+module.exports = {
+  sanitizeHTML,
+  sanitizeInput,
+  BlogContentSchema
+};
+```
+
+---
+
+## Complete Validated API Example
+
+### Fully validated blog API:
+
+```javascript
+// app.js - Complete validated API
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { sanitizeInput } = require('./middleware/sanitization');
+
+const app = express();
+
+// Security middleware
+app.use(helmet());
+app.use(cors());
+app.use(express.json({ limit: '1mb' }));
+
+// Input sanitization
+app.use(sanitizeInput);
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
+app.use(limiter);
+
+// Routes
+const authRoutes = require('./routes/auth');
+const blogRoutes = require('./routes/blogs');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/blogs', blogRoutes);
+
+// Error handling
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Validated API server running on port ${PORT}`);
+});
+```
+
+---
+
+## Testing Validation
+
+### Jest test examples:
+
+```javascript
+// tests/validation.test.js
+const request = require('supertest');
+const app = require('../app');
+
+describe('Blog Validation', () => {
+  describe('POST /api/blogs', () => {
+    it('should reject blog with short title', async () => {
+      const response = await request(app)
+        .post('/api/blogs')
+        .send({
+          title: 'AB', // 2 ta belgi, 3 ta kerak
+          content: 'Content kamida 50 ta belgi bo\'lishi kerak, shuning uchun bu yerda yetarlicha kontent yozaman',
+          category: 'technology'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.details[0].field).toBe('title');
+    });
+
+    it('should accept valid blog data', async () => {
+      const validBlog = {
+        title: 'Valid Blog Title',
+        content: 'Bu yerda yetarlicha content bor blog yaratish uchun, kamida ellik ta belgi bo\'lishi kerak',
+        category: 'technology',
+        tags: ['nodejs', 'api']
+      };
+
+      const response = await request(app)
+        .post('/api/blogs')
+        .send(validBlog);
+
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.title).toBe(validBlog.title);
+    });
+
+    it('should sanitize XSS in content', async () => {
+      const blogWithXSS = {
+        title: 'XSS Test Blog',
+        content: 'Normal content <script>alert("XSS")</script> with malicious code',
+        category: 'technology',
+        tags: ['security']
+      };
+
+      const response = await request(app)
+        .post('/api/blogs')
+        .send(blogWithXSS);
+
+      expect(response.status).toBe(201);
+      expect(response.body.data.content).not.toContain('<script>');
+      expect(response.body.data.content).toContain('Normal content');
+    });
+  });
+});
+```
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **Zod Validation** - TypeScript-first schema validation
+✅ **Middleware Design** - reusable validation middleware
+✅ **Error Handling** - professional error management system
+✅ **Input Sanitization** - XSS va injection prevention
+✅ **Testing** - validation testing strategies
+✅ **Real Implementation** - fully validated blog API
+
+### 🛡️ Security va Data Quality:
+
+✅ **Type Safety** - runtime type checking
+✅ **Data Sanitization** - clean input data
+✅ **Error Uniformity** - consistent error responses
+✅ **Attack Prevention** - XSS, CSRF, injection protection
+✅ **User Experience** - clear validation messages
+
+### 🚀 Keyingi darsda:
+
+- **GraphQL** - modern API alternative
+- **Apollo Server** - GraphQL server implementation
+- **Schema Design** - GraphQL schema best practices
+- **Query Optimization** - N+1 problem solving
+
+### 📚 Mustaqil mashq:
+
+1. **File Upload Validation** - image, document validation
+2. **Custom Validators** - business logic validation
+3. **Multi-language Errors** - internationalization (i18n)
+
+---
+
+<Callout type="success" title="Tabriklaymiz! 🎉">
+Siz endi professional API validation va error handling'ni o'rgandingiz! Zod, input sanitization va comprehensive error management bilan himoyalangan API yaratishni biladigan backend developerga aylandingiz.
+</Callout>
+
+<Callout type="info" title="Best Practice 💡">
+Validation - bu last line of defense emas, first line of defense! Har doim client-side va server-side validation qo'shing. Trust but verify tamoyilini qo'llang!
+</Callout>
+
+**Keyingi dars**: [GraphQL bilan tanishuv](/docs/api/22-graphql-introduction)

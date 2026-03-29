@@ -1,0 +1,1649 @@
+---
+title: "Express Templates va Dynamic HTML"
+description: "EJS, Handlebars template engine'lari bilan dynamic HTML yaratish, template inheritance va server-side rendering"
+category: "nodejs"
+order: 7
+difficulty: "intermediate"
+readTime: "35 daqiqa"
+tags:
+  - nodejs
+  - express
+  - templates
+  - ejs
+  - handlebars
+  - dynamic-html
+  - server-side-rendering
+---
+
+# Express Templates va Dynamic HTML
+
+Assalom aleykum! Oldingi darsda Express middleware'lari bilan ishladik. Endi **template engine'lar** bilan dynamic HTML yaratishni o'rganamiz - real web saytlar qanday ishlashiningasosi!
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- 🎨 **Template Engine nima** - static vs dynamic content
+- 📝 **EJS** - Embedded JavaScript templates
+- 🔧 **Handlebars** - Logic-less templates
+- 🏗️ **Template inheritance** - layout va partials
+- 📊 **Data passing** - variable'lar va loops
+- 💼 **Real loyiha** - Blog Website bilan SSR
+
+---
+
+## Template Engine nima va nega kerak?
+
+**Template Engine** - HTML'ni JavaScript ma'lumotlari bilan birlashtirib, dynamic content yaratish uchun tool.
+
+### Static vs Dynamic content:
+
+**Static HTML:**
+```html
+<!-- Doimo bir xil -->
+<h1>Salom!</h1>
+<p>Bu static content</p>
+```
+
+**Dynamic HTML (Template bilan):**
+```html
+<!-- Har safar boshqacha -->
+<h1>Salom, <%= user.name %>!</h1>
+<p>Bugun <%= new Date().toLocaleDateString() %></p>
+<% if (user.isVIP) { %>
+  <span class="vip-badge">VIP Member</span>
+<% } %>
+```
+
+### Real hayot misoli:
+
+Tasavvur qiling, **Instagram** saytini:
+
+- **Static**: Har bir user uchun alohida HTML fayl yaratish (impossible!)
+- **Dynamic**: 1 ta template + user ma'lumotlari = Personal page
+
+```javascript
+// Template + Data = Dynamic HTML
+const userData = {
+  name: 'Alibek',
+  followers: 1250,
+  posts: [
+    { image: 'photo1.jpg', likes: 45 },
+    { image: 'photo2.jpg', likes: 67 }
+  ]
+};
+
+// Template Engine:
+// template + userData = Alibek'ning personal Instagram page
+```
+
+---
+
+## EJS (Embedded JavaScript)
+
+**EJS** - eng mashhur va oson template engine. JavaScript kodini to'g'ridan-to'g'ri HTML ichida yozish mumkin.
+
+### 1. EJS o'rnatish va setup:
+
+```bash
+npm install ejs
+```
+
+```javascript
+// server.js
+const express = require('express');
+const path = require('path');
+
+const app = express();
+
+// Template engine setup
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// Static files
+app.use(express.static('public'));
+app.use(express.json());
+
+// Sample data
+const users = [
+  { id: 1, name: 'Alibek Tursunov', email: 'alibek@example.com', age: 25, city: 'Tashkent' },
+  { id: 2, name: 'Malika Karimova', email: 'malika@example.com', age: 22, city: 'Samarkand' },
+  { id: 3, name: 'Jasur Nazarov', email: 'jasur@example.com', age: 28, city: 'Bukhara' }
+];
+
+const posts = [
+  { id: 1, title: 'Node.js o\'rganish', content: 'Node.js juda qiziq...', author: 'Alibek', date: '2026-03-29' },
+  { id: 2, title: 'JavaScript masalalari', content: 'JavaScript murakkab...', author: 'Malika', date: '2026-03-28' },
+  { id: 3, title: 'Web development', content: 'Web development...', author: 'Jasur', date: '2026-03-27' }
+];
+
+// Routes
+app.get('/', (req, res) => {
+  res.render('home', {
+    title: 'Bosh sahifa',
+    users: users,
+    posts: posts,
+    currentUser: { name: 'Mehmon' }
+  });
+});
+
+app.listen(3000, () => {
+  console.log('🎨 Template Server: http://localhost:3000');
+});
+```
+
+### 2. EJS sintaksis va xususiyatlar:
+
+```html
+<!-- views/home.ejs -->
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - My Blog</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+    .header { background: #333; color: white; padding: 20px; margin: -40px -40px 20px -40px; }
+    .post { border: 1px solid #ddd; padding: 15px; margin: 15px 0; border-radius: 5px; }
+    .user-card { display: inline-block; margin: 10px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1><%= title %></h1>
+    <p>Xush kelibsiz, <%= currentUser.name %>!</p>
+    <p>Bugun: <%= new Date().toLocaleDateString('uz-UZ') %></p>
+  </div>
+
+  <!-- Users section -->
+  <section>
+    <h2>👥 Foydalanuvchilar (<%= users.length %> ta)</h2>
+
+    <% users.forEach(function(user) { %>
+      <div class="user-card">
+        <h3><%= user.name %></h3>
+        <p>📧 Email: <%= user.email %></p>
+        <p>🎂 Yosh: <%= user.age %></p>
+        <p>🏙️ Shahar: <%= user.city %></p>
+      </div>
+    <% }) %>
+  </section>
+
+  <!-- Posts section -->
+  <section>
+    <h2>📝 So'nggi postlar</h2>
+
+    <% if (posts.length > 0) { %>
+      <% posts.forEach(function(post, index) { %>
+        <article class="post">
+          <h3>#<%= index + 1 %>. <%= post.title %></h3>
+          <p><%= post.content %></p>
+          <footer>
+            <small>Muallif: <strong><%= post.author %></strong> |
+            Sana: <%= post.date %></small>
+          </footer>
+        </article>
+      <% }) %>
+    <% } else { %>
+      <p>Hali postlar yo'q.</p>
+    <% } %>
+  </section>
+
+  <!-- JavaScript variables -->
+  <script>
+    // Server'dan frontend'ga ma'lumot uzatish
+    const users = <%- JSON.stringify(users) %>;
+    const posts = <%- JSON.stringify(posts) %>;
+
+    console.log('Users:', users);
+    console.log('Posts:', posts);
+  </script>
+</body>
+</html>
+```
+
+### 3. EJS sintaksis qoidalari:
+
+```html
+<!-- Variable output (HTML escape) -->
+<h1><%= title %></h1>
+
+<!-- Raw HTML output (escape qilinmaydi) -->
+<div><%- htmlContent %></div>
+
+<!-- JavaScript code (output yo'q) -->
+<% const currentYear = new Date().getFullYear(); %>
+
+<!-- Conditionals -->
+<% if (user.isAdmin) { %>
+  <button>Admin Panel</button>
+<% } else { %>
+  <button>Profile</button>
+<% } %>
+
+<!-- Loops -->
+<% users.forEach(function(user) { %>
+  <li><%= user.name %></li>
+<% }); %>
+
+<!-- Include (partials) -->
+<%- include('partials/header') %>
+
+<!-- Include with data -->
+<%- include('partials/user-card', { user: currentUser }) %>
+```
+
+---
+
+## Handlebars Template Engine
+
+**Handlebars** - "logic-less" template engine. JS kod HTML ichida minimal bo'ladi.
+
+### 1. Handlebars setup:
+
+```bash
+npm install express-handlebars
+```
+
+```javascript
+// server-handlebars.js
+const express = require('express');
+const exphbs = require('express-handlebars');
+const path = require('path');
+
+const app = express();
+
+// Handlebars setup
+const hbs = exphbs.create({
+  defaultLayout: 'main',
+  extname: '.hbs',
+  layoutsDir: path.join(__dirname, 'views/layouts/'),
+  partialsDir: path.join(__dirname, 'views/partials/'),
+  helpers: {
+    // Custom helpers
+    capitalize: function(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    },
+    formatDate: function(date) {
+      return new Date(date).toLocaleDateString('uz-UZ');
+    },
+    eq: function(a, b) {
+      return a === b;
+    },
+    gt: function(a, b) {
+      return a > b;
+    }
+  }
+});
+
+app.engine('hbs', hbs.engine);
+app.set('view engine', 'hbs');
+app.set('views', './views');
+
+// Static files
+app.use(express.static('public'));
+
+// Sample data
+const blogData = {
+  site: {
+    title: 'My Handlebars Blog',
+    description: 'Handlebars bilan yaratilgan blog'
+  },
+  posts: [
+    {
+      id: 1,
+      title: 'handlebars o\'rganish',
+      slug: 'handlebars-organish',
+      excerpt: 'Handlebars template engine haqida',
+      content: 'Handlebars juda oson va kuchli template engine...',
+      author: { name: 'Alibek', avatar: '/images/alibek.jpg' },
+      date: '2026-03-29',
+      views: 156,
+      featured: true,
+      tags: ['handlebars', 'templates', 'nodejs']
+    },
+    {
+      id: 2,
+      title: 'express.js asoslari',
+      slug: 'express-asoslari',
+      excerpt: 'Express.js framework bilan tanishuv',
+      content: 'Express.js Node.js uchun eng mashhur framework...',
+      author: { name: 'Malika', avatar: '/images/malika.jpg' },
+      date: '2026-03-28',
+      views: 89,
+      featured: false,
+      tags: ['express', 'nodejs', 'backend']
+    }
+  ]
+};
+
+// Routes
+app.get('/', (req, res) => {
+  res.render('index', {
+    posts: blogData.posts,
+    site: blogData.site,
+    featuredPosts: blogData.posts.filter(post => post.featured)
+  });
+});
+
+app.get('/post/:slug', (req, res) => {
+  const post = blogData.posts.find(p => p.slug === req.params.slug);
+
+  if (!post) {
+    return res.status(404).render('404', {
+      title: 'Sahifa topilmadi',
+      site: blogData.site
+    });
+  }
+
+  res.render('post', {
+    post: post,
+    site: blogData.site,
+    title: post.title
+  });
+});
+
+app.listen(3000, () => {
+  console.log('🎺 Handlebars Server: http://localhost:3000');
+});
+```
+
+### 2. Handlebars layout (main template):
+
+```html
+<!-- views/layouts/main.hbs -->
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{#if title}}{{title}} - {{/if}}{{site.title}}</title>
+  <meta name="description" content="{{site.description}}">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    header { background: #2c3e50; color: white; padding: 1rem 0; }
+    nav a { color: white; text-decoration: none; margin: 0 15px; }
+    nav a:hover { text-decoration: underline; }
+    main { padding: 2rem 0; }
+    .post { border: 1px solid #ddd; padding: 1.5rem; margin: 1rem 0; border-radius: 8px; }
+    .post-meta { color: #666; font-size: 0.9rem; margin: 0.5rem 0; }
+    .tags { margin: 0.5rem 0; }
+    .tag { background: #3498db; color: white; padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.8rem; margin-right: 0.5rem; }
+    footer { background: #34495e; color: white; text-align: center; padding: 1rem 0; margin-top: 2rem; }
+    .featured { border-left: 4px solid #e74c3c; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <h1>{{site.title}}</h1>
+      <nav>
+        <a href="/">🏠 Bosh sahifa</a>
+        <a href="/about">📋 Biz haqimizda</a>
+        <a href="/contact">📞 Aloqa</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main>
+    <div class="container">
+      {{{body}}}
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 {{site.title}}. Barcha huquqlar himoyalangan.</p>
+    </div>
+  </footer>
+</body>
+</html>
+```
+
+### 3. Handlebars pages:
+
+```html
+<!-- views/index.hbs -->
+<h1>📰 So'nggi postlar</h1>
+
+{{#if featuredPosts.length}}
+<section>
+  <h2>⭐ Ajoyib postlar</h2>
+  {{#each featuredPosts}}
+    {{> post-card this featured=true}}
+  {{/each}}
+</section>
+{{/if}}
+
+<section>
+  <h2>📝 Barcha postlar ({{posts.length}} ta)</h2>
+  {{#each posts}}
+    {{> post-card this}}
+  {{else}}
+    <p>Hali postlar yo'q.</p>
+  {{/each}}
+</section>
+```
+
+```html
+<!-- views/post.hbs -->
+<article class="post">
+  <header>
+    <h1>{{capitalize post.title}}</h1>
+    <div class="post-meta">
+      <span>👤 Muallif: <strong>{{post.author.name}}</strong></span> |
+      <span>📅 Sana: {{formatDate post.date}}</span> |
+      <span>👁️ Ko'rishlar: {{post.views}}</span>
+    </div>
+    {{#if post.tags}}
+    <div class="tags">
+      {{#each post.tags}}
+        <span class="tag">{{this}}</span>
+      {{/each}}
+    </div>
+    {{/if}}
+  </header>
+
+  <div class="content">
+    <p>{{post.content}}</p>
+  </div>
+</article>
+
+<nav>
+  <a href="/">🔙 Bosh sahifaga qaytish</a>
+</nav>
+```
+
+### 4. Handlebars partials:
+
+```html
+<!-- views/partials/post-card.hbs -->
+<article class="post {{#if featured}}featured{{/if}}">
+  <h3>
+    <a href="/post/{{slug}}" style="text-decoration: none; color: inherit;">
+      {{capitalize title}}
+    </a>
+  </h3>
+
+  <div class="post-meta">
+    <span>👤 {{author.name}}</span> |
+    <span>📅 {{formatDate date}}</span> |
+    <span>👁️ {{views}} ko'rish</span>
+  </div>
+
+  <p>{{excerpt}}</p>
+
+  {{#if tags}}
+  <div class="tags">
+    {{#each tags}}
+      <span class="tag">{{this}}</span>
+    {{/each}}
+  </div>
+  {{/if}}
+
+  <a href="/post/{{slug}}" style="color: #3498db;">Batafsil o'qish →</a>
+</article>
+```
+
+---
+
+## Template Inheritance va Partials
+
+### 1. EJS bilan partials:
+
+```html
+<!-- views/partials/header.ejs -->
+<header class="site-header">
+  <div class="container">
+    <h1><%= typeof title !== 'undefined' ? title : 'My Site' %></h1>
+    <nav>
+      <a href="/">Bosh sahifa</a>
+      <a href="/about">Haqimizda</a>
+      <a href="/contact">Aloqa</a>
+    </nav>
+  </div>
+</header>
+```
+
+```html
+<!-- views/partials/footer.ejs -->
+<footer class="site-footer">
+  <div class="container">
+    <p>&copy; <%= new Date().getFullYear() %> My Site. Barcha huquqlar himoyalangan.</p>
+    <p>Node.js va <%= typeof engine !== 'undefined' ? engine : 'EJS' %> bilan yaratilgan</p>
+  </div>
+</footer>
+```
+
+```html
+<!-- views/layout.ejs -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="main-content">
+    <div class="container">
+      <%- body %>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+</body>
+</html>
+```
+
+### 2. Data passing to partials:
+
+```html
+<!-- User card partial with data -->
+<!-- views/partials/user-card.ejs -->
+<div class="user-card" data-user-id="<%= user.id %>">
+  <img src="<%= user.avatar || '/images/default-avatar.png' %>" alt="<%= user.name %>">
+  <h3><%= user.name %></h3>
+  <p class="email"><%= user.email %></p>
+
+  <% if (user.bio) { %>
+    <p class="bio"><%= user.bio %></p>
+  <% } %>
+
+  <div class="user-stats">
+    <span>Posts: <%= user.posts || 0 %></span>
+    <span>Followers: <%= user.followers || 0 %></span>
+  </div>
+
+  <% if (showActions) { %>
+    <div class="actions">
+      <button onclick="followUser(<%= user.id %>)">Follow</button>
+      <button onclick="messageUser(<%= user.id %>)">Message</button>
+    </div>
+  <% } %>
+</div>
+```
+
+```javascript
+// Usage in route
+app.get('/users', (req, res) => {
+  res.render('users', {
+    title: 'Foydalanuvchilar',
+    users: users,
+    showActions: true, // Partial uchun flag
+    currentUser: req.user
+  });
+});
+```
+
+```html
+<!-- views/users.ejs -->
+<h1>👥 Foydalanuvchilar</h1>
+
+<div class="users-grid">
+  <% users.forEach(function(user) { %>
+    <%- include('partials/user-card', {
+      user: user,
+      showActions: user.id !== currentUser.id
+    }) %>
+  <% }) %>
+</div>
+```
+
+---
+
+## Advanced Template Features
+
+### 1. Conditional rendering va loops:
+
+```html
+<!-- Complex conditional rendering -->
+<% if (user.role === 'admin') { %>
+  <div class="admin-panel">
+    <h3>🔧 Admin Panel</h3>
+    <button onclick="manageUsers()">Manage Users</button>
+    <button onclick="viewLogs()">View Logs</button>
+  </div>
+<% } else if (user.role === 'moderator') { %>
+  <div class="moderator-panel">
+    <h3>⚖️ Moderator Tools</h3>
+    <button onclick="moderatePosts()">Moderate Posts</button>
+  </div>
+<% } else { %>
+  <div class="user-dashboard">
+    <h3>📊 Your Dashboard</h3>
+    <p>Welcome, <%= user.name %>!</p>
+  </div>
+<% } %>
+
+<!-- Advanced loops with filtering -->
+<%
+  const recentPosts = posts.filter(post => {
+    const postDate = new Date(post.createdAt);
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return postDate > weekAgo;
+  });
+%>
+
+<% if (recentPosts.length > 0) { %>
+  <section class="recent-posts">
+    <h2>📅 So'nggi hafta postlari</h2>
+    <% recentPosts.forEach(function(post, index) { %>
+      <article class="post-preview">
+        <h3>#<%= index + 1 %> <%= post.title %></h3>
+        <p><%= post.excerpt %></p>
+        <small>
+          <%= new Date(post.createdAt).toLocaleDateString('uz-UZ') %> -
+          <%= post.author %> -
+          <%= post.views %> ko'rish
+        </small>
+      </article>
+    <% }) %>
+  </section>
+<% } %>
+```
+
+### 2. Template ma'lumotlarini formatlash:
+
+```html
+<!-- Helper functions in template -->
+<%
+  function formatNumber(num) {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  }
+
+  function timeAgo(date) {
+    const now = new Date();
+    const postDate = new Date(date);
+    const diffMs = now - postDate;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Bugun';
+    if (diffDays === 1) return 'Kecha';
+    if (diffDays < 7) return diffDays + ' kun oldin';
+    if (diffDays < 30) return Math.floor(diffDays / 7) + ' hafta oldin';
+    return Math.floor(diffDays / 30) + ' oy oldin';
+  }
+
+  function truncateText(text, length = 100) {
+    if (text.length <= length) return text;
+    return text.substr(0, length) + '...';
+  }
+%>
+
+<!-- Usage in template -->
+<% posts.forEach(function(post) { %>
+  <article class="post">
+    <h3><%= post.title %></h3>
+    <p><%= truncateText(post.content, 150) %></p>
+    <div class="meta">
+      <span>👁️ <%= formatNumber(post.views) %></span>
+      <span>📅 <%= timeAgo(post.createdAt) %></span>
+      <span>❤️ <%= formatNumber(post.likes) %></span>
+    </div>
+  </article>
+<% }) %>
+```
+
+---
+
+## Amaliy loyiha: Personal Blog Website
+
+Keling, to'liq blog website yaratamiz - server-side rendering bilan!
+
+### Loyiha strukturasi:
+
+```
+blog-website/
+├── views/
+│   ├── layouts/
+│   │   └── main.hbs
+│   ├── partials/
+│   │   ├── header.hbs
+│   │   ├── footer.hbs
+│   │   ├── post-card.hbs
+│   │   └── sidebar.hbs
+│   ├── index.hbs
+│   ├── post.hbs
+│   ├── about.hbs
+│   └── 404.hbs
+├── public/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── main.js
+│   └── images/
+├── data/
+│   └── blog-data.js
+├── helpers/
+│   └── handlebars-helpers.js
+└── server.js
+```
+
+### 1. Blog Data:
+
+```javascript
+// data/blog-data.js
+const posts = [
+  {
+    id: 1,
+    title: 'Node.js bilan Backend Development',
+    slug: 'nodejs-backend-development',
+    excerpt: 'Node.js yordamida professional backend development o\'rganish',
+    content: `
+      <p>Node.js zamonaviy web development'ning asosi hisoblanadi. Bu darsda biz Node.js'ning asosiy tushunchalarini o'rganamiz.</p>
+
+      <h3>Node.js nima?</h3>
+      <p>Node.js - bu JavaScript runtime environment bo'lib, server-side dasturlash uchun ishlatiladi.</p>
+
+      <h3>Asosiy xususiyatlar:</h3>
+      <ul>
+        <li>Asynchronous va event-driven</li>
+        <li>NPM - ulkan paketlar kutubxonasi</li>
+        <li>Cross-platform ishlaydigan</li>
+      </ul>
+    `,
+    author: {
+      name: 'Alibek Tursunov',
+      email: 'alibek@example.com',
+      avatar: '/images/alibek.jpg',
+      bio: 'Full-stack developer va Node.js enthusiast'
+    },
+    category: 'Backend',
+    tags: ['nodejs', 'javascript', 'backend', 'tutorial'],
+    publishedAt: '2026-03-29T10:00:00Z',
+    updatedAt: '2026-03-29T10:00:00Z',
+    views: 1250,
+    likes: 89,
+    comments: 12,
+    featured: true,
+    image: '/images/nodejs-banner.jpg'
+  },
+  {
+    id: 2,
+    title: 'Express.js Middleware\'lar bilan ishlash',
+    slug: 'express-middlewares',
+    excerpt: 'Express.js middleware\'larini o\'rganish va amalda qo\'llash',
+    content: `
+      <p>Express.js'dagi middleware'lar request va response cycle ichida ishlaydigan function'lardir.</p>
+
+      <h3>Middleware turlari:</h3>
+      <ul>
+        <li>Built-in middleware</li>
+        <li>Third-party middleware</li>
+        <li>Custom middleware</li>
+      </ul>
+
+      <p>Middleware'lar sequential ravishda (ketma-ket) ishlaydi va har biri <code>next()</code> function orqali keyingisiga o'tadi.</p>
+    `,
+    author: {
+      name: 'Malika Karimova',
+      email: 'malika@example.com',
+      avatar: '/images/malika.jpg',
+      bio: 'Frontend/Backend developer'
+    },
+    category: 'Backend',
+    tags: ['express', 'middleware', 'nodejs', 'web-development'],
+    publishedAt: '2026-03-28T14:30:00Z',
+    updatedAt: '2026-03-28T14:30:00Z',
+    views: 890,
+    likes: 67,
+    comments: 8,
+    featured: false,
+    image: '/images/express-banner.jpg'
+  },
+  {
+    id: 3,
+    title: 'JavaScript ES6+ yangi xususiyatlari',
+    slug: 'javascript-es6-features',
+    excerpt: 'Modern JavaScript\'da yangi syntax va xususiyatlar',
+    content: `
+      <p>ES6 va keyingi versiyalarda JavaScript'ga qo'shilgan yangi xususiyatlarni ko'rib chiqamiz.</p>
+
+      <h3>Asosiy yangiliklar:</h3>
+      <ul>
+        <li>Arrow functions</li>
+        <li>Template literals</li>
+        <li>Destructuring assignment</li>
+        <li>Async/await</li>
+        <li>Modules</li>
+      </ul>
+
+      <p>Bu xususiyatlar kodni yanada ixcham va o'qilishi oson qiladi.</p>
+    `,
+    author: {
+      name: 'Jasur Nazarov',
+      email: 'jasur@example.com',
+      avatar: '/images/jasur.jpg',
+      bio: 'JavaScript developer va trainer'
+    },
+    category: 'Frontend',
+    tags: ['javascript', 'es6', 'syntax', 'modern-js'],
+    publishedAt: '2026-03-27T16:20:00Z',
+    updatedAt: '2026-03-27T16:20:00Z',
+    views: 650,
+    likes: 43,
+    comments: 5,
+    featured: true,
+    image: '/images/js-es6-banner.jpg'
+  }
+];
+
+const categories = [
+  { name: 'Backend', count: 2, color: '#2ecc71' },
+  { name: 'Frontend', count: 1, color: '#3498db' },
+  { name: 'DevOps', count: 0, color: '#9b59b6' },
+  { name: 'Database', count: 0, color: '#f39c12' }
+];
+
+const tags = [
+  { name: 'nodejs', count: 2 },
+  { name: 'javascript', count: 2 },
+  { name: 'express', count: 1 },
+  { name: 'backend', count: 1 },
+  { name: 'es6', count: 1 },
+  { name: 'middleware', count: 1 }
+];
+
+const siteInfo = {
+  title: 'Tech Blog Uzbekistan',
+  description: 'O\'zbek tilida texnologiya bo\'yicha blog',
+  author: 'Tech Community UZ',
+  url: 'https://techblog.uz',
+  socialLinks: {
+    telegram: '@techbloguz',
+    youtube: 'TechBlogUZ',
+    github: 'techbloguz'
+  }
+};
+
+module.exports = {
+  posts,
+  categories,
+  tags,
+  siteInfo,
+  getFeaturedPosts: () => posts.filter(post => post.featured),
+  getPostBySlug: (slug) => posts.find(post => post.slug === slug),
+  getPostsByCategory: (category) => posts.filter(post => post.category === category),
+  getPostsByTag: (tag) => posts.filter(post => post.tags.includes(tag))
+};
+```
+
+### 2. Handlebars Helpers:
+
+```javascript
+// helpers/handlebars-helpers.js
+const moment = require('moment');
+
+module.exports = {
+  // Date formatting
+  formatDate: (date, format = 'DD.MM.YYYY') => {
+    return moment(date).format(format);
+  },
+
+  // Relative time
+  timeAgo: (date) => {
+    return moment(date).fromNow();
+  },
+
+  // Capitalize first letter
+  capitalize: (str) => {
+    if (!str || typeof str !== 'string') return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  },
+
+  // Truncate text
+  truncate: (text, length = 100) => {
+    if (!text || text.length <= length) return text;
+    return text.substring(0, length) + '...';
+  },
+
+  // Format numbers
+  formatNumber: (num) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  },
+
+  // Equality check
+  eq: (a, b) => a === b,
+
+  // Greater than
+  gt: (a, b) => a > b,
+
+  // Addition
+  add: (a, b) => a + b,
+
+  // JSON stringify for JavaScript
+  json: (obj) => JSON.stringify(obj),
+
+  // Generate range for pagination
+  range: (start, end) => {
+    const result = [];
+    for (let i = start; i <= end; i++) {
+      result.push(i);
+    }
+    return result;
+  }
+};
+```
+
+### 3. Main Server:
+
+```javascript
+// server.js
+const express = require('express');
+const { engine } = require('express-handlebars');
+const path = require('path');
+const moment = require('moment');
+
+// Data va helpers
+const blogData = require('./data/blog-data');
+const helpers = require('./helpers/handlebars-helpers');
+
+const app = express();
+
+// Moment.js locale
+moment.locale('uz');
+
+// Handlebars setup
+app.engine('hbs', engine({
+  defaultLayout: 'main',
+  extname: '.hbs',
+  layoutsDir: path.join(__dirname, 'views/layouts/'),
+  partialsDir: path.join(__dirname, 'views/partials/'),
+  helpers: helpers
+}));
+
+app.set('view engine', 'hbs');
+app.set('views', './views');
+
+// Middleware
+app.use(express.static('public'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.get('/', (req, res) => {
+  const featuredPosts = blogData.getFeaturedPosts();
+
+  res.render('index', {
+    title: 'Bosh sahifa',
+    posts: blogData.posts,
+    featuredPosts: featuredPosts,
+    categories: blogData.categories,
+    tags: blogData.tags,
+    site: blogData.siteInfo
+  });
+});
+
+app.get('/post/:slug', (req, res) => {
+  const post = blogData.getPostBySlug(req.params.slug);
+
+  if (!post) {
+    return res.status(404).render('404', {
+      title: 'Sahifa topilmadi',
+      site: blogData.siteInfo
+    });
+  }
+
+  // Increment views (demo uchun)
+  post.views++;
+
+  // Related posts (bir xil category)
+  const relatedPosts = blogData.posts
+    .filter(p => p.category === post.category && p.id !== post.id)
+    .slice(0, 3);
+
+  res.render('post', {
+    title: post.title,
+    post: post,
+    relatedPosts: relatedPosts,
+    site: blogData.siteInfo
+  });
+});
+
+app.get('/category/:category', (req, res) => {
+  const categoryName = req.params.category;
+  const posts = blogData.getPostsByCategory(categoryName);
+
+  res.render('category', {
+    title: `${categoryName} postlari`,
+    posts: posts,
+    categoryName: categoryName,
+    site: blogData.siteInfo
+  });
+});
+
+app.get('/tag/:tag', (req, res) => {
+  const tagName = req.params.tag;
+  const posts = blogData.getPostsByTag(tagName);
+
+  res.render('tag', {
+    title: `#${tagName} postlari`,
+    posts: posts,
+    tagName: tagName,
+    site: blogData.siteInfo
+  });
+});
+
+app.get('/about', (req, res) => {
+  res.render('about', {
+    title: 'Biz haqimizda',
+    site: blogData.siteInfo
+  });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).render('404', {
+    title: 'Sahifa topilmadi',
+    site: blogData.siteInfo
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🎨 Blog Website: http://localhost:${PORT}`);
+  console.log('📝 Pages:');
+  console.log(`   🏠 Homepage: http://localhost:${PORT}/`);
+  console.log(`   📖 Sample post: http://localhost:${PORT}/post/nodejs-backend-development`);
+  console.log(`   ℹ️ About: http://localhost:${PORT}/about`);
+});
+```
+
+### 4. Main Layout:
+
+```html
+<!-- views/layouts/main.hbs -->
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{#if title}}{{title}} - {{/if}}{{site.title}}</title>
+  <meta name="description" content="{{site.description}}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  {{> header}}
+
+  <main class="main-content">
+    {{{body}}}
+  </main>
+
+  {{> footer}}
+
+  <script src="/js/main.js"></script>
+</body>
+</html>
+```
+
+### 5. Homepage Template:
+
+```html
+<!-- views/index.hbs -->
+<div class="container">
+  <!-- Hero section -->
+  <section class="hero">
+    <h1>🚀 {{site.title}}</h1>
+    <p>{{site.description}} - O'zbekiston texnologiya hamjamiyati</p>
+  </section>
+
+  <!-- Featured posts -->
+  {{#if featuredPosts.length}}
+  <section class="featured-posts">
+    <h2>⭐ Tanlangan maqolalar</h2>
+    <div class="posts-grid featured">
+      {{#each featuredPosts}}
+        {{> post-card this featured=true}}
+      {{/each}}
+    </div>
+  </section>
+  {{/if}}
+
+  <!-- All posts -->
+  <section class="all-posts">
+    <div class="content-wrapper">
+      <!-- Main content -->
+      <div class="posts-main">
+        <h2>📝 Barcha maqolalar</h2>
+        <div class="posts-list">
+          {{#each posts}}
+            {{> post-card this}}
+          {{else}}
+            <p>Hali maqolalar yo'q.</p>
+          {{/each}}
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      {{> sidebar categories=categories tags=tags}}
+    </div>
+  </section>
+</div>
+```
+
+### 6. Post Template:
+
+```html
+<!-- views/post.hbs -->
+<div class="container">
+  <article class="post-single">
+    <!-- Post header -->
+    <header class="post-header">
+      {{#if post.image}}
+        <img src="{{post.image}}" alt="{{post.title}}" class="post-image">
+      {{/if}}
+
+      <div class="post-meta-header">
+        <span class="category">{{post.category}}</span>
+        <h1 class="post-title">{{post.title}}</h1>
+
+        <div class="post-meta">
+          <div class="author-info">
+            <img src="{{post.author.avatar}}" alt="{{post.author.name}}" class="author-avatar">
+            <div>
+              <strong>{{post.author.name}}</strong>
+              <p>{{post.author.bio}}</p>
+            </div>
+          </div>
+
+          <div class="post-stats">
+            <span>📅 {{formatDate post.publishedAt 'DD MMMM, YYYY'}}</span>
+            <span>👁️ {{formatNumber post.views}} ko'rish</span>
+            <span>❤️ {{formatNumber post.likes}} like</span>
+            <span>💬 {{post.comments}} izoh</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Post content -->
+    <div class="post-content">
+      {{{post.content}}}
+    </div>
+
+    <!-- Post tags -->
+    {{#if post.tags}}
+    <div class="post-tags">
+      <strong>Teglar:</strong>
+      {{#each post.tags}}
+        <a href="/tag/{{this}}" class="tag">{{this}}</a>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    <!-- Post actions -->
+    <div class="post-actions">
+      <button class="btn btn-like" onclick="likePost({{post.id}})">
+        ❤️ Like ({{post.likes}})
+      </button>
+      <button class="btn btn-share" onclick="sharePost()">
+        📤 Ulashish
+      </button>
+    </div>
+  </article>
+
+  <!-- Related posts -->
+  {{#if relatedPosts.length}}
+  <section class="related-posts">
+    <h3>📖 Shunga o'xshash maqolalar</h3>
+    <div class="posts-grid">
+      {{#each relatedPosts}}
+        {{> post-card this compact=true}}
+      {{/each}}
+    </div>
+  </section>
+  {{/if}}
+</div>
+```
+
+---
+
+## CSS Styling:
+
+```css
+/* public/css/style.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background: #f8fafc;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Header styles */
+.site-header {
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo h1 {
+  color: #3b82f6;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.nav-menu a {
+  color: #64748b;
+  text-decoration: none;
+  margin-left: 2rem;
+  font-weight: 500;
+}
+
+.nav-menu a:hover {
+  color: #3b82f6;
+}
+
+/* Hero section */
+.hero {
+  text-align: center;
+  padding: 3rem 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin-bottom: 3rem;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.hero p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* Posts grid */
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.posts-grid.featured {
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+/* Post card */
+.post-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.post-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.post-card.featured {
+  border-left: 4px solid #f59e0b;
+}
+
+.post-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.post-body {
+  padding: 1.5rem;
+}
+
+.post-category {
+  display: inline-block;
+  background: #3b82f6;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.post-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.post-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.post-title a:hover {
+  color: #3b82f6;
+}
+
+.post-excerpt {
+  color: #64748b;
+  margin-bottom: 1rem;
+}
+
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.post-tags {
+  margin: 1rem 0;
+}
+
+.tag {
+  display: inline-block;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  margin-right: 0.5rem;
+  text-decoration: none;
+}
+
+.tag:hover {
+  background: #cbd5e1;
+}
+
+/* Content wrapper */
+.content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 3rem;
+  align-items: start;
+}
+
+.posts-main {
+  min-width: 0;
+}
+
+/* Sidebar */
+.sidebar {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 100px;
+}
+
+.sidebar h3 {
+  margin-bottom: 1rem;
+  color: #1e293b;
+}
+
+.sidebar ul {
+  list-style: none;
+}
+
+.sidebar li {
+  margin-bottom: 0.5rem;
+}
+
+.sidebar a {
+  color: #64748b;
+  text-decoration: none;
+  display: flex;
+  justify-content: space-between;
+}
+
+.sidebar a:hover {
+  color: #3b82f6;
+}
+
+/* Single post styles */
+.post-single {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 3rem;
+}
+
+.post-header {
+  position: relative;
+}
+
+.post-single .post-image {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+}
+
+.post-meta-header {
+  padding: 2rem;
+}
+
+.post-single .post-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 1rem 0;
+  color: #1e293b;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.author-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-right: 1rem;
+}
+
+.post-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.post-content {
+  padding: 0 2rem 2rem;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.post-content h3 {
+  margin: 2rem 0 1rem;
+  color: #1e293b;
+}
+
+.post-content ul, .post-content ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.post-content code {
+  background: #f1f5f9;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
+
+.post-actions {
+  padding: 0 2rem 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-like {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.btn-like:hover {
+  background: #fecaca;
+}
+
+.btn-share {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.btn-share:hover {
+  background: #bfdbfe;
+}
+
+/* Footer */
+.site-footer {
+  background: #1e293b;
+  color: white;
+  text-align: center;
+  padding: 3rem 0;
+  margin-top: 4rem;
+}
+
+.social-links {
+  margin: 1rem 0;
+}
+
+.social-links a {
+  color: #64748b;
+  text-decoration: none;
+  margin: 0 1rem;
+  font-size: 1.1rem;
+}
+
+.social-links a:hover {
+  color: white;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .content-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .posts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .post-single .post-title {
+    font-size: 1.5rem;
+  }
+
+  .post-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+```
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **Template Engine'lar** - EJS va Handlebars
+✅ **Dynamic HTML** - data binding va rendering
+✅ **Template inheritance** - layouts va partials
+✅ **Helper functions** - data formatting va utilities
+✅ **Server-side rendering** - SEO-friendly content
+✅ **Real loyiha** - Professional blog website
+
+### 📊 Blog Website xususiyatlari:
+
+✅ **Responsive design** - mobile-first approach
+✅ **SEO optimized** - server-side rendering
+✅ **Category filtering** - content organization
+✅ **Tag system** - topic-based navigation
+✅ **Featured posts** - highlighted content
+✅ **Post metadata** - views, likes, comments
+✅ **Related posts** - content discovery
+✅ **Professional UI** - modern design system
+
+### 🎨 Template Features:
+
+- **EJS**: JavaScript logic in templates
+- **Handlebars**: Logic-less, clean separation
+- **Partials**: Reusable components
+- **Helpers**: Custom formatting functions
+- **Layouts**: Consistent page structure
+
+### 🚀 Keyingi darsda:
+
+- **Environment Configuration** - .env files, config management
+- **Production deployment** - environment variables
+- **Database integration** - dynamic content from DB
+- **API integration** - external data sources
+
+### 📚 Mustaqil mashq:
+
+1. **Comment system** - post comments with templates
+2. **Search functionality** - live search with templates
+3. **User profiles** - dynamic profile pages
+
+---
+
+<Callout type="success" title="Template Master! 🎉">
+Siz endi Express.js template engine'lari bilan professional web saytlar yaratishni o'rgandingiz! Server-side rendering, dynamic content va modern UI design bilan to'liq blog platformasi yaratdingiz.
+</Callout>
+
+<Callout type="info" title="SSR vs SPA! 🎯">
+Template engine'lar Server-Side Rendering (SSR) uchun ideal - SEO friendly, fast initial load va traditional web development. Keyingi darsda environment configuration bilan production-ready qilamiz!
+</Callout>
+
+**Keyingi dars**: [Environment Configuration](/docs/nodejs/08-environment-config)

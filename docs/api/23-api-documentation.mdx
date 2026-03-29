@@ -1,0 +1,1172 @@
+---
+title: "API Documentation va Testing"
+description: "Swagger/OpenAPI, Jest testing, Supertest va professional API documentation yozishni o'rganamiz"
+category: "api"
+order: 23
+difficulty: "advanced"
+readTime: "30 daqiqa"
+tags:
+  - documentation
+  - swagger
+  - openapi
+  - testing
+  - jest
+  - supertest
+---
+
+# API Documentation va Testing
+
+Assalom aleykum! GraphQL bilan tanishgach, endi **API Documentation** va **Testing** - professional API development'ning muhim qismlarini o'rganamiz. Bu darsda Swagger/OpenAPI va comprehensive testing strategiyalarini o'zlashtiramiz.
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- 📚 **API Documentation** - nega muhim va qanday yozish
+- 📋 **OpenAPI/Swagger** - automatic documentation
+- 🧪 **Testing strategies** - unit, integration, e2e testing
+- 🔧 **Jest va Supertest** - Node.js testing tools
+- 📊 **API monitoring** - performance va health checks
+- 💼 **Real loyiha** - Fully documented va tested Blog API
+
+---
+
+## API Documentation nima uchun muhim?
+
+### Documentation'siz muammolar:
+
+```javascript
+// YOMON API - hech qanday documentation yo'q ❌
+
+// Endpoint: POST /api/blogs
+// Frontend developer o'ylaydi:
+// - Qaysi fieldlar majburiy?
+// - Response format qanday?
+// - Error kodlari qanday?
+// - Authentication kerakmi?
+
+// Backend developer telefon qiladi:
+👤 Frontend: "Bu API qanday ishlaydi?"
+💻 Backend: "Code'ga qarab ko'r..."
+👤 Frontend: "title field majburiymi?"
+💻 Backend: "Ha... yo'q... bilmadim, test qilib ko'r"
+```
+
+### Yaxshi documentation bilan:
+
+```yaml
+# YAXSHI API - to'liq documentation ✅
+paths:
+  /api/blogs:
+    post:
+      summary: "Yangi blog yaratish"
+      description: "Authenticated user yangi blog post yarata oladi"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+              properties:
+                title:
+                  type: string
+                  minLength: 3
+                  maxLength: 100
+                  example: "GraphQL vs REST API"
+                content:
+                  type: string
+                  minLength: 50
+                  maxLength: 50000
+                  example: "Bu maqolada..."
+      responses:
+        201:
+          description: "Blog muvaffaqiyatli yaratildi"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlogResponse'
+        400:
+          description: "Validation error"
+        401:
+          description: "Authentication required"
+```
+
+### Documentation afzalliklari:
+
+- ✅ **Developer Experience** - team productivity yuqori
+- ✅ **Self-service** - savol-javoblar kamaydi
+- ✅ **Testing** - API test qilish oson
+- ✅ **Frontend Development** - parallel development
+- ✅ **API adoption** - third-party developers uchun
+
+---
+
+## OpenAPI/Swagger Setup
+
+### Swagger setup:
+
+```bash
+npm install swagger-jsdoc swagger-ui-express
+```
+
+### Basic Swagger configuration:
+
+```javascript
+// swagger.js
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
+// OpenAPI definition
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Blog Platform API',
+      version: '1.0.0',
+      description: 'Professional blog platform API documentation',
+      contact: {
+        name: 'API Support',
+        email: 'support@blogplatform.com',
+        url: 'https://blogplatform.com/support'
+      },
+      license: {
+        name: 'MIT',
+        url: 'https://opensource.org/licenses/MIT'
+      }
+    },
+    servers: [
+      {
+        url: 'http://localhost:3000',
+        description: 'Development server'
+      },
+      {
+        url: 'https://api.blogplatform.com',
+        description: 'Production server'
+      }
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      },
+      schemas: {
+        // Common schemas
+        User: {
+          type: 'object',
+          required: ['id', 'name', 'email'],
+          properties: {
+            id: {
+              type: 'string',
+              description: 'User unique identifier',
+              example: '123'
+            },
+            name: {
+              type: 'string',
+              description: 'User full name',
+              example: 'Alibek Tursunov'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'User email address',
+              example: 'alibek@example.com'
+            },
+            role: {
+              type: 'string',
+              enum: ['user', 'admin', 'moderator'],
+              description: 'User role',
+              example: 'user'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'User creation timestamp',
+              example: '2024-03-29T10:00:00Z'
+            }
+          }
+        },
+
+        Blog: {
+          type: 'object',
+          required: ['id', 'title', 'content', 'author'],
+          properties: {
+            id: {
+              type: 'string',
+              description: 'Blog unique identifier',
+              example: '456'
+            },
+            title: {
+              type: 'string',
+              description: 'Blog title',
+              example: 'Node.js bilan API yaratish'
+            },
+            content: {
+              type: 'string',
+              description: 'Blog content (Markdown supported)',
+              example: '# Kirish\n\nBu maqolada...'
+            },
+            excerpt: {
+              type: 'string',
+              description: 'Short blog excerpt',
+              example: 'Node.js API development haqida batafsil...'
+            },
+            author: {
+              $ref: '#/components/schemas/User'
+            },
+            status: {
+              type: 'string',
+              enum: ['draft', 'published', 'archived'],
+              description: 'Blog publication status',
+              example: 'published'
+            },
+            tags: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              description: 'Blog tags',
+              example: ['nodejs', 'api', 'backend']
+            },
+            likesCount: {
+              type: 'integer',
+              description: 'Number of likes',
+              example: 42
+            },
+            commentsCount: {
+              type: 'integer',
+              description: 'Number of comments',
+              example: 15
+            },
+            publishedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Publication timestamp',
+              example: '2024-03-29T12:00:00Z'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Creation timestamp',
+              example: '2024-03-29T10:00:00Z'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Last update timestamp',
+              example: '2024-03-29T14:00:00Z'
+            }
+          }
+        },
+
+        // Common response wrapper
+        ApiResponse: {
+          type: 'object',
+          required: ['success'],
+          properties: {
+            success: {
+              type: 'boolean',
+              description: 'Request success status'
+            },
+            data: {
+              description: 'Response data'
+            },
+            error: {
+              $ref: '#/components/schemas/ApiError'
+            },
+            meta: {
+              type: 'object',
+              properties: {
+                timestamp: {
+                  type: 'string',
+                  format: 'date-time'
+                },
+                requestId: {
+                  type: 'string'
+                }
+              }
+            }
+          }
+        },
+
+        ApiError: {
+          type: 'object',
+          required: ['code', 'message'],
+          properties: {
+            code: {
+              type: 'string',
+              description: 'Error code',
+              example: 'VALIDATION_ERROR'
+            },
+            message: {
+              type: 'string',
+              description: 'Error message',
+              example: 'Ma\'lumotlarda xatolik bor'
+            },
+            details: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  field: {
+                    type: 'string',
+                    example: 'title'
+                  },
+                  message: {
+                    type: 'string',
+                    example: 'Title majburiy maydon'
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  apis: ['./routes/*.js'], // Path to files with OpenAPI annotations
+};
+
+const specs = swaggerJsdoc(options);
+
+module.exports = {
+  swaggerUi,
+  specs
+};
+```
+
+### Server'ga Swagger qo'shish:
+
+```javascript
+// app.js
+const express = require('express');
+const { swaggerUi, specs } = require('./swagger');
+
+const app = express();
+
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: "Blog Platform API Documentation"
+}));
+
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/blogs', require('./routes/blogs'));
+
+console.log('API Documentation: http://localhost:3000/api-docs');
+```
+
+---
+
+## Routes Documentation (JSDoc annotations)
+
+### Blog routes documentation:
+
+```javascript
+// routes/blogs.js
+/**
+ * @swagger
+ * tags:
+ *   name: Blogs
+ *   description: Blog management operations
+ */
+
+/**
+ * @swagger
+ * /api/blogs:
+ *   get:
+ *     summary: Get all blogs
+ *     description: Retrieve paginated list of published blogs
+ *     tags: [Blogs]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *         description: Number of blogs per page
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum: [technology, lifestyle, business, health]
+ *         description: Filter by category
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *           maxLength: 100
+ *         description: Search in title and content
+ *       - in: query
+ *         name: author
+ *         schema:
+ *           type: string
+ *         description: Filter by author ID
+ *     responses:
+ *       200:
+ *         description: List of blogs retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Blog'
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                         limit:
+ *                           type: integer
+ *                         total:
+ *                           type: integer
+ *                         totalPages:
+ *                           type: integer
+ *                         hasNext:
+ *                           type: boolean
+ *                         hasPrev:
+ *                           type: boolean
+ *             example:
+ *               success: true
+ *               data:
+ *                 - id: "1"
+ *                   title: "GraphQL vs REST"
+ *                   excerpt: "Modern API development comparison..."
+ *                   author:
+ *                     id: "123"
+ *                     name: "Alibek Tursunov"
+ *                   likesCount: 25
+ *                   commentsCount: 8
+ *               pagination:
+ *                 page: 1
+ *                 limit: 10
+ *                 total: 47
+ *                 totalPages: 5
+ *                 hasNext: true
+ *                 hasPrev: false
+ *       400:
+ *         description: Invalid query parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ */
+router.get('/', validateQuery(BlogQuerySchema), (req, res) => {
+  // Implementation...
+});
+
+/**
+ * @swagger
+ * /api/blogs:
+ *   post:
+ *     summary: Create new blog
+ *     description: Create a new blog post (authentication required)
+ *     tags: [Blogs]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - content
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 minLength: 3
+ *                 maxLength: 100
+ *                 description: Blog title
+ *                 example: "Node.js Best Practices 2024"
+ *               content:
+ *                 type: string
+ *                 minLength: 50
+ *                 maxLength: 50000
+ *                 description: Blog content (Markdown supported)
+ *                 example: "# Introduction\n\nBu maqolada..."
+ *               excerpt:
+ *                 type: string
+ *                 maxLength: 200
+ *                 description: Short excerpt (optional)
+ *                 example: "Node.js development bo'yicha..."
+ *               category:
+ *                 type: string
+ *                 enum: [technology, lifestyle, business, health]
+ *                 description: Blog category
+ *                 example: technology
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 minItems: 1
+ *                 maxItems: 5
+ *                 description: Blog tags
+ *                 example: ["nodejs", "javascript", "backend"]
+ *               isPublished:
+ *                 type: boolean
+ *                 default: false
+ *                 description: Publish immediately
+ *                 example: true
+ *           example:
+ *             title: "GraphQL bilan Modern API"
+ *             content: "# Kirish\n\nGraphQL revolutsion..."
+ *             excerpt: "GraphQL vs REST comparison"
+ *             category: "technology"
+ *             tags: ["graphql", "api", "modern"]
+ *             isPublished: true
+ *     responses:
+ *       201:
+ *         description: Blog created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Blog'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ *             example:
+ *               success: false
+ *               error:
+ *                 code: "VALIDATION_ERROR"
+ *                 message: "Ma'lumotlarda xatolik"
+ *                 details:
+ *                   - field: "title"
+ *                     message: "Title majburiy maydon"
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.post('/', authenticateToken, validateData(BlogCreationSchema), (req, res) => {
+  // Implementation...
+});
+
+/**
+ * @swagger
+ * /api/blogs/{id}:
+ *   get:
+ *     summary: Get blog by ID
+ *     description: Retrieve specific blog post by its ID
+ *     tags: [Blogs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Blog unique identifier
+ *         example: "123"
+ *     responses:
+ *       200:
+ *         description: Blog retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Blog'
+ *       404:
+ *         description: Blog not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ *             example:
+ *               success: false
+ *               error:
+ *                 code: "BLOG_NOT_FOUND"
+ *                 message: "Blog topilmadi"
+ */
+router.get('/:id', validateParams(BlogParamsSchema), (req, res) => {
+  // Implementation...
+});
+```
+
+---
+
+## API Testing - Jest va Supertest
+
+### Testing setup:
+
+```bash
+npm install --save-dev jest supertest
+```
+
+```json
+// package.json
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"],
+    "testMatch": [
+      "**/__tests__/**/*.js",
+      "**/*.test.js"
+    ]
+  }
+}
+```
+
+### Test utilities setup:
+
+```javascript
+// tests/setup.js
+const { app } = require('../app');
+const request = require('supertest');
+
+// Test database setup
+const testUsers = [];
+const testBlogs = [];
+
+// Helper functions
+const createTestUser = (userData = {}) => {
+  const defaultUser = {
+    id: String(testUsers.length + 1),
+    name: 'Test User',
+    email: 'test@example.com',
+    role: 'user',
+    createdAt: new Date().toISOString()
+  };
+
+  const newUser = { ...defaultUser, ...userData };
+  testUsers.push(newUser);
+  return newUser;
+};
+
+const createTestBlog = (blogData = {}, authorId = '1') => {
+  const defaultBlog = {
+    id: String(testBlogs.length + 1),
+    title: 'Test Blog',
+    content: 'Test content that is long enough for validation requirements',
+    excerpt: 'Test excerpt',
+    authorId,
+    status: 'published',
+    category: 'technology',
+    tags: ['test'],
+    createdAt: new Date().toISOString()
+  };
+
+  const newBlog = { ...defaultBlog, ...blogData };
+  testBlogs.push(newBlog);
+  return newBlog;
+};
+
+const generateToken = (userId) => {
+  const jwt = require('jsonwebtoken');
+  return jwt.sign({ userId }, process.env.JWT_SECRET || 'test-secret', {
+    expiresIn: '1h'
+  });
+};
+
+// Reset database before each test
+beforeEach(() => {
+  testUsers.length = 0;
+  testBlogs.length = 0;
+});
+
+module.exports = {
+  app,
+  request,
+  createTestUser,
+  createTestBlog,
+  generateToken
+};
+```
+
+### Blog API tests:
+
+```javascript
+// tests/blogs.test.js
+const { request, app, createTestUser, createTestBlog, generateToken } = require('./setup');
+
+describe('Blog API', () => {
+  describe('GET /api/blogs', () => {
+    it('should return empty array when no blogs exist', async () => {
+      const response = await request(app)
+        .get('/api/blogs')
+        .expect(200);
+
+      expect(response.body).toEqual({
+        success: true,
+        data: [],
+        pagination: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false
+        }
+      });
+    });
+
+    it('should return paginated blogs', async () => {
+      // Setup test data
+      const testUser = createTestUser();
+      createTestBlog({ title: 'First Blog' }, testUser.id);
+      createTestBlog({ title: 'Second Blog' }, testUser.id);
+
+      const response = await request(app)
+        .get('/api/blogs?limit=1&page=1')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.pagination.total).toBe(2);
+      expect(response.body.pagination.hasNext).toBe(true);
+    });
+
+    it('should filter blogs by category', async () => {
+      const testUser = createTestUser();
+      createTestBlog({ category: 'technology' }, testUser.id);
+      createTestBlog({ category: 'lifestyle' }, testUser.id);
+
+      const response = await request(app)
+        .get('/api/blogs?category=technology')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].category).toBe('technology');
+    });
+
+    it('should search blogs by title and content', async () => {
+      const testUser = createTestUser();
+      createTestBlog({
+        title: 'GraphQL API Tutorial',
+        content: 'Learn GraphQL with this comprehensive guide'
+      }, testUser.id);
+      createTestBlog({
+        title: 'REST API Guide',
+        content: 'Traditional REST API development'
+      }, testUser.id);
+
+      const response = await request(app)
+        .get('/api/blogs?search=GraphQL')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].title).toContain('GraphQL');
+    });
+
+    it('should validate query parameters', async () => {
+      const response = await request(app)
+        .get('/api/blogs?page=invalid')
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('QUERY_VALIDATION_ERROR');
+    });
+  });
+
+  describe('POST /api/blogs', () => {
+    it('should create blog with valid data and auth', async () => {
+      const testUser = createTestUser();
+      const token = generateToken(testUser.id);
+
+      const blogData = {
+        title: 'New Blog Post',
+        content: 'This is a comprehensive blog post content that meets the minimum length requirement',
+        category: 'technology',
+        tags: ['nodejs', 'api']
+      };
+
+      const response = await request(app)
+        .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
+        .send(blogData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toMatchObject({
+        title: blogData.title,
+        content: blogData.content,
+        category: blogData.category,
+        tags: blogData.tags
+      });
+      expect(response.body.data.id).toBeDefined();
+      expect(response.body.data.createdAt).toBeDefined();
+    });
+
+    it('should reject blog creation without authentication', async () => {
+      const blogData = {
+        title: 'Unauthorized Blog',
+        content: 'This should fail because no auth token provided'
+      };
+
+      const response = await request(app)
+        .post('/api/blogs')
+        .send(blogData)
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('TOKEN_MISSING');
+    });
+
+    it('should validate required fields', async () => {
+      const testUser = createTestUser();
+      const token = generateToken(testUser.id);
+
+      // Missing title
+      const response = await request(app)
+        .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          content: 'Content without title'
+        })
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.details[0].field).toBe('title');
+    });
+
+    it('should validate field lengths', async () => {
+      const testUser = createTestUser();
+      const token = generateToken(testUser.id);
+
+      // Title too short
+      const response = await request(app)
+        .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          title: 'AB', // Less than 3 characters
+          content: 'Content that meets minimum length requirements for blog posts'
+        })
+        .expect(400);
+
+      expect(response.body.error.details[0].message).toContain('kamida 3');
+    });
+
+    it('should sanitize HTML content', async () => {
+      const testUser = createTestUser();
+      const token = generateToken(testUser.id);
+
+      const blogData = {
+        title: 'XSS Test Blog',
+        content: 'Normal content <script>alert("XSS")</script> with malicious code that should be sanitized'
+      };
+
+      const response = await request(app)
+        .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
+        .send(blogData)
+        .expect(201);
+
+      expect(response.body.data.content).not.toContain('<script>');
+      expect(response.body.data.content).toContain('Normal content');
+    });
+  });
+
+  describe('PUT /api/blogs/:id', () => {
+    it('should update own blog', async () => {
+      const testUser = createTestUser();
+      const testBlog = createTestBlog({}, testUser.id);
+      const token = generateToken(testUser.id);
+
+      const updates = {
+        title: 'Updated Blog Title',
+        content: 'Updated content that meets all validation requirements'
+      };
+
+      const response = await request(app)
+        .put(`/api/blogs/${testBlog.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(updates)
+        .expect(200);
+
+      expect(response.body.data.title).toBe(updates.title);
+      expect(response.body.data.content).toBe(updates.content);
+      expect(response.body.data.updatedAt).toBeDefined();
+    });
+
+    it('should not update others blog', async () => {
+      const author = createTestUser({ id: '1' });
+      const otherUser = createTestUser({ id: '2', email: 'other@example.com' });
+      const testBlog = createTestBlog({}, author.id);
+      const token = generateToken(otherUser.id);
+
+      const response = await request(app)
+        .put(`/api/blogs/${testBlog.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Hacked Title' })
+        .expect(403);
+
+      expect(response.body.error.code).toBe('INSUFFICIENT_PERMISSIONS');
+    });
+  });
+
+  describe('DELETE /api/blogs/:id', () => {
+    it('should delete own blog', async () => {
+      const testUser = createTestUser();
+      const testBlog = createTestBlog({}, testUser.id);
+      const token = generateToken(testUser.id);
+
+      const response = await request(app)
+        .delete(`/api/blogs/${testBlog.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+
+      // Verify blog is deleted
+      await request(app)
+        .get(`/api/blogs/${testBlog.id}`)
+        .expect(404);
+    });
+
+    it('should allow admin to delete any blog', async () => {
+      const author = createTestUser({ id: '1' });
+      const admin = createTestUser({ id: '2', role: 'admin', email: 'admin@example.com' });
+      const testBlog = createTestBlog({}, author.id);
+      const adminToken = generateToken(admin.id);
+
+      const response = await request(app)
+        .delete(`/api/blogs/${testBlog.id}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle non-existent blog ID', async () => {
+      const response = await request(app)
+        .get('/api/blogs/999999')
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('BLOG_NOT_FOUND');
+    });
+
+    it('should handle invalid blog ID format', async () => {
+      const response = await request(app)
+        .get('/api/blogs/invalid-id')
+        .expect(400);
+
+      expect(response.body.error.code).toBe('PARAMS_VALIDATION_ERROR');
+    });
+
+    it('should handle server errors gracefully', async () => {
+      // Mock server error
+      const originalFind = Array.prototype.find;
+      Array.prototype.find = () => {
+        throw new Error('Database connection failed');
+      };
+
+      const response = await request(app)
+        .get('/api/blogs/1')
+        .expect(500);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('INTERNAL_SERVER_ERROR');
+
+      // Restore original method
+      Array.prototype.find = originalFind;
+    });
+  });
+});
+```
+
+### Authentication tests:
+
+```javascript
+// tests/auth.test.js
+const { request, app, createTestUser } = require('./setup');
+const bcrypt = require('bcryptjs');
+
+describe('Authentication API', () => {
+  describe('POST /api/auth/register', () => {
+    it('should register new user with valid data', async () => {
+      const userData = {
+        name: 'New User',
+        email: 'newuser@example.com',
+        password: 'SecurePassword123!'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send(userData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.user.email).toBe(userData.email);
+      expect(response.body.data.user.name).toBe(userData.name);
+      expect(response.body.data.token).toBeDefined();
+      expect(response.body.data.user.password).toBeUndefined(); // Password should not be returned
+    });
+
+    it('should not register user with weak password', async () => {
+      const userData = {
+        name: 'Test User',
+        email: 'test@example.com',
+        password: '123' // Too weak
+      };
+
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send(userData)
+        .expect(400);
+
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('should not register duplicate email', async () => {
+      const userData = {
+        name: 'First User',
+        email: 'duplicate@example.com',
+        password: 'SecurePassword123!'
+      };
+
+      // First registration
+      await request(app)
+        .post('/api/auth/register')
+        .send(userData)
+        .expect(201);
+
+      // Duplicate registration
+      const response = await request(app)
+        .post('/api/auth/register')
+        .send(userData)
+        .expect(409);
+
+      expect(response.body.error.code).toBe('USER_EXISTS');
+    });
+  });
+
+  describe('POST /api/auth/login', () => {
+    it('should login with correct credentials', async () => {
+      // Create user
+      const password = 'TestPassword123!';
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const testUser = createTestUser({
+        email: 'login@example.com',
+        password: hashedPassword
+      });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: testUser.email,
+          password: password
+        })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.user.email).toBe(testUser.email);
+      expect(response.body.data.token).toBeDefined();
+    });
+
+    it('should not login with incorrect password', async () => {
+      const testUser = createTestUser({
+        email: 'login@example.com',
+        password: await bcrypt.hash('CorrectPassword', 10)
+      });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: testUser.email,
+          password: 'WrongPassword'
+        })
+        .expect(401);
+
+      expect(response.body.error.code).toBe('INVALID_CREDENTIALS');
+    });
+  });
+});
+```
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **API Documentation** - Swagger/OpenAPI professional setup
+✅ **Schema Design** - comprehensive API schemas
+✅ **Interactive Documentation** - Swagger UI integration
+✅ **Testing Strategy** - Jest + Supertest comprehensive tests
+✅ **Error Handling Testing** - edge cases va error scenarios
+✅ **Authentication Testing** - JWT token testing
+
+### 📚 Documentation Best Practices:
+
+✅ **Complete Examples** - request/response samples
+✅ **Error Documentation** - barcha error kodlari
+✅ **Schema Definitions** - reusable components
+✅ **Authentication Info** - security requirements
+✅ **Interactive Testing** - Swagger UI playground
+
+### 🧪 Testing Checklist:
+
+✅ **Happy Path** - normal scenarios
+✅ **Validation** - input validation testing
+✅ **Authentication** - auth required endpoints
+✅ **Authorization** - permission testing
+✅ **Error Cases** - 404, 500, validation errors
+✅ **Edge Cases** - boundary conditions
+
+### 🚀 Keyingi darsda:
+
+- **Fullstack Project** - Instagram-style Social Media API
+- **Advanced Features** - file uploads, notifications
+- **Performance Optimization** - caching, rate limiting
+- **Deployment** - production setup guide
+
+### 📚 Mustaqil mashq:
+
+1. **E-commerce API Documentation** - products, orders, payments
+2. **Chat API Testing** - real-time messaging tests
+3. **File Upload API** - multipart form testing
+
+---
+
+<Callout type="success" title="Tabriklaymiz! 🎉">
+Siz endi professional API documentation va testing'ni o'rgandingiz! Swagger/OpenAPI bilan comprehensive documentation va Jest bilan to'liq testing strategiyasini qo'llashni bilasiz.
+</Callout>
+
+<Callout type="info" title="Production Tip 💡">
+Good documentation = Happy developers! API documentation - bu marketing tool ham. Yaxshi document qilingan API ko'proq ishlatiladi va kamroq support request keladi.
+</Callout>
+
+**Keyingi dars**: [Fullstack Social Media Project](/docs/api/24-fullstack-project)

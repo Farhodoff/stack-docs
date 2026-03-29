@@ -1,0 +1,1501 @@
+---
+title: "Prisma ORM - Zamonaviy Database Toolkit"
+description: "Prisma ORM bilan type-safe, schema-first database development va modern API yaratish asoslari"
+difficulty: "Intermediate"
+readTime: "40 daqiqa"
+tags: ["prisma", "orm", "typescript", "database", "schema", "migrations"]
+category: "database"
+---
+
+# Prisma ORM - Zamonaviy Database Toolkit
+
+Salom! Bu darsda biz Prisma ORM bilan tanishamiz - zamonaviy va type-safe database development uchun eng yaxshi vositalardan biri.
+
+## Bu darsdan nimani o'rganasiz?
+
+- 🎯 **Prisma nima** va nega uni tanlash kerak?
+- ⚡ **Schema-first Development** - zamonaviy yondalish
+- 🛠️ **Setup va Configuration** - loyihada to'liq sozlash
+- 📊 **Schema Design** - Models, relationships, attributes
+- 🔧 **Prisma Client** - Type-safe database operations
+- 🖥️ **Prisma Studio** - Database GUI browser
+- 🚀 **Real-world API** - Blog platform yaratish
+
+---
+
+## 1. Prisma nima va nega uni tanlash kerak? 🎯
+
+### Traditional ORM vs Prisma
+
+```javascript
+// ❌ Traditional ORM (Sequelize misoli)
+const user = await User.findOne({
+  where: { id: userId },
+  include: [{
+    model: Post,
+    where: { status: 'published' },
+    include: [{ model: Comment }]
+  }]
+});
+// TypeScript support cheklangan, runtime errors
+
+// ✅ Prisma ORM
+const user = await prisma.user.findUnique({
+  where: { id: userId },
+  include: {
+    posts: {
+      where: { status: 'PUBLISHED' },
+      include: { comments: true }
+    }
+  }
+});
+// To'liq TypeScript support, compile-time type checking
+```
+
+### Prisma'ning asosiy afzalliklari:
+
+1. **Type Safety** - 100% TypeScript support
+2. **Schema-first** - Database schema'dan TypeScript types avtomatik generate
+3. **Developer Experience** - IntelliSense va autocomplete
+4. **Prisma Studio** - Visual database browser
+5. **Migration System** - Database schema versioning
+6. **Multi-database** - PostgreSQL, MySQL, SQLite, MongoDB support
+7. **Performance** - Optimized queries va connection pooling
+
+### Prisma Ecosystem:
+
+```bash
+# Prisma asosiy qismlari:
+1. Prisma Schema    # schema.prisma - database model definition
+2. Prisma Client    # Auto-generated type-safe client
+3. Prisma Migrate   # Database migration system
+4. Prisma Studio    # Visual database gui
+5. Prisma CLI       # Command-line tools
+```
+
+---
+
+## 2. Loyihani Sozlash va O'rnatish 🛠️
+
+### Yangi loyiha yaratish
+
+```bash
+# 1. Loyiha yaratish
+mkdir blog-api-prisma && cd blog-api-prisma
+npm init -y
+
+# 2. Dependencies o'rnatish
+npm install prisma @prisma/client express
+npm install -D typescript ts-node @types/node @types/express nodemon
+
+# 3. TypeScript sozlash
+npx tsc --init
+
+# 4. Prisma inicializatsiya
+npx prisma init
+```
+
+### Directory structure
+
+```bash
+blog-api-prisma/
+├── prisma/
+│   ├── schema.prisma       # Database schema
+│   └── migrations/         # Migration files
+├── src/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── routes/
+│   └── app.ts
+├── package.json
+├── tsconfig.json
+└── .env                   # Environment variables
+```
+
+### Environment sozlash
+
+```bash
+# .env fayli
+DATABASE_URL="postgresql://username:password@localhost:5432/blog_prisma?schema=public"
+PORT=3000
+NODE_ENV=development
+JWT_SECRET=your_super_secret_key_here
+```
+
+### TypeScript konfiguratsiya
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+```
+
+### Package.json scripts
+
+```json
+{
+  "scripts": {
+    "dev": "nodemon src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "ts-node prisma/seed.ts"
+  }
+}
+```
+
+---
+
+## 3. Prisma Schema Design 📊
+
+### schema.prisma asoslari
+
+```prisma
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  email    String @unique
+  password String
+
+  // Optional fields
+  firstName String?
+  lastName  String?
+  bio       String?
+  avatarUrl String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  posts    Post[]
+  comments Comment[]
+  likes    PostLike[]
+
+  @@map("users") // Database table name
+}
+
+// Category model
+model Category {
+  id          Int    @id @default(autoincrement())
+  name        String @unique
+  slug        String @unique
+  description String?
+  color       String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  posts Post[]
+
+  @@map("categories")
+}
+
+// Post model
+model Post {
+  id      Int    @id @default(autoincrement())
+  title   String
+  slug    String @unique
+  content String
+  excerpt String?
+
+  // Enums
+  status     PostStatus    @default(DRAFT)
+  visibility PostVisibility @default(PUBLIC)
+
+  // Timestamps
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Foreign keys
+  authorId   Int
+  categoryId Int?
+
+  // Relations
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  comments Comment[]
+  tags     PostTag[]
+  likes    PostLike[]
+
+  // Indexes
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([status, publishedAt])
+  @@map("posts")
+}
+
+// Comment model with self-relation (nested comments)
+model Comment {
+  id      Int    @id @default(autoincrement())
+  content String
+
+  // Self-relation for nested comments
+  parentId Int?
+  parent   Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  // Status
+  status CommentStatus @default(PENDING)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign keys
+  postId Int
+  userId Int?
+
+  // Relations
+  post Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([postId])
+  @@index([userId])
+  @@map("comments")
+}
+
+// Tag model
+model Tag {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  slug  String @unique
+  color String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relations (Many-to-Many through PostTag)
+  posts PostTag[]
+
+  @@map("tags")
+}
+
+// Junction table for Post-Tag relationship
+model PostTag {
+  postId Int
+  tagId  Int
+
+  // Relations
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+// Post likes (Many-to-Many)
+model PostLike {
+  userId Int
+  postId Int
+
+  // Timestamp
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@map("post_likes")
+}
+
+// Enums
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  SCHEDULED
+}
+
+enum PostVisibility {
+  PUBLIC
+  PRIVATE
+  PASSWORD_PROTECTED
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SPAM
+}
+```
+
+### Schema attributes tushuntirish
+
+```prisma
+// Field attributes
+@id                    // Primary key
+@default()            // Default value
+@unique               // Unique constraint
+@relation()           // Relationship definition
+@map()                // Custom database column name
+@updatedAt            // Auto-update timestamp
+@db.VarChar(255)      // Database-specific type
+
+// Model attributes
+@@id()                // Composite primary key
+@@unique()            // Composite unique constraint
+@@index()             // Database index
+@@map()               // Custom table name
+
+// Example: Composite unique constraint
+model UserProfile {
+  userId Int
+  email  String
+  phone  String
+
+  @@unique([email, phone])
+  @@map("user_profiles")
+}
+```
+
+---
+
+## 4. Database Migration va Client Generation 🔄
+
+### Birinchi migration yaratish
+
+```bash
+# 1. Database schema'ni yaratish (development)
+npx prisma migrate dev --name init
+
+# Bu quyidagilarni bajaradi:
+# - Database'da jadvallarni yaratadi
+# - Migration fayl yaratadi (prisma/migrations/...)
+# - Prisma Client'ni generate qiladi
+```
+
+### Migration files
+
+```sql
+-- prisma/migrations/20240315000000_init/migration.sql
+CREATE TABLE "users" (
+    "id" SERIAL NOT NULL,
+    "username" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "firstName" TEXT,
+    "lastName" TEXT,
+    "bio" TEXT,
+    "avatarUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- ... boshqa jadvallar
+```
+
+### Prisma Client generate qilish
+
+```bash
+# Client'ni generate qilish (schema o'zgarishdan keyin)
+npx prisma generate
+
+# Bu TypeScript types va client methods yaratadi
+```
+
+### Generated types misoli
+
+```typescript
+// Generated types (node_modules/.prisma/client'da)
+export type User = {
+  id: number
+  username: string
+  email: string
+  password: string
+  firstName: string | null
+  lastName: string | null
+  bio: string | null
+  avatarUrl: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type PostCreateInput = {
+  title: string
+  slug: string
+  content: string
+  excerpt?: string | null
+  status?: PostStatus
+  visibility?: PostVisibility
+  publishedAt?: Date | null
+  author: UserCreateNestedOneWithoutPostsInput
+  category?: CategoryCreateNestedOneWithoutPostsInput | null
+  // ...
+}
+```
+
+---
+
+## 5. Prisma Client bilan Ishlash 🔧
+
+### Client initlash va basic CRUD
+
+```typescript
+// src/lib/prisma.ts
+import { PrismaClient } from '@prisma/client'
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
+})
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+```
+
+### CREATE operations
+
+```typescript
+// src/controllers/userController.ts
+import { Request, Response } from 'express'
+import { prisma } from '../lib/prisma'
+import bcrypt from 'bcrypt'
+
+export class UserController {
+  // Create new user
+  static async createUser(req: Request, res: Response) {
+    try {
+      const { username, email, password, firstName, lastName } = req.body
+
+      // Check if user exists
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email },
+            { username }
+          ]
+        }
+      })
+
+      if (existingUser) {
+        return res.status(400).json({
+          error: 'User with this email or username already exists'
+        })
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10)
+
+      // Create user
+      const user = await prisma.user.create({
+        data: {
+          username,
+          email,
+          password: hashedPassword,
+          firstName,
+          lastName
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          createdAt: true
+        }
+      })
+
+      res.status(201).json({
+        message: 'User created successfully',
+        user
+      })
+    } catch (error) {
+      console.error('Error creating user:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+
+  // Create post with relations
+  static async createPost(req: Request, res: Response) {
+    try {
+      const { title, content, excerpt, categoryId, tagIds } = req.body
+      const authorId = req.user!.id // Assuming auth middleware
+
+      const slug = title.toLowerCase()
+        .replace(/[^a-z0-9 -]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+
+      const post = await prisma.post.create({
+        data: {
+          title,
+          slug,
+          content,
+          excerpt,
+          authorId,
+          categoryId,
+          // Many-to-many relationship
+          tags: {
+            create: tagIds?.map((tagId: number) => ({
+              tag: { connect: { id: tagId } }
+            }))
+          }
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true
+            }
+          },
+          category: true,
+          tags: {
+            include: {
+              tag: true
+            }
+          },
+          _count: {
+            select: {
+              comments: true,
+              likes: true
+            }
+          }
+        }
+      })
+
+      res.status(201).json({
+        message: 'Post created successfully',
+        post
+      })
+
+    } catch (error) {
+      console.error('Error creating post:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+}
+```
+
+### READ operations
+
+```typescript
+export class PostController {
+  // Get all posts with filtering
+  static async getPosts(req: Request, res: Response) {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        status,
+        categoryId,
+        authorId,
+        search,
+        sortBy = 'createdAt',
+        sortOrder = 'desc'
+      } = req.query
+
+      // Build where clause
+      const where: any = {}
+
+      if (status) {
+        where.status = status
+      }
+
+      if (categoryId) {
+        where.categoryId = parseInt(categoryId as string)
+      }
+
+      if (authorId) {
+        where.authorId = parseInt(authorId as string)
+      }
+
+      if (search) {
+        where.OR = [
+          { title: { contains: search as string, mode: 'insensitive' } },
+          { content: { contains: search as string, mode: 'insensitive' } }
+        ]
+      }
+
+      // Get posts with pagination
+      const [posts, total] = await Promise.all([
+        prisma.post.findMany({
+          where,
+          include: {
+            author: {
+              select: {
+                id: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+                avatarUrl: true
+              }
+            },
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                color: true
+              }
+            },
+            tags: {
+              include: {
+                tag: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    color: true
+                  }
+                }
+              }
+            },
+            _count: {
+              select: {
+                comments: {
+                  where: { status: 'APPROVED' }
+                },
+                likes: true
+              }
+            }
+          },
+          orderBy: {
+            [sortBy as string]: sortOrder
+          },
+          skip: (parseInt(page as string) - 1) * parseInt(limit as string),
+          take: parseInt(limit as string)
+        }),
+        prisma.post.count({ where })
+      ])
+
+      // Calculate pagination metadata
+      const totalPages = Math.ceil(total / parseInt(limit as string))
+      const hasNext = parseInt(page as string) < totalPages
+      const hasPrev = parseInt(page as string) > 1
+
+      res.json({
+        data: posts,
+        pagination: {
+          total,
+          page: parseInt(page as string),
+          limit: parseInt(limit as string),
+          totalPages,
+          hasNext,
+          hasPrev
+        }
+      })
+
+    } catch (error) {
+      console.error('Error fetching posts:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+
+  // Get single post with detailed includes
+  static async getPostBySlug(req: Request, res: Response) {
+    try {
+      const { slug } = req.params
+
+      const post = await prisma.post.findUnique({
+        where: { slug },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+              bio: true
+            }
+          },
+          category: true,
+          tags: {
+            include: {
+              tag: true
+            }
+          },
+          comments: {
+            where: { status: 'APPROVED', parentId: null }, // Only top-level comments
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  firstName: true,
+                  lastName: true,
+                  avatarUrl: true
+                }
+              },
+              replies: {
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      username: true,
+                      firstName: true,
+                      lastName: true,
+                      avatarUrl: true
+                    }
+                  }
+                }
+              }
+            },
+            orderBy: { createdAt: 'desc' }
+          },
+          _count: {
+            select: {
+              comments: {
+                where: { status: 'APPROVED' }
+              },
+              likes: true
+            }
+          }
+        }
+      })
+
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' })
+      }
+
+      res.json(post)
+
+    } catch (error) {
+      console.error('Error fetching post:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+}
+```
+
+### UPDATE operations
+
+```typescript
+export class PostController {
+  // Update post
+  static async updatePost(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+      const { title, content, excerpt, categoryId, tagIds, status } = req.body
+      const userId = req.user!.id
+
+      // Check if post exists and user has permission
+      const existingPost = await prisma.post.findUnique({
+        where: { id: parseInt(id) },
+        include: { author: true }
+      })
+
+      if (!existingPost) {
+        return res.status(404).json({ error: 'Post not found' })
+      }
+
+      if (existingPost.authorId !== userId) {
+        return res.status(403).json({ error: 'Access denied' })
+      }
+
+      // Generate new slug if title changed
+      let slug = existingPost.slug
+      if (title && title !== existingPost.title) {
+        slug = title.toLowerCase()
+          .replace(/[^a-z0-9 -]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+      }
+
+      // Update post with relations
+      const updatedPost = await prisma.post.update({
+        where: { id: parseInt(id) },
+        data: {
+          title,
+          slug,
+          content,
+          excerpt,
+          categoryId,
+          status,
+          publishedAt: status === 'PUBLISHED' ? new Date() : null,
+          // Update tags (disconnect all, then connect new ones)
+          tags: {
+            deleteMany: {}, // Remove all existing connections
+            create: tagIds?.map((tagId: number) => ({
+              tag: { connect: { id: tagId } }
+            }))
+          }
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true
+            }
+          },
+          category: true,
+          tags: {
+            include: {
+              tag: true
+            }
+          }
+        }
+      })
+
+      res.json({
+        message: 'Post updated successfully',
+        post: updatedPost
+      })
+
+    } catch (error) {
+      console.error('Error updating post:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+}
+```
+
+### DELETE operations
+
+```typescript
+export class PostController {
+  // Soft delete (update status)
+  static async deletePost(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+      const userId = req.user!.id
+
+      // Check ownership
+      const post = await prisma.post.findUnique({
+        where: { id: parseInt(id) },
+        include: { author: true }
+      })
+
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' })
+      }
+
+      if (post.authorId !== userId) {
+        return res.status(403).json({ error: 'Access denied' })
+      }
+
+      // Soft delete by updating status
+      await prisma.post.update({
+        where: { id: parseInt(id) },
+        data: {
+          status: 'ARCHIVED'
+        }
+      })
+
+      res.json({ message: 'Post archived successfully' })
+
+    } catch (error) {
+      console.error('Error deleting post:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+
+  // Hard delete (permanent)
+  static async permanentDeletePost(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+
+      // Delete post (cascades to related records due to schema definition)
+      await prisma.post.delete({
+        where: { id: parseInt(id) }
+      })
+
+      res.json({ message: 'Post deleted permanently' })
+
+    } catch (error) {
+      console.error('Error deleting post permanently:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+}
+```
+
+---
+
+## 6. Advanced Prisma Features 🚀
+
+### Transactions
+
+```typescript
+// Complex operation with transaction
+export class PostController {
+  static async likePost(req: Request, res: Response) {
+    try {
+      const { postId } = req.params
+      const userId = req.user!.id
+
+      // Transaction to ensure consistency
+      const result = await prisma.$transaction(async (tx) => {
+        // Check if already liked
+        const existingLike = await tx.postLike.findUnique({
+          where: {
+            userId_postId: {
+              userId,
+              postId: parseInt(postId)
+            }
+          }
+        })
+
+        if (existingLike) {
+          // Unlike: remove like
+          await tx.postLike.delete({
+            where: {
+              userId_postId: {
+                userId,
+                postId: parseInt(postId)
+              }
+            }
+          })
+          return { action: 'unliked' }
+        } else {
+          // Like: create like
+          await tx.postLike.create({
+            data: {
+              userId,
+              postId: parseInt(postId)
+            }
+          })
+          return { action: 'liked' }
+        }
+      })
+
+      // Get updated like count
+      const likesCount = await prisma.postLike.count({
+        where: { postId: parseInt(postId) }
+      })
+
+      res.json({
+        message: `Post ${result.action} successfully`,
+        likesCount,
+        action: result.action
+      })
+
+    } catch (error) {
+      console.error('Error toggling like:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+}
+```
+
+### Aggregations va Analytics
+
+```typescript
+export class AnalyticsController {
+  static async getDashboardStats(req: Request, res: Response) {
+    try {
+      const stats = await prisma.$transaction(async (tx) => {
+        // User statistics
+        const usersStats = await tx.user.aggregate({
+          _count: {
+            id: true
+          },
+          where: {
+            createdAt: {
+              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+            }
+          }
+        })
+
+        // Posts statistics
+        const postsStats = await tx.post.aggregate({
+          _count: {
+            id: true
+          },
+          where: {
+            status: 'PUBLISHED'
+          }
+        })
+
+        // Comments statistics
+        const commentsStats = await tx.comment.aggregate({
+          _count: {
+            id: true
+          },
+          where: {
+            status: 'APPROVED',
+            createdAt: {
+              gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
+            }
+          }
+        })
+
+        // Popular categories
+        const popularCategories = await tx.category.findMany({
+          include: {
+            _count: {
+              select: {
+                posts: {
+                  where: { status: 'PUBLISHED' }
+                }
+              }
+            }
+          },
+          orderBy: {
+            posts: {
+              _count: 'desc'
+            }
+          },
+          take: 5
+        })
+
+        // Top authors
+        const topAuthors = await tx.user.findMany({
+          include: {
+            _count: {
+              select: {
+                posts: {
+                  where: { status: 'PUBLISHED' }
+                }
+              }
+            }
+          },
+          orderBy: {
+            posts: {
+              _count: 'desc'
+            }
+          },
+          take: 5
+        })
+
+        return {
+          users: usersStats,
+          posts: postsStats,
+          comments: commentsStats,
+          popularCategories,
+          topAuthors
+        }
+      })
+
+      res.json(stats)
+
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+}
+```
+
+### Raw SQL va Custom Queries
+
+```typescript
+// Complex queries with raw SQL when needed
+export class SearchController {
+  static async fullTextSearch(req: Request, res: Response) {
+    try {
+      const { query, limit = 10, offset = 0 } = req.query
+
+      // Full-text search with raw SQL
+      const searchResults = await prisma.$queryRaw`
+        SELECT
+          p.id,
+          p.title,
+          p.slug,
+          p.excerpt,
+          p."publishedAt",
+          ts_rank(to_tsvector('english', p.title || ' ' || p.content), plainto_tsquery('english', ${query})) as rank,
+          u.username as "authorName",
+          c.name as "categoryName"
+        FROM posts p
+        JOIN users u ON p."authorId" = u.id
+        LEFT JOIN categories c ON p."categoryId" = c.id
+        WHERE p.status = 'PUBLISHED'
+          AND to_tsvector('english', p.title || ' ' || p.content) @@ plainto_tsquery('english', ${query})
+        ORDER BY rank DESC, p."publishedAt" DESC
+        LIMIT ${limit}
+        OFFSET ${offset}
+      `
+
+      // Typed result
+      const results = (searchResults as any[]).map(row => ({
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        excerpt: row.excerpt,
+        publishedAt: row.publishedAt,
+        rank: row.rank,
+        author: row.authorName,
+        category: row.categoryName
+      }))
+
+      res.json({
+        query,
+        results,
+        count: results.length
+      })
+
+    } catch (error) {
+      console.error('Error performing search:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+}
+```
+
+---
+
+## 7. Prisma Studio va Database Management 🖥️
+
+### Prisma Studio ishga tushirish
+
+```bash
+# Prisma Studio'ni ishga tushirish
+npx prisma studio
+
+# Browser'da ochiladi: http://localhost:5555
+```
+
+### Prisma Studio features:
+
+1. **Visual Data Browser** - Jadvallarni ko'rish va edit qilish
+2. **Relationship Navigation** - Foreign key relationships orqali navigate
+3. **Data Filtering** - Advanced filters
+4. **CRUD Operations** - Create, read, update, delete records
+5. **Schema Visualization** - Database structure ko'rish
+
+### Database seeding
+
+```typescript
+// prisma/seed.ts
+import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcrypt'
+
+const prisma = new PrismaClient()
+
+async function main() {
+  console.log('🌱 Seeding database...')
+
+  // Create users
+  const hashedPassword = await bcrypt.hash('password123', 10)
+
+  const users = await Promise.all([
+    prisma.user.create({
+      data: {
+        username: 'admin',
+        email: 'admin@example.com',
+        password: hashedPassword,
+        firstName: 'Admin',
+        lastName: 'User'
+      }
+    }),
+    prisma.user.create({
+      data: {
+        username: 'john_doe',
+        email: 'john@example.com',
+        password: hashedPassword,
+        firstName: 'John',
+        lastName: 'Doe',
+        bio: 'Software developer and tech enthusiast'
+      }
+    })
+  ])
+
+  // Create categories
+  const categories = await Promise.all([
+    prisma.category.create({
+      data: {
+        name: 'Technology',
+        slug: 'technology',
+        description: 'Latest tech trends and tutorials',
+        color: '#3B82F6'
+      }
+    }),
+    prisma.category.create({
+      data: {
+        name: 'Programming',
+        slug: 'programming',
+        description: 'Programming tutorials and tips',
+        color: '#10B981'
+      }
+    })
+  ])
+
+  // Create tags
+  const tags = await Promise.all([
+    prisma.tag.create({
+      data: {
+        name: 'JavaScript',
+        slug: 'javascript',
+        color: '#F59E0B'
+      }
+    }),
+    prisma.tag.create({
+      data: {
+        name: 'TypeScript',
+        slug: 'typescript',
+        color: '#3B82F6'
+      }
+    }),
+    prisma.tag.create({
+      data: {
+        name: 'Node.js',
+        slug: 'nodejs',
+        color: '#10B981'
+      }
+    })
+  ])
+
+  // Create posts
+  const posts = await Promise.all([
+    prisma.post.create({
+      data: {
+        title: 'Getting Started with TypeScript',
+        slug: 'getting-started-with-typescript',
+        content: 'TypeScript is a powerful superset of JavaScript...',
+        excerpt: 'Learn the basics of TypeScript programming language',
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
+        authorId: users[1].id,
+        categoryId: categories[1].id,
+        tags: {
+          create: [
+            { tagId: tags[1].id },
+            { tagId: tags[2].id }
+          ]
+        }
+      }
+    }),
+    prisma.post.create({
+      data: {
+        title: 'Modern JavaScript Features',
+        slug: 'modern-javascript-features',
+        content: 'ES6+ brought many powerful features to JavaScript...',
+        excerpt: 'Explore the latest JavaScript language features',
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
+        authorId: users[1].id,
+        categoryId: categories[0].id,
+        tags: {
+          create: [
+            { tagId: tags[0].id }
+          ]
+        }
+      }
+    })
+  ])
+
+  // Create comments
+  await Promise.all([
+    prisma.comment.create({
+      data: {
+        content: 'Great article! Very helpful for beginners.',
+        status: 'APPROVED',
+        postId: posts[0].id,
+        userId: users[0].id
+      }
+    }),
+    prisma.comment.create({
+      data: {
+        content: 'Thanks for the detailed explanation.',
+        status: 'APPROVED',
+        postId: posts[1].id,
+        userId: users[0].id
+      }
+    })
+  ])
+
+  console.log('✅ Database seeded successfully!')
+}
+
+main()
+  .catch((e) => {
+    console.error('❌ Seeding failed:', e)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
+```
+
+### Seeding command
+
+```bash
+# Seed data qo'shish
+npm run db:seed
+
+# Yoki
+npx ts-node prisma/seed.ts
+```
+
+---
+
+## 8. Express App bilan To'liq Integratsiya 📱
+
+### Main application file
+
+```typescript
+// src/app.ts
+import express from 'express'
+import cors from 'cors'
+import helmet from 'helmet'
+import morgan from 'morgan'
+import { userRoutes } from './routes/userRoutes'
+import { postRoutes } from './routes/postRoutes'
+import { categoryRoutes } from './routes/categoryRoutes'
+import { authRoutes } from './routes/authRoutes'
+import { errorHandler } from './middleware/errorHandler'
+
+const app = express()
+
+// Global middleware
+app.use(helmet()) // Security headers
+app.use(cors()) // CORS support
+app.use(morgan('combined')) // Logging
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  })
+})
+
+// API routes
+app.use('/api/auth', authRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/posts', postRoutes)
+app.use('/api/categories', categoryRoutes)
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.originalUrl
+  })
+})
+
+// Global error handler
+app.use(errorHandler)
+
+const PORT = process.env.PORT || 3000
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`)
+  console.log(`📊 Prisma Studio: http://localhost:5555`)
+  console.log(`🏥 Health check: http://localhost:${PORT}/health`)
+})
+
+export default app
+```
+
+### Routes example
+
+```typescript
+// src/routes/postRoutes.ts
+import { Router } from 'express'
+import { PostController } from '../controllers/PostController'
+import { authenticate } from '../middleware/auth'
+import { validatePost } from '../middleware/validation'
+
+const router = Router()
+
+// Public routes
+router.get('/', PostController.getPosts)
+router.get('/slug/:slug', PostController.getPostBySlug)
+
+// Protected routes
+router.use(authenticate) // Apply auth middleware to all routes below
+
+router.post('/', validatePost, PostController.createPost)
+router.put('/:id', validatePost, PostController.updatePost)
+router.delete('/:id', PostController.deletePost)
+router.post('/:postId/like', PostController.likePost)
+
+export { router as postRoutes }
+```
+
+---
+
+## Xulosa 🎯
+
+Bu darsda biz Prisma ORM'ning asoslarini o'rgandik:
+
+✅ **Prisma Introduction** - Type-safe, modern database toolkit
+✅ **Schema Design** - Models, relationships, attributes
+✅ **Migration System** - Database versioning va deployment
+✅ **Prisma Client** - Generated client va CRUD operations
+✅ **Advanced Features** - Transactions, aggregations, raw SQL
+✅ **Prisma Studio** - Visual database management
+✅ **Real-world Integration** - Express API bilan to'liq loyiha
+
+### Keyingi darsda:
+
+🔧 **Advanced Prisma Queries**
+- Complex queries va optimizations
+- Performance tuning
+- Caching strategies
+- Production best practices
+
+### Uyga vazifa:
+
+1. **Blog API'ni** to'liq implement qiling barcha CRUD operations bilan
+2. **Prisma Studio** orqali ma'lumotlar qo'shing va edit qiling
+3. **Custom queries** yozing - analytics, search, filters
+4. **Seeding script** yozing realistic test data uchun
+
+### Prisma best practices:
+
+```typescript
+// ✅ Prisma best practices
+1. Use select/include wisely - don't over-fetch
+2. Implement pagination for large datasets
+3. Use transactions for consistent operations
+4. Handle errors gracefully
+5. Use environment-specific configs
+6. Keep migrations clean and reversible
+7. Regular backup and monitoring
+```
+
+---
+
+### Qo'shimcha resurslar:
+
+- 🔧 [Prisma Documentation](https://prisma.io/docs/)
+- 📊 [Prisma Examples](https://github.com/prisma/prisma-examples)
+- 🎯 [TypeScript with Prisma](https://prisma.io/docs/concepts/more/typescript)
+- 🚀 [Prisma Best Practices](https://prisma.io/docs/guides/performance-and-optimization)
+
+**Keyingi dars:** Advanced Prisma Queries va Performance Optimization 🚀

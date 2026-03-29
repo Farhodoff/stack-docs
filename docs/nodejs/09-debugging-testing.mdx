@@ -1,0 +1,1245 @@
+---
+title: "Debugging va Testing"
+description: "Node.js'da debugging techniques, unit testing, integration testing va professional test-driven development"
+category: "nodejs"
+order: 9
+difficulty: "advanced"
+readTime: "50 daqiqa"
+tags:
+  - nodejs
+  - debugging
+  - testing
+  - jest
+  - unit-testing
+  - integration-testing
+  - tdd
+---
+
+# Debugging va Testing
+
+Assalom aleykum! Professional backend developer bo'lish uchun eng muhim ko'nikmalardan biri - **debugging** va **testing**. Bu darsda bug'larni qanday topish va kod sifatini qanday ta'minlashni o'rganamiz.
+
+## O'qish rejasi
+
+Bu darsda quyidagilarni o'rganasiz:
+- 🐛 **Debugging techniques** - xatoliklarni topish va tuzatish
+- ✅ **Unit Testing** - individual function'larni test qilish
+- 🔧 **Integration Testing** - komponentlarning birgalikda ishlashini test qilish
+- 📡 **API Testing** - HTTP endpoint'larni test qilish
+- 📊 **Test Coverage** - kod qoplami o'lchash
+- 💼 **Real loyiha** - To'liq test suite News API uchun
+
+---
+
+## Debugging Fundamentals
+
+**Debugging** - kodda xatoliklarni topish, tushunish va tuzatish jarayoni.
+
+### 1. Console debugging:
+
+```javascript
+// Basic console methods
+console.log('Basic log');                    // Oddiy log
+console.info('Information message');         // Ma'lumot
+console.warn('Warning message');             // Ogohlantirish
+console.error('Error message');              // Xatolik
+console.debug('Debug information');          // Debug (NODE_ENV=development'da ko'rinadi)
+
+// Advanced console methods
+const user = { id: 1, name: 'Alibek', email: 'alibek@example.com' };
+
+console.table([user]);                       // Jadval ko'rinishida
+console.dir(user, { depth: null });          // Object struktura
+console.time('operation');                   // Timer start
+console.timeEnd('operation');                // Timer end
+console.trace('Call stack trace');           // Call stack
+console.count('function calls');             // Counter
+console.group('Grouped logs');               // Log grouping
+console.groupEnd();
+
+// Conditional logging
+console.assert(user.id > 0, 'User ID must be positive');
+
+// Custom logging function
+function debugLog(message, data = null, level = 'info') {
+  if (process.env.NODE_ENV === 'development') {
+    const timestamp = new Date().toISOString();
+    const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
+
+    console[level](`${prefix} ${message}`);
+
+    if (data) {
+      console[level]('Data:', JSON.stringify(data, null, 2));
+    }
+  }
+}
+
+// Usage
+debugLog('User authentication started', { userId: 123 });
+debugLog('Database query slow', { duration: '2.5s' }, 'warn');
+```
+
+### 2. Node.js built-in debugger:
+
+```javascript
+// debugger.js
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.post('/api/calculate', (req, res) => {
+  const { a, b, operation } = req.body;
+
+  debugger; // Breakpoint - dastur bu yerda to'xtaydi
+
+  let result;
+
+  switch (operation) {
+    case 'add':
+      debugger; // Debugging point
+      result = a + b;
+      break;
+    case 'subtract':
+      result = a - b;
+      break;
+    case 'multiply':
+      result = a * b;
+      break;
+    case 'divide':
+      if (b === 0) {
+        debugger; // Division by zero check
+        return res.status(400).json({ error: 'Division by zero' });
+      }
+      result = a / b;
+      break;
+    default:
+      debugger; // Invalid operation
+      return res.status(400).json({ error: 'Invalid operation' });
+  }
+
+  res.json({ result, operation, inputs: { a, b } });
+});
+
+app.listen(3000);
+```
+
+```bash
+# Node.js debugger ishga tushirish
+node inspect debugger.js
+
+# Commands:
+# n - next line
+# s - step into function
+# c - continue
+# repl - REPL mode'ga kirish
+# .exit - debugger'dan chiqish
+```
+
+### 3. VS Code debugging:
+
+```json
+// .vscode/launch.json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Node.js App",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/server.js",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "restart": true,
+      "runtimeArgs": ["--nolazy"]
+    },
+    {
+      "name": "Debug Jest Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "args": ["--runInBand", "--no-cache"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}
+```
+
+---
+
+## Error Handling va Logging
+
+### 1. Professional error tracking:
+
+```javascript
+// utils/errorHandler.js
+class AppError extends Error {
+  constructor(message, statusCode, code = null, isOperational = true) {
+    super(message);
+
+    this.statusCode = statusCode;
+    this.code = code;
+    this.isOperational = isOperational;
+    this.timestamp = new Date().toISOString();
+
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+class ErrorHandler {
+  static handle(error, req = null) {
+    // Log error
+    console.error('💥 Error occurred:', {
+      message: error.message,
+      stack: error.stack,
+      statusCode: error.statusCode,
+      code: error.code,
+      timestamp: error.timestamp,
+      request: req ? {
+        method: req.method,
+        url: req.url,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      } : null
+    });
+
+    // Send to external service (Sentry, LogRocket, etc.)
+    if (process.env.NODE_ENV === 'production') {
+      this.sendToExternalService(error, req);
+    }
+  }
+
+  static sendToExternalService(error, req) {
+    // Sentry, Bugsnag, or other error tracking service
+    console.log('📡 Sending to error tracking service...');
+  }
+
+  static createExpressErrorHandler() {
+    return (error, req, res, next) => {
+      this.handle(error, req);
+
+      const statusCode = error.statusCode || 500;
+      const message = error.isOperational ? error.message : 'Internal Server Error';
+
+      res.status(statusCode).json({
+        success: false,
+        error: {
+          message,
+          code: error.code,
+          statusCode,
+          timestamp: new Date().toISOString()
+        },
+        ...(process.env.NODE_ENV === 'development' && {
+          stack: error.stack
+        })
+      });
+    };
+  }
+}
+
+// Async error catcher
+const catchAsync = (fn) => {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
+module.exports = {
+  AppError,
+  ErrorHandler,
+  catchAsync
+};
+```
+
+---
+
+## Unit Testing bilan Jest
+
+### 1. Jest o'rnatish va konfiguratsiya:
+
+```bash
+npm install -D jest supertest
+npm install -D @types/jest  # TypeScript uchun
+```
+
+```json
+// jest.config.js
+module.exports = {
+  testEnvironment: 'node',
+  testMatch: [
+    '**/__tests__/**/*.js',
+    '**/*.test.js',
+    '**/*.spec.js'
+  ],
+  collectCoverageFrom: [
+    'src/**/*.js',
+    'utils/**/*.js',
+    'models/**/*.js',
+    '!src/server.js',
+    '!**/__tests__/**',
+    '!**/node_modules/**'
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+  testTimeout: 10000
+};
+```
+
+```javascript
+// tests/setup.js
+// Global test setup
+beforeAll(async () => {
+  // Database connection, test data setup
+});
+
+afterAll(async () => {
+  // Cleanup, close connections
+});
+
+beforeEach(() => {
+  // Reset mocks, clear data before each test
+  jest.clearAllMocks();
+});
+```
+
+### 2. Basic unit tests:
+
+```javascript
+// utils/calculator.js
+class Calculator {
+  add(a, b) {
+    if (typeof a !== 'number' || typeof b !== 'number') {
+      throw new Error('Arguments must be numbers');
+    }
+    return a + b;
+  }
+
+  subtract(a, b) {
+    if (typeof a !== 'number' || typeof b !== 'number') {
+      throw new Error('Arguments must be numbers');
+    }
+    return a - b;
+  }
+
+  multiply(a, b) {
+    if (typeof a !== 'number' || typeof b !== 'number') {
+      throw new Error('Arguments must be numbers');
+    }
+    return a * b;
+  }
+
+  divide(a, b) {
+    if (typeof a !== 'number' || typeof b !== 'number') {
+      throw new Error('Arguments must be numbers');
+    }
+
+    if (b === 0) {
+      throw new Error('Cannot divide by zero');
+    }
+
+    return a / b;
+  }
+
+  static factorial(n) {
+    if (!Number.isInteger(n) || n < 0) {
+      throw new Error('Input must be a non-negative integer');
+    }
+
+    if (n === 0 || n === 1) return 1;
+
+    let result = 1;
+    for (let i = 2; i <= n; i++) {
+      result *= i;
+    }
+
+    return result;
+  }
+}
+
+module.exports = Calculator;
+```
+
+```javascript
+// __tests__/calculator.test.js
+const Calculator = require('../utils/calculator');
+
+describe('Calculator', () => {
+  let calculator;
+
+  beforeEach(() => {
+    calculator = new Calculator();
+  });
+
+  describe('add()', () => {
+    test('should add two positive numbers correctly', () => {
+      const result = calculator.add(2, 3);
+      expect(result).toBe(5);
+    });
+
+    test('should add negative numbers correctly', () => {
+      expect(calculator.add(-2, -3)).toBe(-5);
+      expect(calculator.add(-2, 3)).toBe(1);
+    });
+
+    test('should add decimal numbers correctly', () => {
+      expect(calculator.add(0.1, 0.2)).toBeCloseTo(0.3, 5);
+    });
+
+    test('should throw error for non-numeric inputs', () => {
+      expect(() => calculator.add('a', 2)).toThrow('Arguments must be numbers');
+      expect(() => calculator.add(2, null)).toThrow('Arguments must be numbers');
+      expect(() => calculator.add(undefined, 2)).toThrow('Arguments must be numbers');
+    });
+  });
+
+  describe('divide()', () => {
+    test('should divide numbers correctly', () => {
+      expect(calculator.divide(10, 2)).toBe(5);
+      expect(calculator.divide(9, 3)).toBe(3);
+    });
+
+    test('should handle decimal division', () => {
+      expect(calculator.divide(1, 3)).toBeCloseTo(0.333333, 5);
+    });
+
+    test('should throw error when dividing by zero', () => {
+      expect(() => calculator.divide(10, 0)).toThrow('Cannot divide by zero');
+    });
+
+    test('should throw error for non-numeric inputs', () => {
+      expect(() => calculator.divide('10', 2)).toThrow('Arguments must be numbers');
+    });
+  });
+
+  describe('factorial()', () => {
+    test('should calculate factorial correctly', () => {
+      expect(Calculator.factorial(0)).toBe(1);
+      expect(Calculator.factorial(1)).toBe(1);
+      expect(Calculator.factorial(5)).toBe(120);
+      expect(Calculator.factorial(3)).toBe(6);
+    });
+
+    test('should throw error for negative numbers', () => {
+      expect(() => Calculator.factorial(-1)).toThrow('Input must be a non-negative integer');
+    });
+
+    test('should throw error for non-integers', () => {
+      expect(() => Calculator.factorial(3.5)).toThrow('Input must be a non-negative integer');
+      expect(() => Calculator.factorial('3')).toThrow('Input must be a non-negative integer');
+    });
+  });
+});
+```
+
+### 3. Async function testing:
+
+```javascript
+// utils/asyncOperations.js
+const fs = require('fs').promises;
+const axios = require('axios');
+
+class AsyncOperations {
+  static async readFileContent(filePath) {
+    try {
+      const content = await fs.readFile(filePath, 'utf8');
+      return content.trim();
+    } catch (error) {
+      throw new Error(`Failed to read file: ${error.message}`);
+    }
+  }
+
+  static async fetchUserData(userId) {
+    if (!userId || userId <= 0) {
+      throw new Error('Valid user ID is required');
+    }
+
+    try {
+      const response = await axios.get(`https://jsonplaceholder.typicode.com/users/${userId}`);
+      return {
+        id: response.data.id,
+        name: response.data.name,
+        email: response.data.email,
+        username: response.data.username
+      };
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        throw new Error('User not found');
+      }
+      throw new Error(`Failed to fetch user data: ${error.message}`);
+    }
+  }
+
+  static async processDataWithDelay(data, delayMs = 1000) {
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+
+    if (!Array.isArray(data)) {
+      throw new Error('Data must be an array');
+    }
+
+    return data
+      .filter(item => item != null)
+      .map(item => String(item).toUpperCase());
+  }
+}
+
+module.exports = AsyncOperations;
+```
+
+```javascript
+// __tests__/asyncOperations.test.js
+const AsyncOperations = require('../utils/asyncOperations');
+const fs = require('fs').promises;
+const axios = require('axios');
+
+// Mock external dependencies
+jest.mock('fs', () => ({
+  promises: {
+    readFile: jest.fn()
+  }
+}));
+
+jest.mock('axios');
+
+describe('AsyncOperations', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('readFileContent()', () => {
+    test('should read file content successfully', async () => {
+      const mockContent = 'Test file content\n';
+      fs.readFile.mockResolvedValue(mockContent);
+
+      const result = await AsyncOperations.readFileContent('test.txt');
+
+      expect(result).toBe('Test file content');
+      expect(fs.readFile).toHaveBeenCalledWith('test.txt', 'utf8');
+    });
+
+    test('should throw error when file reading fails', async () => {
+      const error = new Error('File not found');
+      fs.readFile.mockRejectedValue(error);
+
+      await expect(AsyncOperations.readFileContent('nonexistent.txt'))
+        .rejects.toThrow('Failed to read file: File not found');
+    });
+  });
+
+  describe('fetchUserData()', () => {
+    test('should fetch user data successfully', async () => {
+      const mockUserData = {
+        data: {
+          id: 1,
+          name: 'Alibek Tursunov',
+          email: 'alibek@example.com',
+          username: 'alibek',
+          address: { city: 'Tashkent' } // Bu field qaytarilmaydi
+        }
+      };
+
+      axios.get.mockResolvedValue(mockUserData);
+
+      const result = await AsyncOperations.fetchUserData(1);
+
+      expect(result).toEqual({
+        id: 1,
+        name: 'Alibek Tursunov',
+        email: 'alibek@example.com',
+        username: 'alibek'
+      });
+
+      expect(axios.get).toHaveBeenCalledWith('https://jsonplaceholder.typicode.com/users/1');
+    });
+
+    test('should throw error for invalid user ID', async () => {
+      await expect(AsyncOperations.fetchUserData(0)).rejects.toThrow('Valid user ID is required');
+      await expect(AsyncOperations.fetchUserData(-1)).rejects.toThrow('Valid user ID is required');
+      await expect(AsyncOperations.fetchUserData(null)).rejects.toThrow('Valid user ID is required');
+    });
+
+    test('should handle 404 error appropriately', async () => {
+      const error404 = {
+        response: { status: 404 },
+        message: 'Request failed with status code 404'
+      };
+
+      axios.get.mockRejectedValue(error404);
+
+      await expect(AsyncOperations.fetchUserData(999))
+        .rejects.toThrow('User not found');
+    });
+
+    test('should handle network errors', async () => {
+      const networkError = new Error('Network Error');
+      axios.get.mockRejectedValue(networkError);
+
+      await expect(AsyncOperations.fetchUserData(1))
+        .rejects.toThrow('Failed to fetch user data: Network Error');
+    });
+  });
+
+  describe('processDataWithDelay()', () => {
+    test('should process data after delay', async () => {
+      const testData = ['hello', 'world', null, 'test'];
+
+      const start = Date.now();
+      const result = await AsyncOperations.processDataWithDelay(testData, 100);
+      const duration = Date.now() - start;
+
+      expect(result).toEqual(['HELLO', 'WORLD', 'TEST']);
+      expect(duration).toBeGreaterThan(90); // Allow some variation
+    }, 10000); // Increase timeout for this test
+
+    test('should throw error for non-array input', async () => {
+      await expect(AsyncOperations.processDataWithDelay('not-an-array'))
+        .rejects.toThrow('Data must be an array');
+    });
+  });
+});
+```
+
+---
+
+## API Testing bilan Supertest
+
+### 1. Express app testing:
+
+```javascript
+// app.js
+const express = require('express');
+const { AppError, ErrorHandler } = require('./utils/errorHandler');
+
+const app = express();
+
+app.use(express.json());
+
+// Routes
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+app.post('/api/users', (req, res) => {
+  const { name, email } = req.body;
+
+  if (!name || !email) {
+    throw new AppError('Name va email majburiy', 400, 'VALIDATION_ERROR');
+  }
+
+  if (!email.includes('@')) {
+    throw new AppError('Email formati noto\'g\'ri', 400, 'INVALID_EMAIL');
+  }
+
+  const user = {
+    id: Date.now(),
+    name,
+    email,
+    createdAt: new Date().toISOString()
+  };
+
+  res.status(201).json({
+    success: true,
+    data: user
+  });
+});
+
+app.get('/api/users/:id', (req, res) => {
+  const userId = parseInt(req.params.id);
+
+  if (isNaN(userId) || userId <= 0) {
+    throw new AppError('Noto\'g\'ri user ID', 400, 'INVALID_ID');
+  }
+
+  // Simulate user lookup
+  if (userId === 999) {
+    throw new AppError('User topilmadi', 404, 'USER_NOT_FOUND');
+  }
+
+  const user = {
+    id: userId,
+    name: `User ${userId}`,
+    email: `user${userId}@example.com`
+  };
+
+  res.json({
+    success: true,
+    data: user
+  });
+});
+
+// Error handling
+app.use(ErrorHandler.createExpressErrorHandler());
+
+module.exports = app;
+```
+
+```javascript
+// __tests__/app.test.js
+const request = require('supertest');
+const app = require('../app');
+
+describe('Express App', () => {
+  describe('GET /health', () => {
+    test('should return health status', async () => {
+      const response = await request(app)
+        .get('/health')
+        .expect(200);
+
+      expect(response.body).toHaveProperty('status', 'OK');
+      expect(response.body).toHaveProperty('timestamp');
+      expect(new Date(response.body.timestamp)).toBeInstanceOf(Date);
+    });
+  });
+
+  describe('POST /api/users', () => {
+    test('should create user successfully', async () => {
+      const userData = {
+        name: 'Alibek Tursunov',
+        email: 'alibek@example.com'
+      };
+
+      const response = await request(app)
+        .post('/api/users')
+        .send(userData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('id');
+      expect(response.body.data.name).toBe(userData.name);
+      expect(response.body.data.email).toBe(userData.email);
+      expect(response.body.data).toHaveProperty('createdAt');
+    });
+
+    test('should return validation error for missing fields', async () => {
+      const invalidData = { name: 'Test User' }; // email yo'q
+
+      const response = await request(app)
+        .post('/api/users')
+        .send(invalidData)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('VALIDATION_ERROR');
+      expect(response.body.error.message).toBe('Name va email majburiy');
+    });
+
+    test('should return error for invalid email format', async () => {
+      const invalidData = {
+        name: 'Test User',
+        email: 'invalid-email-format'
+      };
+
+      const response = await request(app)
+        .post('/api/users')
+        .send(invalidData)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('INVALID_EMAIL');
+    });
+
+    test('should handle invalid JSON', async () => {
+      const response = await request(app)
+        .post('/api/users')
+        .set('Content-Type', 'application/json')
+        .send('invalid json')
+        .expect(400);
+    });
+  });
+
+  describe('GET /api/users/:id', () => {
+    test('should return user data', async () => {
+      const userId = 1;
+
+      const response = await request(app)
+        .get(`/api/users/${userId}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.id).toBe(userId);
+      expect(response.body.data.name).toBe(`User ${userId}`);
+      expect(response.body.data.email).toBe(`user${userId}@example.com`);
+    });
+
+    test('should return 404 for non-existent user', async () => {
+      const response = await request(app)
+        .get('/api/users/999')
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('USER_NOT_FOUND');
+    });
+
+    test('should return error for invalid user ID', async () => {
+      const response = await request(app)
+        .get('/api/users/invalid-id')
+        .expect(400);
+
+      expect(response.body.error.code).toBe('INVALID_ID');
+    });
+
+    test('should handle negative user ID', async () => {
+      await request(app)
+        .get('/api/users/-1')
+        .expect(400);
+    });
+  });
+});
+```
+
+---
+
+## Integration Testing
+
+### 1. Database integration tests:
+
+```javascript
+// __tests__/integration/database.test.js
+const { Pool } = require('pg');
+const app = require('../../app');
+const request = require('supertest');
+
+describe('Database Integration Tests', () => {
+  let pool;
+
+  beforeAll(async () => {
+    // Test database connection
+    pool = new Pool({
+      connectionString: process.env.TEST_DATABASE_URL,
+      ssl: false
+    });
+
+    // Setup test tables
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+  });
+
+  beforeEach(async () => {
+    // Clean up before each test
+    await pool.query('DELETE FROM users');
+
+    // Insert test data
+    await pool.query(`
+      INSERT INTO users (name, email) VALUES
+      ('Alibek', 'alibek@test.com'),
+      ('Malika', 'malika@test.com');
+    `);
+  });
+
+  afterAll(async () => {
+    // Cleanup
+    await pool.query('DROP TABLE IF EXISTS users');
+    await pool.end();
+  });
+
+  describe('User CRUD operations', () => {
+    test('should fetch all users from database', async () => {
+      const response = await request(app)
+        .get('/api/users')
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(2);
+      expect(response.body.data[0]).toHaveProperty('name', 'Alibek');
+    });
+
+    test('should create user and save to database', async () => {
+      const userData = {
+        name: 'Jasur',
+        email: 'jasur@test.com'
+      };
+
+      const response = await request(app)
+        .post('/api/users')
+        .send(userData)
+        .expect(201);
+
+      // Verify in database
+      const result = await pool.query('SELECT * FROM users WHERE email = $1', [userData.email]);
+      expect(result.rows).toHaveLength(1);
+      expect(result.rows[0].name).toBe(userData.name);
+    });
+
+    test('should handle unique constraint violation', async () => {
+      const duplicateUser = {
+        name: 'Duplicate',
+        email: 'alibek@test.com' // Already exists
+      };
+
+      const response = await request(app)
+        .post('/api/users')
+        .send(duplicateUser)
+        .expect(409); // Conflict
+
+      expect(response.body.error.code).toBe('DUPLICATE_EMAIL');
+    });
+  });
+
+  describe('Transaction handling', () => {
+    test('should rollback transaction on error', async () => {
+      const client = await pool.connect();
+
+      try {
+        await client.query('BEGIN');
+
+        await client.query('INSERT INTO users (name, email) VALUES ($1, $2)',
+          ['Test User', 'test@example.com']);
+
+        // Simulate error
+        await client.query('INSERT INTO users (name, email) VALUES ($1, $2)',
+          ['Another User', 'test@example.com']); // Duplicate email
+
+        await client.query('COMMIT');
+      } catch (error) {
+        await client.query('ROLLBACK');
+
+        // Verify rollback worked
+        const result = await client.query('SELECT * FROM users WHERE email = $1', ['test@example.com']);
+        expect(result.rows).toHaveLength(0);
+      } finally {
+        client.release();
+      }
+    });
+  });
+});
+```
+
+---
+
+## Test Coverage va Reporting
+
+### 1. Coverage configuration:
+
+```json
+// package.json
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:verbose": "jest --verbose",
+    "test:integration": "jest --testMatch='**/__tests__/integration/**/*.test.js'"
+  },
+  "jest": {
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  }
+}
+```
+
+### 2. Test organization:
+
+```
+project/
+├── __tests__/
+│   ├── unit/
+│   │   ├── utils/
+│   │   │   ├── calculator.test.js
+│   │   │   └── helpers.test.js
+│   │   └── models/
+│   │       └── User.test.js
+│   ├── integration/
+│   │   ├── api/
+│   │   │   ├── auth.test.js
+│   │   │   └── users.test.js
+│   │   └── database/
+│   │       └── operations.test.js
+│   └── e2e/
+│       └── userFlow.test.js
+├── __mocks__/
+│   ├── fs.js
+│   └── axios.js
+└── tests/
+    ├── setup.js
+    ├── helpers.js
+    └── fixtures/
+        └── userData.js
+```
+
+### 3. Test helpers va fixtures:
+
+```javascript
+// tests/helpers.js
+class TestHelpers {
+  static generateUser(override = {}) {
+    return {
+      id: Math.floor(Math.random() * 1000),
+      name: 'Test User',
+      email: 'test@example.com',
+      createdAt: new Date().toISOString(),
+      ...override
+    };
+  }
+
+  static generateUsers(count = 3) {
+    return Array.from({ length: count }, (_, i) =>
+      this.generateUser({
+        id: i + 1,
+        name: `User ${i + 1}`,
+        email: `user${i + 1}@example.com`
+      })
+    );
+  }
+
+  static async clearDatabase(pool) {
+    await pool.query('DELETE FROM users');
+    await pool.query('DELETE FROM posts');
+    // Reset auto-increment
+    await pool.query('ALTER SEQUENCE users_id_seq RESTART WITH 1');
+  }
+
+  static mockResponse() {
+    const res = {};
+    res.status = jest.fn().mockReturnValue(res);
+    res.json = jest.fn().mockReturnValue(res);
+    res.send = jest.fn().mockReturnValue(res);
+    return res;
+  }
+
+  static mockRequest(override = {}) {
+    return {
+      params: {},
+      query: {},
+      body: {},
+      headers: {},
+      ...override
+    };
+  }
+}
+
+module.exports = TestHelpers;
+```
+
+---
+
+## Performance Testing
+
+### 1. Performance benchmarks:
+
+```javascript
+// __tests__/performance/benchmarks.test.js
+const app = require('../../app');
+const request = require('supertest');
+
+describe('Performance Benchmarks', () => {
+  describe('API Response Times', () => {
+    test('GET /health should respond within 50ms', async () => {
+      const start = Date.now();
+
+      await request(app)
+        .get('/health')
+        .expect(200);
+
+      const duration = Date.now() - start;
+      expect(duration).toBeLessThan(50);
+    });
+
+    test('POST /api/users should respond within 200ms', async () => {
+      const userData = {
+        name: 'Performance Test',
+        email: 'perf@test.com'
+      };
+
+      const start = Date.now();
+
+      await request(app)
+        .post('/api/users')
+        .send(userData)
+        .expect(201);
+
+      const duration = Date.now() - start;
+      expect(duration).toBeLessThan(200);
+    });
+  });
+
+  describe('Concurrent Requests', () => {
+    test('should handle 10 concurrent requests', async () => {
+      const requests = Array.from({ length: 10 }, (_, i) =>
+        request(app)
+          .post('/api/users')
+          .send({
+            name: `User ${i}`,
+            email: `user${i}@concurrent.test`
+          })
+      );
+
+      const responses = await Promise.all(requests);
+
+      responses.forEach((response, i) => {
+        expect(response.status).toBe(201);
+        expect(response.body.data.email).toBe(`user${i}@concurrent.test`);
+      });
+    }, 10000); // 10 second timeout
+  });
+
+  describe('Memory Usage', () => {
+    test('should not have significant memory leaks', async () => {
+      const initialMemory = process.memoryUsage().heapUsed;
+
+      // Simulate workload
+      for (let i = 0; i < 100; i++) {
+        await request(app).get('/health');
+      }
+
+      // Force garbage collection if available
+      if (global.gc) {
+        global.gc();
+      }
+
+      const finalMemory = process.memoryUsage().heapUsed;
+      const memoryIncrease = finalMemory - initialMemory;
+
+      console.log(`Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)} MB`);
+
+      // Should not increase by more than 10MB
+      expect(memoryIncrease).toBeLessThan(10 * 1024 * 1024);
+    });
+  });
+});
+```
+
+### 2. Load testing:
+
+```javascript
+// loadTest.js - Artillery yoki boshqa tool'lar bilan
+const autocannon = require('autocannon');
+
+async function runLoadTest() {
+  const instance = autocannon({
+    url: 'http://localhost:3000',
+    connections: 10,
+    pipelining: 1,
+    duration: 10,
+    requests: [
+      {
+        method: 'GET',
+        path: '/health'
+      },
+      {
+        method: 'GET',
+        path: '/api/users/1'
+      },
+      {
+        method: 'POST',
+        path: '/api/users',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: 'Load Test User',
+          email: 'load@test.com'
+        })
+      }
+    ]
+  });
+
+  instance.on('done', (results) => {
+    console.log('\n📊 LOAD TEST RESULTS:');
+    console.log(`🚀 Requests/sec: ${results.requests.average}`);
+    console.log(`⚡ Latency avg: ${results.latency.average}ms`);
+    console.log(`📈 Throughput: ${results.throughput.average} bytes/sec`);
+    console.log(`❌ Errors: ${results.errors}`);
+  });
+}
+
+if (require.main === module) {
+  runLoadTest();
+}
+
+module.exports = runLoadTest;
+```
+
+---
+
+## Package.json Test Scripts
+
+```json
+{
+  "scripts": {
+    "test": "jest",
+    "test:unit": "jest __tests__/unit",
+    "test:integration": "jest __tests__/integration",
+    "test:e2e": "jest __tests__/e2e",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:performance": "jest __tests__/performance",
+    "test:load": "node loadTest.js",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:performance",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand"
+  }
+}
+```
+
+---
+
+## Xulosa va keyingi qadam
+
+### 🎯 Bu darsda o'rgandiklar:
+
+✅ **Debugging techniques** - console, Node.js debugger, VS Code
+✅ **Error handling** - professional error tracking va logging
+✅ **Unit testing** - Jest bilan function testing
+✅ **API testing** - Supertest bilan HTTP endpoint testing
+✅ **Integration testing** - database va component testing
+✅ **Performance testing** - benchmark'lar va load testing
+✅ **Test coverage** - kod qoplami o'lchash
+
+### 📊 Testing best practices:
+
+✅ **Test pyramid** - Unit > Integration > E2E
+✅ **Mocking** - external dependencies'ni mock qilish
+✅ **Test organization** - logical folder structure
+✅ **Coverage thresholds** - 80%+ code coverage
+✅ **Performance benchmarks** - response time monitoring
+✅ **Error scenarios** - edge cases testing
+
+### 🐛 Debugging arsenal:
+
+✅ **Console methods** - log, table, trace, time
+✅ **Node.js debugger** - breakpoints va inspection
+✅ **VS Code integration** - visual debugging
+✅ **Error tracking** - professional error handling
+✅ **Performance monitoring** - memory va timing
+
+### 🚀 Keyingi darsda:
+
+- **Final Project** - Real-world Blog Platform
+- **Production deployment** - Docker, CI/CD
+- **Monitoring va logging** - advanced observability
+- **Security auditing** - vulnerability testing
+
+### 📚 Mustaqil mashq:
+
+1. **News API testing** - to'liq test suite yaratish
+2. **Performance optimization** - bottleneck'larni topish
+3. **E2E testing** - Playwright yoki Cypress
+
+---
+
+<Callout type="success" title="Testing Master! 🧪">
+Siz endi professional debugging va testing ko'nimalarini egallabsiz! Unit testing, integration testing va performance monitoring bilan production-ready kod yozasiz.
+</Callout>
+
+<Callout type="info" title="Quality Assurance! 💎">
+Testing - bu code quality'ning asosi. Professional development'da testing olmagan kod production'ga chiqa olmaydi. Keyingi darsda barchasi birlashtirib, to'liq real-world loyiha yaratamiz!
+</Callout>
+
+**Keyingi dars**: [Node.js Real Project](/docs/nodejs/10-nodejs-project)
