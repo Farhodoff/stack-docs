@@ -124,106 +124,165 @@ export function SearchOverlay({ open, onOpenChange, index }: SearchOverlayProps)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetOverlay />
-      <SheetContent side="top" className="h-[500px] w-full max-w-2xl mx-auto mt-[10vh] p-0 rounded-lg">
+      <SheetOverlay className="bg-background/80 backdrop-blur-sm" />
+      <SheetContent
+        side="top"
+        className="h-[550px] w-full max-w-3xl mx-auto mt-[8vh] p-0 rounded-xl border border-border/60 shadow-2xl bg-background/95 backdrop-blur-md"
+      >
         <div className="flex flex-col h-full">
-          <div className="border-b border-border/50">
-            <div className="flex items-center gap-3 px-4 py-3">
-              <Search className="h-5 w-5 text-muted-foreground" />
+          {/* Enhanced Search Header */}
+          <div className="border-b border-border/40 bg-gradient-to-r from-muted/20 to-muted/10">
+            <div className="flex items-center gap-4 px-6 py-4">
+              <div className="relative">
+                <Search className="h-5 w-5 text-[#534AB7]" />
+                <div className="absolute inset-0 h-5 w-5 bg-[#534AB7] rounded-full opacity-20 animate-pulse" />
+              </div>
               <input
                 ref={inputRef}
                 type="search"
                 placeholder="Hujjatlarni qidiring..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
+                className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground/70 font-medium"
               />
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Command className="h-3 w-3" />
-                <span>K</span>
+              <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground bg-muted/40 rounded-md px-2 py-1 border border-border/30">
+                  <Command className="h-3 w-3" />
+                  <span className="font-mono font-medium">K</span>
+                </div>
+                <SheetClose asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50 rounded-full">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </SheetClose>
               </div>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <X className="h-4 w-4" />
-                </Button>
-              </SheetClose>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          {/* Enhanced Results Area */}
+          <div className="flex-1 overflow-hidden">
+            {!query.trim() && (
+              <div className="py-12 px-6 text-center">
+                <div className="max-w-sm mx-auto">
+                  <Search className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground/80 mb-2">
+                    Hujjatlarni qidiring
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    React, Node.js, CSS va boshqa texnologiyalar bo'yicha ma'lumot toping
+                  </p>
+                </div>
+              </div>
+            )}
+
             {query.trim() && results.length === 0 && (
-              <div className="py-6 px-4 text-center text-sm text-muted-foreground">
-                "{query}" uchun natija topilmadi
+              <div className="py-12 px-6 text-center">
+                <div className="max-w-sm mx-auto">
+                  <FileText className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground/80 mb-2">
+                    Natija topilmadi
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium">"{query}"</span> uchun hech narsa topilmadi. Boshqa atama bilan qidiring.
+                  </p>
+                </div>
               </div>
             )}
 
             {results.length > 0 && (
-              <div className="py-2">
-                {results.map((item, index) => (
-                  <button
-                    type="button"
-                    key={item.slug}
-                    onClick={() => handleResultClick(item.slug)}
-                    className={cn(
-                      "w-full px-4 py-3 text-left hover:bg-muted/50 transition-colors",
-                      index === selectedIndex && "bg-muted/80"
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <FileText className="h-4 w-4 text-primary flex-shrink-0" />
-                          <h3 className="font-medium text-sm truncate">{item.title}</h3>
-                        </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                          {item.description}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs">
-                          {item.readTime && (
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              {item.readTime} min
+              <div className="py-3 px-3 overflow-y-auto max-h-full">
+                <div className="space-y-1">
+                  {results.map((item, index) => (
+                    <button
+                      type="button"
+                      key={item.slug}
+                      onClick={() => handleResultClick(item.slug)}
+                      className={cn(
+                        "group w-full p-4 text-left rounded-lg transition-all duration-150 border",
+                        "hover:bg-gradient-to-r hover:from-muted/40 hover:to-muted/20 hover:shadow-md hover:border-border/60",
+                        "focus:outline-none focus:ring-2 focus:ring-[#534AB7]/20 focus:ring-offset-1",
+                        index === selectedIndex
+                          ? "bg-gradient-to-r from-[#534AB7]/10 to-[#534AB7]/5 border-[#534AB7]/30 shadow-sm"
+                          : "border-transparent hover:border-border/40"
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={cn(
+                              "p-1.5 rounded-md transition-colors",
+                              index === selectedIndex
+                                ? "bg-[#534AB7]/15 text-[#534AB7]"
+                                : "bg-muted/60 text-muted-foreground group-hover:bg-[#534AB7]/10 group-hover:text-[#534AB7]"
+                            )}>
+                              <FileText className="h-3.5 w-3.5" />
                             </div>
-                          )}
-                          {item.difficulty && (
-                            <Badge variant="outline" className={cn("text-xs px-1.5 py-0", DIFFICULTY_COLORS[item.difficulty])}>
-                              {getDifficultyLabel(item.difficulty)}
-                            </Badge>
-                          )}
-                          {item.category && (
-                            <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                              {item.category}
-                            </Badge>
-                          )}
+                            <h3 className="font-semibold text-sm text-foreground/90 truncate leading-tight">
+                              {item.title}
+                            </h3>
+                          </div>
+
+                          <p className="text-xs text-muted-foreground/80 line-clamp-2 mb-3 leading-relaxed">
+                            {item.description}
+                          </p>
+
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {item.readTime && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/40 rounded-full px-2 py-1">
+                                <Clock className="h-3 w-3" />
+                                <span className="font-medium">{item.readTime} min</span>
+                              </div>
+                            )}
+                            {item.difficulty && (
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "text-xs px-2 py-0.5 font-medium border",
+                                  DIFFICULTY_COLORS[item.difficulty]
+                                )}
+                              >
+                                {getDifficultyLabel(item.difficulty)}
+                              </Badge>
+                            )}
+                            {item.category && (
+                              <Badge
+                                variant="secondary"
+                                className="text-xs px-2 py-0.5 bg-[#534AB7]/10 text-[#534AB7] border border-[#534AB7]/20 font-medium"
+                              >
+                                {item.category}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
-          <div className="border-t border-border/50 px-4 py-3 text-xs text-muted-foreground">
+          {/* Enhanced Footer */}
+          <div className="border-t border-border/40 bg-gradient-to-r from-muted/10 to-transparent px-6 py-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  <kbd className="pointer-events-none select-none rounded border bg-muted px-1.5 py-0.5 font-mono text-xs">↑</kbd>
-                  <kbd className="pointer-events-none select-none rounded border bg-muted px-1.5 py-0.5 font-mono text-xs">↓</kbd>
-                  <span>navigate</span>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-1.5">
+                  <kbd className="pointer-events-none select-none rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-xs font-medium shadow-sm">↑</kbd>
+                  <kbd className="pointer-events-none select-none rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-xs font-medium shadow-sm">↓</kbd>
+                  <span className="text-xs text-muted-foreground font-medium">navigate</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <kbd className="pointer-events-none select-none rounded border bg-muted px-1.5 py-0.5 font-mono text-xs">↵</kbd>
-                  <span>select</span>
+                <div className="flex items-center gap-1.5">
+                  <kbd className="pointer-events-none select-none rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-xs font-medium shadow-sm">↵</kbd>
+                  <span className="text-xs text-muted-foreground font-medium">select</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <kbd className="pointer-events-none select-none rounded border bg-muted px-1.5 py-0.5 font-mono text-xs">esc</kbd>
-                  <span>close</span>
+                <div className="flex items-center gap-1.5">
+                  <kbd className="pointer-events-none select-none rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-xs font-medium shadow-sm">esc</kbd>
+                  <span className="text-xs text-muted-foreground font-medium">close</span>
                 </div>
               </div>
-              <div className="text-muted-foreground">
+              <div className="text-xs font-medium">
                 {results.length > 0 && (
-                  <span>{results.length} ta natija</span>
+                  <span className="text-[#534AB7]">{results.length} ta natija</span>
                 )}
               </div>
             </div>

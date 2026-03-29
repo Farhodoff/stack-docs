@@ -46,19 +46,19 @@ export default async function DocPage(props: {
         <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
         {/* Page Header */}
-        <div className="mb-8 space-y-4">
-          <h1 className="text-2xl font-medium tracking-tight leading-tight">
+        <div className="mb-10 space-y-4">
+          <h1 className="text-3xl font-bold tracking-tight leading-tight text-foreground/95 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
             {doc.title}
           </h1>
           {doc.description && (
-            <p className="text-base text-muted-foreground leading-relaxed">
+            <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
               {doc.description}
             </p>
           )}
         </div>
 
         {/* Content */}
-        <article className="prose prose-slate dark:prose-invert max-w-none w-full prose-headings:font-medium prose-p:leading-relaxed prose-li:leading-relaxed">
+        <article className="prose prose-slate dark:prose-invert max-w-none w-full prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-7 prose-p:text-foreground/80 prose-li:leading-7 prose-li:text-foreground/80 prose-strong:text-foreground prose-strong:font-semibold prose-code:text-[#534AB7] prose-code:bg-muted/40 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-medium prose-code:text-sm prose-blockquote:border-l-[#534AB7] prose-blockquote:bg-gradient-to-r prose-blockquote:from-muted/40 prose-blockquote:to-transparent prose-blockquote:not-italic prose-a:text-[#534AB7] prose-a:no-underline hover:prose-a:underline prose-a:font-medium prose-a:decoration-2 prose-a:underline-offset-4 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-h4:text-base prose-h2:mt-8 prose-h2:mb-4 prose-h3:mt-6 prose-h3:mb-3 prose-h4:mt-4 prose-h4:mb-2">
           <MDXRenderer source={serialized} />
         </article>
 

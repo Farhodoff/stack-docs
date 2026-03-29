@@ -58,22 +58,30 @@ export function MobileNavigation({ open, onOpenChange, items }: MobileNavigation
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-80 p-0">
-        <SheetHeader className="border-b border-border/50 p-4">
+        <SheetHeader className="border-b border-border/40 bg-gradient-to-r from-muted/20 to-muted/10 p-6">
           <div className="flex items-center justify-between">
-            <SheetTitle className="text-left">Navigation</SheetTitle>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-lg font-bold text-foreground/90">
+                📚
+                <span className="bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                  Stack Docs
+                </span>
+              </div>
+            </div>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9 hover:bg-muted/50 rounded-full transition-all duration-200"
               onClick={() => onOpenChange(false)}
+              title="Close navigation"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto p-4">
-          <nav className="space-y-1">
+        <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
+          <nav className="space-y-2">
             {items.map((group, index) => {
               const isExpanded = expandedSections.has(group.category)
               const hasActiveItem = group.items.some(item =>
@@ -81,51 +89,67 @@ export function MobileNavigation({ open, onOpenChange, items }: MobileNavigation
               )
 
               return (
-                <div key={index}>
+                <div key={index} className="group animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                   <button
                     type="button"
                     onClick={() => toggleSection(group.category)}
                     className={cn(
-                      "flex w-full items-center justify-between rounded-md px-3 py-2",
-                      "text-sm font-medium transition-colors",
-                      "hover:bg-muted/50",
+                      "flex w-full items-center justify-between rounded-lg px-4 py-3",
+                      "text-sm font-semibold transition-all duration-200",
+                      "hover:bg-muted/60 hover:shadow-sm",
+                      "focus:outline-none focus:ring-2 focus:ring-[#534AB7]/20 focus:ring-offset-1",
                       hasActiveItem
-                        ? "text-[#534AB7] bg-[#534AB7]/5"
-                        : "text-foreground"
+                        ? "text-[#534AB7] bg-[#534AB7]/8 shadow-sm border border-[#534AB7]/20"
+                        : "text-foreground/90 border border-transparent"
                     )}
                   >
-                    <span className="text-left leading-relaxed">{group.category}</span>
-                    {isExpanded ? (
-                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                    ) : (
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                    )}
+                    <span className="text-left font-medium tracking-wide">{group.category}</span>
+                    <div className={cn(
+                      "transition-transform duration-200 ease-in-out",
+                      isExpanded ? "rotate-0" : "-rotate-90"
+                    )}>
+                      <ChevronDown className={cn(
+                        "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                        hasActiveItem ? "text-[#534AB7]/70" : "text-muted-foreground/70"
+                      )} />
+                    </div>
                   </button>
 
-                  {isExpanded && group.items?.length > 0 && (
-                    <div className="ml-3 mt-1 space-y-0.5">
-                      {group.items.map((item, itemIndex) => {
-                        const href = `/docs/${item.slug}`
-                        const isActive = pathname === href
+                  <div className={cn(
+                    "overflow-hidden transition-all duration-300 ease-in-out",
+                    isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                  )}>
+                    {group.items?.length > 0 && (
+                      <div className="ml-4 mt-2 space-y-1 border-l border-border/40 pl-4">
+                        {group.items.map((item, itemIndex) => {
+                          const href = `/docs/${item.slug}`
+                          const isActive = pathname === href
 
-                        return (
-                          <Link
-                            key={itemIndex}
-                            href={href}
-                            onClick={() => onOpenChange(false)}
-                            className={cn(
-                              "block rounded-md px-3 py-1.5 text-sm transition-colors leading-relaxed",
-                              isActive
-                                ? "bg-[#534AB7] text-white font-medium shadow-sm"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                            )}
-                          >
-                            {item.title}
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  )}
+                          return (
+                            <Link
+                              key={itemIndex}
+                              href={href}
+                              onClick={() => onOpenChange(false)}
+                              className={cn(
+                                "group/item block rounded-md px-3 py-2.5 text-sm transition-all duration-150",
+                                "relative overflow-hidden",
+                                isActive
+                                  ? "bg-gradient-to-r from-[#534AB7] to-[#534AB7]/90 text-white font-medium shadow-md border border-[#534AB7]"
+                                  : "text-muted-foreground/80 hover:text-foreground hover:bg-muted/40 hover:shadow-sm border border-transparent hover:border-border/30"
+                              )}
+                            >
+                              <span className="relative z-10 leading-relaxed tracking-wide font-medium">
+                                {item.title}
+                              </span>
+                              {!isActive && (
+                                <div className="absolute inset-0 bg-gradient-to-r from-muted/20 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-200" />
+                              )}
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             })}
