@@ -2,7 +2,9 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { Search, FileText, Clock, Command, X } from "lucide-react"
+import { Search, FileText, Clock, Command, X, ChevronRight } from "lucide-react"
+
+// ... (rest of the imports)
 import { Sheet, SheetContent, SheetHeader, SheetClose, SheetOverlay } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -54,14 +56,15 @@ export function SearchOverlay({ open, onOpenChange, index }: SearchOverlayProps)
   const fuse = React.useMemo(() => {
     return new Fuse(index, {
       keys: [
-        { name: "title", weight: 2 },
-        { name: "description", weight: 1.5 },
-        { name: "tags", weight: 1.2 },
-        { name: "category", weight: 1 },
+        { name: "title", weight: 3 },
+        { name: "tags", weight: 2 },
+        { name: "description", weight: 1 },
+        { name: "category", weight: 0.8 },
         { name: "content", weight: 0.5 },
       ],
-      threshold: 0.3,
+      threshold: 0.35,
       includeMatches: true,
+      ignoreLocation: true,
     })
   }, [index])
 
@@ -69,6 +72,11 @@ export function SearchOverlay({ open, onOpenChange, index }: SearchOverlayProps)
     if (!query.trim()) return []
     return fuse.search(query).slice(0, 8).map(result => result.item)
   }, [query, fuse])
+
+  // Get recommended docs (latest 4)
+  const recommended = React.useMemo(() => {
+    return [...index].slice(0, 4)
+  }, [index])
 
   // Reset state when modal opens
   React.useEffect(() => {
@@ -83,13 +91,16 @@ export function SearchOverlay({ open, onOpenChange, index }: SearchOverlayProps)
   React.useEffect(() => {
     if (typeof document === 'undefined') return
 
+    const currentResults = query.trim() ? results : recommended
+    if (!currentResults.length) return
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!open) return
 
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault()
-          setSelectedIndex(prev => Math.min(prev + 1, results.length - 1))
+          setSelectedIndex(prev => Math.min(prev + 1, currentResults.length - 1))
           break
         case "ArrowUp":
           e.preventDefault()
@@ -97,8 +108,8 @@ export function SearchOverlay({ open, onOpenChange, index }: SearchOverlayProps)
           break
         case "Enter":
           e.preventDefault()
-          if (results[selectedIndex]) {
-            router.push(`/docs/${results[selectedIndex].slug}`)
+          if (currentResults[selectedIndex]) {
+            router.push(`/docs/${currentResults[selectedIndex].slug}`)
             onOpenChange(false)
           }
           break
@@ -110,7 +121,7 @@ export function SearchOverlay({ open, onOpenChange, index }: SearchOverlayProps)
 
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [open, results, selectedIndex, router, onOpenChange])
+  }, [open, results, recommended, query, selectedIndex, router, onOpenChange])
 
   // Reset selected index when query changes
   React.useEffect(() => {
@@ -124,168 +135,155 @@ export function SearchOverlay({ open, onOpenChange, index }: SearchOverlayProps)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetOverlay className="bg-background/80 backdrop-blur-sm" />
+      <SheetOverlay className="bg-background/40 backdrop-blur-md" />
       <SheetContent
         side="top"
-        className="h-[550px] w-full max-w-3xl mx-auto mt-[8vh] p-0 rounded-xl border border-border/60 shadow-2xl bg-background/95 backdrop-blur-md"
+        className="h-[600px] w-full max-w-2xl mx-auto mt-[10vh] p-0 rounded-2xl border border-border/40 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] bg-background/90 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200"
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
           {/* Enhanced Search Header */}
-          <div className="border-b border-border/40 bg-gradient-to-r from-muted/20 to-muted/10">
-            <div className="flex items-center gap-4 px-6 py-4">
-              <div className="relative">
-                <Search className="h-5 w-5 text-[#534AB7]" />
-                <div className="absolute inset-0 h-5 w-5 bg-[#534AB7] rounded-full opacity-20 animate-pulse" />
-              </div>
+          <div className="relative group/input border-b border-border/30">
+            <div className="flex items-center gap-4 px-6 h-16">
+              <Search className={cn(
+                "h-5 w-5 transition-colors duration-300",
+                query ? "text-primary" : "text-muted-foreground/50"
+              )} />
               <input
                 ref={inputRef}
                 type="search"
-                placeholder="Hujjatlarni qidiring..."
+                placeholder="Nima o'rganamiz bugun?..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground/70 font-medium"
+                className="flex-1 bg-transparent text-lg outline-none placeholder:text-muted-foreground/40 font-medium"
               />
-              <div className="flex items-center gap-2">
-                <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground bg-muted/40 rounded-md px-2 py-1 border border-border/30">
+              <div className="flex items-center gap-3">
+                <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 bg-muted/30 rounded-lg px-2 py-1 border border-border/30">
                   <Command className="h-3 w-3" />
-                  <span className="font-mono font-medium">K</span>
+                  <span>K</span>
                 </div>
                 <SheetClose asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50 rounded-full">
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4 text-muted-foreground/50" />
                   </Button>
                 </SheetClose>
               </div>
             </div>
+            {query && (
+              <div className="absolute bottom-0 left-0 h-[2px] bg-primary animate-in slide-in-from-left duration-300 w-full" />
+            )}
           </div>
 
           {/* Enhanced Results Area */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto scrollbar-none py-4">
             {!query.trim() && (
-              <div className="py-12 px-6 text-center">
-                <div className="max-w-sm mx-auto">
-                  <Search className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground/80 mb-2">
-                    Hujjatlarni qidiring
+              <div className="px-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/60 flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    Tavsiya etilgan darslar
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    React, Node.js, CSS va boshqa texnologiyalar bo'yicha ma'lumot toping
-                  </p>
                 </div>
-              </div>
-            )}
-
-            {query.trim() && results.length === 0 && (
-              <div className="py-12 px-6 text-center">
-                <div className="max-w-sm mx-auto">
-                  <FileText className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground/80 mb-2">
-                    Natija topilmadi
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-medium">"{query}"</span> uchun hech narsa topilmadi. Boshqa atama bilan qidiring.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {results.length > 0 && (
-              <div className="py-3 px-3 overflow-y-auto max-h-full">
-                <div className="space-y-1">
-                  {results.map((item, index) => (
+                <div className="grid gap-2">
+                  {recommended.map((item, index) => (
                     <button
-                      type="button"
                       key={item.slug}
                       onClick={() => handleResultClick(item.slug)}
+                      onMouseEnter={() => setSelectedIndex(index)}
                       className={cn(
-                        "group w-full p-4 text-left rounded-lg transition-all duration-150 border",
-                        "hover:bg-gradient-to-r hover:from-muted/40 hover:to-muted/20 hover:shadow-md hover:border-border/60",
-                        "focus:outline-none focus:ring-2 focus:ring-[#534AB7]/20 focus:ring-offset-1",
-                        index === selectedIndex
-                          ? "bg-gradient-to-r from-[#534AB7]/10 to-[#534AB7]/5 border-[#534AB7]/30 shadow-sm"
-                          : "border-transparent hover:border-border/40"
+                        "flex items-center gap-4 p-3 rounded-xl transition-all duration-200 group text-left border border-transparent",
+                        index === selectedIndex 
+                          ? "bg-primary/5 border-primary/20 shadow-sm" 
+                          : "hover:bg-muted/30"
                       )}
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className={cn(
-                              "p-1.5 rounded-md transition-colors",
-                              index === selectedIndex
-                                ? "bg-[#534AB7]/15 text-[#534AB7]"
-                                : "bg-muted/60 text-muted-foreground group-hover:bg-[#534AB7]/10 group-hover:text-[#534AB7]"
-                            )}>
-                              <FileText className="h-3.5 w-3.5" />
-                            </div>
-                            <h3 className="font-semibold text-sm text-foreground/90 truncate leading-tight">
-                              {item.title}
-                            </h3>
-                          </div>
-
-                          <p className="text-xs text-muted-foreground/80 line-clamp-2 mb-3 leading-relaxed">
-                            {item.description}
-                          </p>
-
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {item.readTime && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/40 rounded-full px-2 py-1">
-                                <Clock className="h-3 w-3" />
-                                <span className="font-medium">{item.readTime} min</span>
-                              </div>
-                            )}
-                            {item.difficulty && (
-                              <Badge
-                                variant="outline"
-                                className={cn(
-                                  "text-xs px-2 py-0.5 font-medium border",
-                                  DIFFICULTY_COLORS[item.difficulty]
-                                )}
-                              >
-                                {getDifficultyLabel(item.difficulty)}
-                              </Badge>
-                            )}
-                            {item.category && (
-                              <Badge
-                                variant="secondary"
-                                className="text-xs px-2 py-0.5 bg-[#534AB7]/10 text-[#534AB7] border border-[#534AB7]/20 font-medium"
-                              >
-                                {item.category}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
+                      <div className="h-10 w-10 rounded-lg bg-background border border-border/50 flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">
+                        {item.category?.split(' ')[0] || "📄"}
                       </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-sm mb-0.5">{item.title}</div>
+                        <div className="text-xs text-muted-foreground line-clamp-1">{item.description}</div>
+                      </div>
+                      <ChevronRight className={cn(
+                        "h-4 w-4 transition-all duration-200",
+                        index === selectedIndex ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0"
+                      )} />
                     </button>
                   ))}
                 </div>
               </div>
             )}
+
+            {query.trim() && results.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center py-20 px-6 text-center animate-in fade-in zoom-in-95">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+                  <Search className="h-16 w-16 text-muted-foreground/20 relative z-10" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground/80 mb-2">
+                  Hech narsa topilmadi
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                  <span className="font-bold text-primary">"{query}"</span> bo'yicha hech qanday hujjat topilmadi. Boshqa kalit so'zlar bilan qidiring.
+                </p>
+              </div>
+            )}
+
+            {results.length > 0 && (
+              <div className="px-3 space-y-1 animate-in fade-in duration-300">
+                {results.map((item, index) => (
+                  <button
+                    key={item.slug}
+                    onClick={() => handleResultClick(item.slug)}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                    className={cn(
+                      "flex flex-col w-full p-4 rounded-xl transition-all duration-200 group text-left border relative",
+                      index === selectedIndex
+                        ? "bg-primary/[0.03] border-primary/30 shadow-[0_4px_20px_rgba(var(--primary),0.05)]"
+                        : "border-transparent hover:bg-muted/30"
+                    )}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={cn(
+                        "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md border border-border/50",
+                        index === selectedIndex ? "bg-primary/10 text-primary border-primary/20" : "bg-muted/50 text-muted-foreground/70"
+                      )}>
+                        {item.category || "Ma'lumot"}
+                      </div>
+                      <h3 className="font-bold text-sm text-foreground/90 leading-none">
+                        {item.title}
+                      </h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground/80 line-clamp-1 pl-0.5">
+                      {item.description}
+                    </p>
+                    {index === selectedIndex && (
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase tracking-wider animate-in fade-in slide-in-from-right-2">
+                        O'qish <ChevronRight className="h-3 w-3" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Enhanced Footer */}
-          <div className="border-t border-border/40 bg-gradient-to-r from-muted/10 to-transparent px-6 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-1.5">
-                  <kbd className="pointer-events-none select-none rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-xs font-medium shadow-sm">↑</kbd>
-                  <kbd className="pointer-events-none select-none rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-xs font-medium shadow-sm">↓</kbd>
-                  <span className="text-xs text-muted-foreground font-medium">navigate</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <kbd className="pointer-events-none select-none rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-xs font-medium shadow-sm">↵</kbd>
-                  <span className="text-xs text-muted-foreground font-medium">select</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <kbd className="pointer-events-none select-none rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-xs font-medium shadow-sm">esc</kbd>
-                  <span className="text-xs text-muted-foreground font-medium">close</span>
-                </div>
+          <div className="h-12 border-t border-border/30 bg-muted/10 px-6 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-1.5">
+                <kbd className="rounded border border-border/40 bg-background px-1.5 py-0.5">↑↓</kbd>
+                <span>Navigatsiya</span>
               </div>
-              <div className="text-xs font-medium">
-                {results.length > 0 && (
-                  <span className="text-[#534AB7]">{results.length} ta natija</span>
-                )}
+              <div className="flex items-center gap-1.5">
+                <kbd className="rounded border border-border/40 bg-background px-1.5 py-0.5">↵</kbd>
+                <span>Tanlash</span>
               </div>
             </div>
+            {results.length > 0 && (
+              <div className="text-primary/60">
+                {results.length} ta natija topildi
+              </div>
+            )}
           </div>
         </div>
       </SheetContent>

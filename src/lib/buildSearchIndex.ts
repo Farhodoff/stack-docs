@@ -19,26 +19,27 @@ export interface SearchDocument {
 
 /**
  * Build search index from all documentation files
- * @param dir - Directory to search in
+ * @param dir - Relative directory to process (relative to process.cwd())
  * @returns Array of search documents
  */
 export function buildSearchIndex(dir: string = 'docs'): SearchDocument[] {
-  const docsPath = path.join(process.cwd(), dir)
+  const baseDocsDir = path.join(process.cwd(), 'docs')
+  const currentDirPath = path.join(process.cwd(), dir)
   
-  if (!fs.existsSync(docsPath)) {
+  if (!fs.existsSync(currentDirPath)) {
     return []
   }
   
-  const files = fs.readdirSync(docsPath, { withFileTypes: true })
+  const files = fs.readdirSync(currentDirPath, { withFileTypes: true })
   const documents: SearchDocument[] = []
   
   for (const file of files) {
-    const fullPath = path.join(docsPath, file.name)
-    const relativePath = path.relative(dir, fullPath)
+    const fullPath = path.join(currentDirPath, file.name)
     
     if (file.isDirectory()) {
-      // Recursively process subdirectories
-      const subDocs = buildSearchIndex(relativePath)
+      // Recursively process subdirectories using the relative path from process.cwd()
+      const relativeToCwd = path.relative(process.cwd(), fullPath)
+      const subDocs = buildSearchIndex(relativeToCwd)
       documents.push(...subDocs)
     } else if (file.isFile() && file.name.endsWith('.mdx')) {
       // Read and parse the MDX file
@@ -46,8 +47,9 @@ export function buildSearchIndex(dir: string = 'docs'): SearchDocument[] {
       const frontmatter = parseFrontmatter(content)
       
       if (frontmatter && !frontmatter.draft) {
-        // Generate slug from file path
-        const slug = relativePath
+        // Generate slug relative to the base 'docs' directory
+        const relativeToDocs = path.relative(baseDocsDir, fullPath)
+        const slug = relativeToDocs
           .replace(/\.mdx$/, '')
           .split(path.sep)
           .join('/')
@@ -63,10 +65,10 @@ export function buildSearchIndex(dir: string = 'docs'): SearchDocument[] {
         
         documents.push({
           slug,
-          title: frontmatter.title,
-          description: frontmatter.description,
+          title: frontmatter.title || 'Untitled',
+          description: frontmatter.description || '',
           category: frontmatter.category,
-          tags: frontmatter.tags,
+          tags: frontmatter.tags || [],
           content: plainTextContent.slice(0, 5000), // Limit content length
           filePath: fullPath,
           difficulty: (frontmatter as any).difficulty,
