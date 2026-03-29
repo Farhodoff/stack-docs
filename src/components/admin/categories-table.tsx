@@ -64,7 +64,7 @@ export function CategoriesTable({
                   </td>
                   <td className="px-4 py-3">
                     {/* Dynamic category color - inline style necessary for user-defined colors */}
-                    {/* eslint-disable-next-line */}
+                    {/* eslint-disable-next-line react/forbid-dom-props */}
                     <div
                       className="w-8 h-8 rounded border"
                       style={{ backgroundColor: category.color } as React.CSSProperties}

@@ -1,4 +1,5 @@
--- Stack Docs - Test Queries (Working Versions)
+-- PostgreSQL Test Queries - Stack Docs (Working Versions)
+-- This file uses PostgreSQL-specific syntax and full-text search
 -- Copy-paste these into Supabase Dashboard > SQL Editor
 
 -- ============================================================================

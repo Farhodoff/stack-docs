@@ -5,11 +5,13 @@ Bu guide sizning Stack Docs loyihangizdagi oddiy `documents` jadvalidan to'liq *
 ## 🎯 Nimani o'zgartiramiz?
 
 ### ❌ **Oldingi holat:**
+
 ```sql
 documents jadval (oddiy struktura)
 ```
 
 ### ✅ **Yangi holat:**
+
 ```sql
 courses → categories → lessons
 users → progress → bookmarks → notes → comments
@@ -80,7 +82,7 @@ SELECT COUNT(*) FROM categories;
 
 ### **Asosiy jadvallar:**
 
-```
+```text
 📚 courses (5 ta course)
 ├── 🎨 html-css (HTML & CSS Fundamentals)
 ├── 🟨 javascript (JavaScript Programming)

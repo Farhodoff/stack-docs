@@ -89,7 +89,7 @@ export default async function AdminDashboardPage() {
             ) : (
               categoryStats.map((cat) => (
                 // Dynamic category colors - inline styles necessary for user-defined colors
-                // eslint-disable-next-line
+                // eslint-disable-next-line react/forbid-dom-props
                 <div
                   key={cat.id}
                   className="p-4 rounded-lg border transition-colors hover:bg-muted"
@@ -105,6 +105,8 @@ export default async function AdminDashboardPage() {
                         {cat.name}
                       </Link>
                     </div>
+                    {/* Dynamic category badge color - inline style necessary for user-defined colors */}
+                    {/* eslint-disable-next-line react/forbid-dom-props */}
                     <span
                       className="px-3 py-1 rounded-full text-white text-sm font-bold"
                       style={{ backgroundColor: cat.color }}
@@ -114,6 +116,8 @@ export default async function AdminDashboardPage() {
                   </div>
                   <p className="text-sm text-muted-foreground">{cat.description}</p>
                   <div className="mt-3 w-full bg-muted rounded-full h-2 overflow-hidden">
+                    {/* Dynamic progress bar with category color and calculated width */}
+                    {/* eslint-disable-next-line react/forbid-dom-props */}
                     <div
                       className="h-full transition-all"
                       style={{

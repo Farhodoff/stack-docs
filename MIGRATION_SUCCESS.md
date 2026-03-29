@@ -2,9 +2,10 @@
 
 Migration 3/3 marta muvaffaqiyat bilan bajarildi. Schema cache muammosi tufayli test query'lar ishlamayapti, lekin bu normal holat.
 
-## 📊 Yaratilgan Schema:
+## 📊 Yaratilgan Schema
 
 **15+ jadval yaratildi:**
+
 - ✅ courses (5 ta course)
 - ✅ categories (16 ta category)
 - ✅ lessons (3 ta sample lesson)
@@ -14,9 +15,9 @@ Migration 3/3 marta muvaffaqiyat bilan bajarildi. Schema cache muammosi tufayli 
 - ✅ Full-text search indexes
 - ✅ RLS policies
 
-## 🧪 Manual Test Queries:
+## 🧪 Manual Test Queries
 
-### Supabase Dashboard > SQL Editor'da quyidagi query'larni ishga tushiring:
+### Supabase Dashboard > SQL Editor'da quyidagi query'larni ishga tushiring
 
 ```sql
 -- 1. Check all tables created
@@ -71,9 +72,10 @@ WHERE l.is_published = true
 ORDER BY rank DESC;
 ```
 
-## 📱 Frontend Integration:
+## 📱 Frontend Integration
 
 ### 1. Supabase Types Update
+
 ```bash
 # Generate TypeScript types
 npx supabase gen types typescript --project-id nubkzdubcqczoutrykwy > types/database.ts
@@ -119,7 +121,7 @@ export async function getLesson(slug: string) {
 }
 ```
 
-## 🎯 Next Steps:
+## 🎯 Next Steps
 
 1. **✅ Supabase Dashboard'da verify qiling** - Tables va data mavjudligini tekshiring
 2. **🔄 Frontend kodini update qiling** - Yangi API endpoints'larni ishlatish
@@ -127,7 +129,7 @@ export async function getLesson(slug: string) {
 4. **📊 Progress tracking** - User progress jadvalini ishlatish
 5. **💬 Comments system** - Community features qo'shish
 
-## 🔧 Troubleshooting:
+## 🔧 Troubleshooting
 
 Agar query'lar ishlamasa:
 

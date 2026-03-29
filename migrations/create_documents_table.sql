@@ -1,4 +1,6 @@
--- Create documents table for Supabase
+-- PostgreSQL Migration Script - Create documents table for Supabase
+-- This file uses PostgreSQL-specific syntax (UUID, gen_random_uuid, arrays)
+-- Compatible with PostgreSQL 12+ and Supabase
 CREATE TABLE IF NOT EXISTS documents (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   slug TEXT UNIQUE NOT NULL,

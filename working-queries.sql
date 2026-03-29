@@ -1,3 +1,7 @@
+-- PostgreSQL Query Examples - Stack Docs Platform
+-- This file uses PostgreSQL-specific syntax and functions
+-- Compatible with PostgreSQL 12+ full-text search features
+
 -- Stack Docs Platform - Working SQL Queries
 -- These queries will work after applying the new schema
 
