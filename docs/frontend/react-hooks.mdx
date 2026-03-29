@@ -1,0 +1,719 @@
+---
+title: "React Hooks - To'liq Qo'llanma"
+description: "React Hooks: useState, useEffect, useContext va boshqa hooklar bilan efficient komponentlar yaratish"
+category: "frontend"
+order: 2
+tags:
+  - react
+  - hooks
+  - state-management
+  - frontend
+  - javascript
+difficulty: "intermediate"
+readTime: 25
+---
+
+# React Hooks - To'liq Qo'llanma
+
+React Hooks - bu React 16.8 versiyasida kiritilgan yangi xususiyat bo'lib, functional komponentlarda state va lifecycle metodlaridan foydalanish imkonini beradi. Hooklar yordamida siz class komponentlarisiz ham to'liq functional ilovalar yarata olasiz.
+
+## Nima uchun Hooklar kerak?
+
+### Class komponentlar muammolari:
+- **Murakkab state logic** - komponentlar o'rtasida stateful logic'ni qayta ishlatish qiyin
+- **Lifecycle metodlar** - bir xil logic turli metodlarda tarqalib ketadi
+- **Class sintaksis** - `this` kalit so'zining chalkashliklari
+
+### Hooks afzalliklari:
+- **Sodda sintaksis** - functional komponentlar orqali
+- **Logic qayta ishlatish** - custom hooklar yaratish
+- **Performance** - Class komponentlarga qaraganda tezroq
+
+## 1. useState Hook
+
+`useState` - state boshqarish uchun asosiy hook.
+
+### Asosiy sintaksis:
+
+```jsx
+import React, { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>Sanoq: {count}</p>
+      <button onClick={() => setCount(count + 1)}>
+        Oshir
+      </button>
+    </div>
+  );
+}
+```
+
+### Turli xil ma'lumot turlari bilan:
+
+```jsx
+function UserProfile() {
+  // Number
+  const [age, setAge] = useState(25);
+
+  // String
+  const [name, setName] = useState('');
+
+  // Boolean
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Array
+  const [todos, setTodos] = useState([]);
+
+  // Object
+  const [user, setUser] = useState({
+    name: '',
+    email: '',
+    city: ''
+  });
+
+  // Array ga element qo'shish
+  const addTodo = (text) => {
+    setTodos([...todos, { id: Date.now(), text, completed: false }]);
+  };
+
+  // Object ni yangilash
+  const updateUser = (field, value) => {
+    setUser(prevUser => ({
+      ...prevUser,
+      [field]: value
+    }));
+  };
+
+  return (
+    <div>
+      <h2>Ismi: {user.name}</h2>
+      <input
+        value={user.name}
+        onChange={(e) => updateUser('name', e.target.value)}
+        placeholder="Ismingiz"
+      />
+      <p>Vazifalar soni: {todos.length}</p>
+    </div>
+  );
+}
+```
+
+## 2. useEffect Hook
+
+`useEffect` - side effect'larni boshqarish uchun (API so'rovlar, DOM manipulatsiya, timer'lar).
+
+### Asosiy ishlatish:
+
+```jsx
+import React, { useState, useEffect } from 'react';
+
+function UserData() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Komponent mount bo'lganda ishlaydi
+    fetchUserData();
+  }, []); // Bo'sh dependency array - faqat bir marta
+
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch('/api/user');
+      const userData = await response.json();
+      setUser(userData);
+    } catch (error) {
+      console.error('Xatolik:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div>Yuklanmoqda...</div>;
+
+  return (
+    <div>
+      <h2>{user?.name}</h2>
+      <p>{user?.email}</p>
+    </div>
+  );
+}
+```
+
+### Dependency array bilan:
+
+```jsx
+function SearchResults() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    if (query.length > 2) {
+      searchData(query);
+    }
+  }, [query]); // query o'zgarganda ishlaydi
+
+  const searchData = async (searchQuery) => {
+    const response = await fetch(`/api/search?q=${searchQuery}`);
+    const data = await response.json();
+    setResults(data);
+  };
+
+  return (
+    <div>
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Qidiruv..."
+      />
+      <ul>
+        {results.map(item => (
+          <li key={item.id}>{item.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### Cleanup function:
+
+```jsx
+function Timer() {
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSeconds(prev => prev + 1);
+    }, 1000);
+
+    // Cleanup function - komponent unmount bo'lganda
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  return <div>Soniyalar: {seconds}</div>;
+}
+```
+
+## 3. useContext Hook
+
+Global state boshqarish uchun Context API dan foydalanish.
+
+### Context yaratish:
+
+```jsx
+import React, { createContext, useContext, useState } from 'react';
+
+// Context yaratish
+const ThemeContext = createContext();
+
+// Provider komponent
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+  const [language, setLanguage] = useState('uz');
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  const changeLanguage = (lang) => {
+    setLanguage(lang);
+  };
+
+  return (
+    <ThemeContext.Provider value={{
+      theme,
+      language,
+      toggleTheme,
+      changeLanguage
+    }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+// Custom hook
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme Hook faqat ThemeProvider ichida ishlatilishi kerak');
+  }
+  return context;
+}
+```
+
+### Context ishlatish:
+
+```jsx
+function Header() {
+  const { theme, toggleTheme, language } = useTheme();
+
+  return (
+    <header className={`header ${theme}`}>
+      <h1>Sayt sarlavhasi</h1>
+      <button onClick={toggleTheme}>
+        {theme === 'light' ? '🌙' : '☀️'}
+        Mavzu o'zgartirish
+      </button>
+      <span>Til: {language}</span>
+    </header>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <div>
+        <Header />
+        <main>Asosiy kontent</main>
+      </div>
+    </ThemeProvider>
+  );
+}
+```
+
+## 4. useReducer Hook
+
+Murakkab state logic uchun useReducer dan foydalanish.
+
+```jsx
+import React, { useReducer } from 'react';
+
+// Initial state
+const initialState = {
+  todos: [],
+  filter: 'all' // all, completed, pending
+};
+
+// Reducer function
+function todoReducer(state, action) {
+  switch (action.type) {
+    case 'ADD_TODO':
+      return {
+        ...state,
+        todos: [...state.todos, {
+          id: Date.now(),
+          text: action.payload,
+          completed: false
+        }]
+      };
+
+    case 'TOGGLE_TODO':
+      return {
+        ...state,
+        todos: state.todos.map(todo =>
+          todo.id === action.payload
+            ? { ...todo, completed: !todo.completed }
+            : todo
+        )
+      };
+
+    case 'DELETE_TODO':
+      return {
+        ...state,
+        todos: state.todos.filter(todo => todo.id !== action.payload)
+      };
+
+    case 'SET_FILTER':
+      return {
+        ...state,
+        filter: action.payload
+      };
+
+    default:
+      return state;
+  }
+}
+
+function TodoApp() {
+  const [state, dispatch] = useReducer(todoReducer, initialState);
+  const [inputValue, setInputValue] = useState('');
+
+  const addTodo = () => {
+    if (inputValue.trim()) {
+      dispatch({ type: 'ADD_TODO', payload: inputValue });
+      setInputValue('');
+    }
+  };
+
+  const filteredTodos = state.todos.filter(todo => {
+    if (state.filter === 'completed') return todo.completed;
+    if (state.filter === 'pending') return !todo.completed;
+    return true;
+  });
+
+  return (
+    <div>
+      <div>
+        <input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="Yangi vazifa"
+        />
+        <button onClick={addTodo}>Qo'shish</button>
+      </div>
+
+      <div>
+        <button onClick={() => dispatch({ type: 'SET_FILTER', payload: 'all' })}>
+          Barcha
+        </button>
+        <button onClick={() => dispatch({ type: 'SET_FILTER', payload: 'pending' })}>
+          Kutilayotgan
+        </button>
+        <button onClick={() => dispatch({ type: 'SET_FILTER', payload: 'completed' })}>
+          Tugallangan
+        </button>
+      </div>
+
+      <ul>
+        {filteredTodos.map(todo => (
+          <li key={todo.id}>
+            <span
+              style={{
+                textDecoration: todo.completed ? 'line-through' : 'none'
+              }}
+              onClick={() => dispatch({ type: 'TOGGLE_TODO', payload: todo.id })}
+            >
+              {todo.text}
+            </span>
+            <button
+              onClick={() => dispatch({ type: 'DELETE_TODO', payload: todo.id })}
+            >
+              O'chirish
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+## 5. Custom Hooklar
+
+O'zingizning hook'laringizni yaratish orqali logic'ni qayta ishlatish.
+
+### API so'rovlari uchun custom hook:
+
+```jsx
+import { useState, useEffect } from 'react';
+
+function useApi(url) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`Xatolik: ${response.status}`);
+        }
+
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [url]);
+
+  return { data, loading, error };
+}
+
+// Ishlatish
+function UserProfile({ userId }) {
+  const { data: user, loading, error } = useApi(`/api/users/${userId}`);
+
+  if (loading) return <div>Yuklanmoqda...</div>;
+  if (error) return <div>Xatolik: {error}</div>;
+
+  return (
+    <div>
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+```
+
+### LocalStorage uchun custom hook:
+
+```jsx
+import { useState, useEffect } from 'react';
+
+function useLocalStorage(key, initialValue) {
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.log(error);
+      return initialValue;
+    }
+  });
+
+  const setValue = (value) => {
+    try {
+      setStoredValue(value);
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  return [storedValue, setValue];
+}
+
+// Ishlatish
+function Settings() {
+  const [theme, setTheme] = useLocalStorage('theme', 'light');
+  const [language, setLanguage] = useLocalStorage('language', 'uz');
+
+  return (
+    <div>
+      <select value={theme} onChange={(e) => setTheme(e.target.value)}>
+        <option value="light">Yorug'</option>
+        <option value="dark">Qorong'u</option>
+      </select>
+
+      <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+        <option value="uz">O'zbek</option>
+        <option value="en">English</option>
+        <option value="ru">Русский</option>
+      </select>
+    </div>
+  );
+}
+```
+
+## 6. Hook'lar Qoidalari
+
+### ✅ To'g'ri ishlatish:
+- Hook'larni faqat React komponentlar yoki custom hook'larda chaqiring
+- Hook'larni har doim komponentning yuqori darajasida chaqiring
+- Hook'larni loop, shart yoki nested function'larda chaqirmang
+
+### ❌ Noto'g'ri ishlatish:
+
+```jsx
+function BadExample({ condition }) {
+  // ❌ Shart ichida hook chaqirish
+  if (condition) {
+    const [state, setState] = useState();
+  }
+
+  // ❌ Loop ichida hook chaqirish
+  for (let i = 0; i < 5; i++) {
+    useEffect(() => {
+      // Some logic
+    });
+  }
+
+  return <div>...</div>;
+}
+```
+
+### ✅ To'g'ri yondashuv:
+
+```jsx
+function GoodExample({ condition }) {
+  // ✅ Hook'lar har doim yuqorida
+  const [state, setState] = useState();
+  const [data, setData] = useState([]);
+
+  // ✅ Shart ichida hook'dan olingan ma'lumotlardan foydalanish
+  useEffect(() => {
+    if (condition) {
+      setState(newValue);
+    }
+  }, [condition]);
+
+  return <div>...</div>;
+}
+```
+
+## 7. Performance Optimizatsiya
+
+### useMemo Hook:
+
+```jsx
+import React, { useState, useMemo } from 'react';
+
+function ExpensiveComponent({ items, filter }) {
+  const [count, setCount] = useState(0);
+
+  // Qimmat hisoblashni cache qilish
+  const filteredItems = useMemo(() => {
+    console.log('Filterlash...');
+    return items.filter(item => item.category === filter);
+  }, [items, filter]); // Faqat items yoki filter o'zgarganda qayta hisoblanadi
+
+  const expensiveValue = useMemo(() => {
+    let result = 0;
+    for (let i = 0; i < 1000000; i++) {
+      result += i;
+    }
+    return result;
+  }, []); // Faqat bir marta hisoblanadi
+
+  return (
+    <div>
+      <p>Sanoq: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Oshir</button>
+      <p>Qimmat qiymat: {expensiveValue}</p>
+      <ul>
+        {filteredItems.map(item => (
+          <li key={item.id}>{item.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### useCallback Hook:
+
+```jsx
+import React, { useState, useCallback } from 'react';
+
+function TodoList() {
+  const [todos, setTodos] = useState([]);
+  const [filter, setFilter] = useState('all');
+
+  // Callback functin cache qilish
+  const addTodo = useCallback((text) => {
+    setTodos(prev => [...prev, { id: Date.now(), text, completed: false }]);
+  }, []);
+
+  const toggleTodo = useCallback((id) => {
+    setTodos(prev => prev.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  }, []);
+
+  return (
+    <div>
+      <TodoForm onAdd={addTodo} />
+      <TodoItems
+        todos={todos}
+        onToggle={toggleTodo}
+        filter={filter}
+      />
+    </div>
+  );
+}
+```
+
+## 8. Amaliy Loyiha - Weather App
+
+Hooklar yordamida ob-havo ilovasi:
+
+```jsx
+import React, { useState, useEffect, useCallback } from 'react';
+
+function useWeather() {
+  const [weather, setWeather] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchWeather = useCallback(async (city) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=API_KEY&units=metric`
+      );
+
+      if (!response.ok) {
+        throw new Error('Shahar topilmadi');
+      }
+
+      const data = await response.json();
+      setWeather(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { weather, loading, error, fetchWeather };
+}
+
+function WeatherApp() {
+  const [city, setCity] = useState('Tashkent');
+  const { weather, loading, error, fetchWeather } = useWeather();
+
+  useEffect(() => {
+    fetchWeather(city);
+  }, [fetchWeather, city]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newCity = formData.get('city');
+    setCity(newCity);
+  };
+
+  return (
+    <div className="weather-app">
+      <h1>Ob-havo Ma'lumotlari</h1>
+
+      <form onSubmit={handleSearch}>
+        <input
+          name="city"
+          defaultValue={city}
+          placeholder="Shahar nomini kiriting"
+        />
+        <button type="submit">Qidirish</button>
+      </form>
+
+      {loading && <p>Yuklanmoqda...</p>}
+      {error && <p style={{ color: 'red' }}>Xatolik: {error}</p>}
+
+      {weather && (
+        <div className="weather-info">
+          <h2>{weather.name}</h2>
+          <p>Harorat: {weather.main.temp}°C</p>
+          <p>His qilinayotgan: {weather.main.feels_like}°C</p>
+          <p>Namlik: {weather.main.humidity}%</p>
+          <p>Tavsif: {weather.weather[0].description}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default WeatherApp;
+```
+
+## Xulosa
+
+React Hooklar functional komponentlarni yanada qudratli qiladi va kodni qayta ishlatish imkonini beradi. Asosiy afzalliklari:
+
+- **Sodda sintaksis** - Class komponentlarga qaraganda osonroq
+- **Logic qayta ishlatish** - Custom hooklar orqali
+- **Performance** - useMemo va useCallback orqali optimizatsiya
+- **Debugging** - React DevTools bilan yaxshi qo'llab-quvvatlash
+
+### Keyingi qadamlar:
+1. Oddiy loyihalar bilan amaliyot qiling
+2. Custom hooklar yaratishni o'rganing
+3. Performance optimization texnikalarini o'rganib chiqing
+4. React ekosistemi (Redux, React Query) bilan tanishing
+
+React Hooklar zamonaviy React development'ning asosini tashkil etadi va har bir React developer uchun majburiy bilim hisoblanadi.

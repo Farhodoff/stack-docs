@@ -161,6 +161,7 @@ export function SearchOverlay({ open, onOpenChange, index }: SearchOverlayProps)
               <div className="py-2">
                 {results.map((item, index) => (
                   <button
+                    type="button"
                     key={item.slug}
                     onClick={() => handleResultClick(item.slug)}
                     className={cn(

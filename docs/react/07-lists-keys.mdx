@@ -1,0 +1,910 @@
+---
+title: "Ro'yxatlar va Keys"
+description: "React'da ro'yxatlarni render qilish, key prop'ning ahamiyati va performance optimization"
+category: "react"
+order: 7
+tags:
+  - react
+  - lists
+  - keys
+  - array-methods
+  - rendering
+  - performance
+difficulty: "intermediate"
+readTime: 25
+---
+
+# Ro'yxatlar va Keys
+
+React'da ma'lumotlar ro'yxatini ko'rsatish juda keng tarqalgan vazifa. Key prop React'ning qaysi element o'zgarganligi, qo'shilganligi yoki o'chirilganligini aniqlash uchun ishlatiladi.
+
+## 1. Asosiy List Rendering
+
+### Oddiy ro'yxat:
+
+```jsx
+import React from 'react';
+
+function SimpleList() {
+  const fruits = ['Olma', 'Uzum', 'Banan', 'Apelsin', 'Qulupnay'];
+
+  return (
+    <div>
+      <h2>Mevalar ro'yxati</h2>
+      <ul>
+        {fruits.map((fruit, index) => (
+          <li key={index}>{fruit}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+⚠️ **Diqqat:** Index'ni key sifatida ishlatish har doim ham yaxshi emas!
+
+### Object array bilan:
+
+```jsx
+function UserList() {
+  const users = [
+    { id: 1, name: 'Ali Valiyev', age: 25, city: 'Toshkent' },
+    { id: 2, name: 'Nigora Karimova', age: 30, city: 'Samarqand' },
+    { id: 3, name: 'Bobur Toshev', age: 28, city: 'Buxoro' },
+    { id: 4, name: 'Malika Ergasheva', age: 22, city: 'Farg\'ona' }
+  ];
+
+  return (
+    <div>
+      <h2>Foydalanuvchilar</h2>
+      <div style={{ display: 'grid', gap: '10px' }}>
+        {users.map(user => (
+          <div
+            key={user.id}  // ✅ Unique ID ishlatish
+            style={{
+              border: '1px solid #ddd',
+              padding: '15px',
+              borderRadius: '8px'
+            }}
+          >
+            <h3>{user.name}</h3>
+            <p>Yosh: {user.age}</p>
+            <p>Shahar: {user.city}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+## 2. Keys nima va nima uchun kerak?
+
+### Key'ning vazifasi:
+- **Identifikatsiya** - React elementlarni farqlash uchun
+- **Performance** - Virtual DOM diff algoritmi uchun
+- **State saqlash** - komponentning holatini to'g'ri saqlash uchun
+
+### Noto'g'ri key ishlatish:
+
+```jsx
+function BadKeyExample() {
+  const [items, setItems] = useState([
+    { id: 1, text: 'Birinchi element' },
+    { id: 2, text: 'Ikkinchi element' },
+    { id: 3, text: 'Uchinchi element' }
+  ]);
+
+  const removeFirst = () => {
+    setItems(items.slice(1));
+  };
+
+  return (
+    <div>
+      <h2>❌ Noto'g'ri Key (Index)</h2>
+      <button onClick={removeFirst}>Birinchini o'chir</button>
+
+      {items.map((item, index) => (
+        <div key={index} style={{ padding: '10px', border: '1px solid #ccc' }}>
+          <input type="text" defaultValue={item.text} />
+          <span> (Original ID: {item.id})</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function GoodKeyExample() {
+  const [items, setItems] = useState([
+    { id: 1, text: 'Birinchi element' },
+    { id: 2, text: 'Ikkinchi element' },
+    { id: 3, text: 'Uchinchi element' }
+  ]);
+
+  const removeFirst = () => {
+    setItems(items.slice(1));
+  };
+
+  return (
+    <div>
+      <h2>✅ To'g'ri Key (Unique ID)</h2>
+      <button onClick={removeFirst}>Birinchini o'chir</button>
+
+      {items.map(item => (
+        <div key={item.id} style={{ padding: '10px', border: '1px solid #ccc' }}>
+          <input type="text" defaultValue={item.text} />
+          <span> (Original ID: {item.id})</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function KeyComparison() {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+      <BadKeyExample />
+      <GoodKeyExample />
+      <div style={{ gridColumn: '1 / -1', backgroundColor: '#fff3cd', padding: '15px' }}>
+        <strong>Sinab ko'ring:</strong> Input field'larga matn yozing, so'ng "Birinchini o'chir" tugmasini bosing.
+        Chapda noto'g'ri behavior, o'ngda to'g'ri behavior ko'rasiz.
+      </div>
+    </div>
+  );
+}
+```
+
+## 3. Array Methods bilan ishlash
+
+React'da array manipulation - eng keng tarqalgan operatsiyalar.
+
+### Filtering va Searching:
+
+```jsx
+function ProductFilter() {
+  const [products] = useState([
+    { id: 1, name: 'iPhone 15', category: 'phone', price: 999, brand: 'Apple' },
+    { id: 2, name: 'Galaxy S24', category: 'phone', price: 899, brand: 'Samsung' },
+    { id: 3, name: 'MacBook Pro', category: 'laptop', price: 1999, brand: 'Apple' },
+    { id: 4, name: 'ThinkPad X1', category: 'laptop', price: 1299, brand: 'Lenovo' },
+    { id: 5, name: 'iPad Pro', category: 'tablet', price: 799, brand: 'Apple' },
+    { id: 6, name: 'Surface Pro', category: 'tablet', price: 999, brand: 'Microsoft' }
+  ]);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedBrand, setSelectedBrand] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
+
+  // Get unique categories and brands
+  const categories = [...new Set(products.map(p => p.category))];
+  const brands = [...new Set(products.map(p => p.brand))];
+
+  // Filter and sort products
+  const filteredProducts = products
+    .filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+      const matchesBrand = selectedBrand === 'all' || product.brand === selectedBrand;
+
+      return matchesSearch && matchesCategory && matchesBrand;
+    })
+    .sort((a, b) => {
+      let aValue = a[sortBy];
+      let bValue = b[sortBy];
+
+      if (sortBy === 'price') {
+        aValue = parseFloat(aValue);
+        bValue = parseFloat(bValue);
+      } else {
+        aValue = aValue.toString().toLowerCase();
+        bValue = bValue.toString().toLowerCase();
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+  return (
+    <div>
+      <h2>Mahsulotlar Filtri</h2>
+
+      {/* Filters */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '10px',
+        marginBottom: '20px',
+        padding: '15px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px'
+      }}>
+        <div>
+          <label>Qidirish:</label>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Mahsulot nomi..."
+          />
+        </div>
+
+        <div>
+          <label>Kategoriya:</label>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+          >
+            <option value="all">Barcha kategoriyalar</option>
+            {categories.map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label>Brend:</label>
+          <select
+            value={selectedBrand}
+            onChange={(e) => setSelectedBrand(e.target.value)}
+          >
+            <option value="all">Barcha brendlar</option>
+            {brands.map(brand => (
+              <option key={brand} value={brand}>{brand}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label>Saralash:</label>
+          <select
+            value={`${sortBy}-${sortOrder}`}
+            onChange={(e) => {
+              const [field, order] = e.target.value.split('-');
+              setSortBy(field);
+              setSortOrder(order);
+            }}
+          >
+            <option value="name-asc">Nomi (A-Z)</option>
+            <option value="name-desc">Nomi (Z-A)</option>
+            <option value="price-asc">Narx (Arzon)</option>
+            <option value="price-desc">Narx (Qimmat)</option>
+            <option value="brand-asc">Brend (A-Z)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Results count */}
+      <p>
+        <strong>{filteredProducts.length}</strong> mahsulot topildi
+        {searchTerm && ` "${searchTerm}" bo'yicha`}
+        {selectedCategory !== 'all' && ` ${selectedCategory} kategoriyasida`}
+        {selectedBrand !== 'all' && ` ${selectedBrand} brendidan`}
+      </p>
+
+      {/* Product grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+        gap: '15px'
+      }}>
+        {filteredProducts.length > 0 ? (
+          filteredProducts.map(product => (
+            <div
+              key={product.id}
+              style={{
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                padding: '15px',
+                backgroundColor: 'white'
+              }}
+            >
+              <h3>{product.name}</h3>
+              <p>
+                <span style={{
+                  backgroundColor: '#e9ecef',
+                  padding: '3px 8px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  textTransform: 'uppercase'
+                }}>
+                  {product.category}
+                </span>
+              </p>
+              <p><strong>Brend:</strong> {product.brand}</p>
+              <p style={{
+                fontSize: '20px',
+                color: '#28a745',
+                fontWeight: 'bold'
+              }}>
+                ${product.price}
+              </p>
+            </div>
+          ))
+        ) : (
+          <div style={{
+            gridColumn: '1 / -1',
+            textAlign: 'center',
+            padding: '40px',
+            color: '#6c757d'
+          }}>
+            🔍 Hech qanday mahsulot topilmadi
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+### CRUD Operations bilan List:
+
+```jsx
+function TodoCRUD() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: 'React o\'rganish', completed: false, priority: 'high', createdAt: new Date('2024-01-01') },
+    { id: 2, text: 'Loyiha yaratish', completed: true, priority: 'medium', createdAt: new Date('2024-01-02') },
+    { id: 3, text: 'Portfolio tayyorlash', completed: false, priority: 'low', createdAt: new Date('2024-01-03') }
+  ]);
+
+  const [newTodo, setNewTodo] = useState({ text: '', priority: 'medium' });
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [filter, setFilter] = useState('all');
+
+  // CREATE - Yangi todo qo'shish
+  const addTodo = (e) => {
+    e.preventDefault();
+    if (!newTodo.text.trim()) return;
+
+    const todo = {
+      id: Date.now(), // Real proyektda UUID ishlatish kerak
+      text: newTodo.text.trim(),
+      completed: false,
+      priority: newTodo.priority,
+      createdAt: new Date()
+    };
+
+    setTodos(prev => [todo, ...prev]); // Yangi element yuqorida
+    setNewTodo({ text: '', priority: 'medium' });
+  };
+
+  // READ - Filtering
+  const getFilteredTodos = () => {
+    switch (filter) {
+      case 'completed':
+        return todos.filter(todo => todo.completed);
+      case 'pending':
+        return todos.filter(todo => !todo.completed);
+      case 'high':
+        return todos.filter(todo => todo.priority === 'high');
+      default:
+        return todos;
+    }
+  };
+
+  // UPDATE - Todo ni tahrirlash
+  const startEdit = (todo) => {
+    setEditingId(todo.id);
+    setEditText(todo.text);
+  };
+
+  const saveEdit = () => {
+    if (!editText.trim()) return;
+
+    setTodos(prev => prev.map(todo =>
+      todo.id === editingId
+        ? { ...todo, text: editText.trim() }
+        : todo
+    ));
+
+    setEditingId(null);
+    setEditText('');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditText('');
+  };
+
+  // UPDATE - Todo status toggle
+  const toggleTodo = (id) => {
+    setTodos(prev => prev.map(todo =>
+      todo.id === id
+        ? { ...todo, completed: !todo.completed }
+        : todo
+    ));
+  };
+
+  // UPDATE - Priority o'zgartirish
+  const changePriority = (id, newPriority) => {
+    setTodos(prev => prev.map(todo =>
+      todo.id === id
+        ? { ...todo, priority: newPriority }
+        : todo
+    ));
+  };
+
+  // DELETE - Todo ni o'chirish
+  const deleteTodo = (id) => {
+    if (window.confirm('Bu todo\'ni o\'chirmoqchimisiz?')) {
+      setTodos(prev => prev.filter(todo => todo.id !== id));
+    }
+  };
+
+  // DELETE - Barcha completed todo'larni o'chirish
+  const clearCompleted = () => {
+    setTodos(prev => prev.filter(todo => !todo.completed));
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high': return '#dc3545';
+      case 'medium': return '#ffc107';
+      case 'low': return '#28a745';
+      default: return '#6c757d';
+    }
+  };
+
+  const filteredTodos = getFilteredTodos();
+
+  return (
+    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <h2>Todo CRUD Management</h2>
+
+      {/* ADD FORM */}
+      <form onSubmit={addTodo} style={{
+        display: 'flex',
+        gap: '10px',
+        marginBottom: '20px',
+        padding: '15px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px'
+      }}>
+        <input
+          type="text"
+          value={newTodo.text}
+          onChange={(e) => setNewTodo(prev => ({ ...prev, text: e.target.value }))}
+          placeholder="Yangi vazifa..."
+          style={{ flex: 1 }}
+        />
+        <select
+          value={newTodo.priority}
+          onChange={(e) => setNewTodo(prev => ({ ...prev, priority: e.target.value }))}
+        >
+          <option value="low">Past</option>
+          <option value="medium">O'rta</option>
+          <option value="high">Yuqori</option>
+        </select>
+        <button type="submit">Qo'shish</button>
+      </form>
+
+      {/* FILTERS */}
+      <div style={{ marginBottom: '20px' }}>
+        <button
+          onClick={() => setFilter('all')}
+          style={{
+            backgroundColor: filter === 'all' ? '#007bff' : '#e9ecef',
+            color: filter === 'all' ? 'white' : 'black',
+            margin: '0 5px'
+          }}
+        >
+          Barchasi ({todos.length})
+        </button>
+        <button
+          onClick={() => setFilter('pending')}
+          style={{
+            backgroundColor: filter === 'pending' ? '#007bff' : '#e9ecef',
+            color: filter === 'pending' ? 'white' : 'black',
+            margin: '0 5px'
+          }}
+        >
+          Bajarilmagan ({todos.filter(t => !t.completed).length})
+        </button>
+        <button
+          onClick={() => setFilter('completed')}
+          style={{
+            backgroundColor: filter === 'completed' ? '#007bff' : '#e9ecef',
+            color: filter === 'completed' ? 'white' : 'black',
+            margin: '0 5px'
+          }}
+        >
+          Bajarilgan ({todos.filter(t => t.completed).length})
+        </button>
+        <button
+          onClick={() => setFilter('high')}
+          style={{
+            backgroundColor: filter === 'high' ? '#007bff' : '#e9ecef',
+            color: filter === 'high' ? 'white' : 'black',
+            margin: '0 5px'
+          }}
+        >
+          Yuqori prioritet ({todos.filter(t => t.priority === 'high').length})
+        </button>
+      </div>
+
+      {/* BULK ACTIONS */}
+      <div style={{ marginBottom: '20px' }}>
+        <button
+          onClick={clearCompleted}
+          disabled={!todos.some(t => t.completed)}
+          style={{
+            backgroundColor: '#dc3545',
+            color: 'white',
+            border: 'none',
+            padding: '5px 10px',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Bajarilganlarni tozalash
+        </button>
+      </div>
+
+      {/* TODO LIST */}
+      <div>
+        {filteredTodos.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '40px',
+            color: '#6c757d'
+          }}>
+            📝 Hech qanday vazifa yo'q
+          </div>
+        ) : (
+          filteredTodos.map(todo => (
+            <div
+              key={todo.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '10px',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                marginBottom: '10px',
+                backgroundColor: todo.completed ? '#f8f9fa' : 'white'
+              }}
+            >
+              {/* Checkbox */}
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => toggleTodo(todo.id)}
+                style={{ marginRight: '10px' }}
+              />
+
+              {/* Priority Indicator */}
+              <div
+                style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: getPriorityColor(todo.priority),
+                  marginRight: '10px'
+                }}
+                title={`${todo.priority} prioritet`}
+              />
+
+              {/* Text */}
+              <div style={{ flex: 1 }}>
+                {editingId === todo.id ? (
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                      type="text"
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      style={{ flex: 1 }}
+                      autoFocus
+                    />
+                    <button onClick={saveEdit} style={{ backgroundColor: '#28a745', color: 'white' }}>
+                      Saqlash
+                    </button>
+                    <button onClick={cancelEdit} style={{ backgroundColor: '#6c757d', color: 'white' }}>
+                      Bekor qilish
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <span
+                      style={{
+                        textDecoration: todo.completed ? 'line-through' : 'none',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => toggleTodo(todo.id)}
+                    >
+                      {todo.text}
+                    </span>
+                    <div style={{ fontSize: '12px', color: '#6c757d' }}>
+                      Yaratilgan: {todo.createdAt.toLocaleDateString()}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              {editingId !== todo.id && (
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  <select
+                    value={todo.priority}
+                    onChange={(e) => changePriority(todo.id, e.target.value)}
+                    style={{ fontSize: '12px' }}
+                  >
+                    <option value="low">Past</option>
+                    <option value="medium">O'rta</option>
+                    <option value="high">Yuqori</option>
+                  </select>
+
+                  <button
+                    onClick={() => startEdit(todo)}
+                    style={{ backgroundColor: '#ffc107', color: 'black', fontSize: '12px' }}
+                  >
+                    Tahrirlash
+                  </button>
+
+                  <button
+                    onClick={() => deleteTodo(todo.id)}
+                    style={{ backgroundColor: '#dc3545', color: 'white', fontSize: '12px' }}
+                  >
+                    O'chirish
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+## 4. Nested Lists
+
+Ichma-ich ro'yxatlar bilan ishlash:
+
+```jsx
+function NestedMenu() {
+  const menuData = [
+    {
+      id: 1,
+      title: 'Web Development',
+      items: [
+        { id: 11, title: 'Frontend', link: '/frontend' },
+        { id: 12, title: 'Backend', link: '/backend' },
+        { id: 13, title: 'Fullstack', link: '/fullstack' }
+      ]
+    },
+    {
+      id: 2,
+      title: 'Programming Languages',
+      items: [
+        { id: 21, title: 'JavaScript', link: '/javascript' },
+        { id: 22, title: 'Python', link: '/python' },
+        { id: 23, title: 'Java', link: '/java' },
+        { id: 24, title: 'C++', link: '/cpp' }
+      ]
+    },
+    {
+      id: 3,
+      title: 'Frameworks',
+      items: [
+        { id: 31, title: 'React', link: '/react' },
+        { id: 32, title: 'Vue', link: '/vue' },
+        { id: 33, title: 'Angular', link: '/angular' }
+      ]
+    }
+  ];
+
+  const [expandedItems, setExpandedItems] = useState([]);
+
+  const toggleExpanded = (id) => {
+    setExpandedItems(prev =>
+      prev.includes(id)
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  return (
+    <div style={{ maxWidth: '400px' }}>
+      <h2>Nested Menu</h2>
+      <nav>
+        {menuData.map(category => (
+          <div key={category.id} style={{ marginBottom: '10px' }}>
+            <div
+              onClick={() => toggleExpanded(category.id)}
+              style={{
+                padding: '10px',
+                backgroundColor: '#f8f9fa',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <strong>{category.title}</strong>
+              <span>
+                {expandedItems.includes(category.id) ? '▼' : '▶'}
+              </span>
+            </div>
+
+            {expandedItems.includes(category.id) && (
+              <ul style={{
+                listStyle: 'none',
+                padding: '0',
+                margin: '5px 0 0 0'
+              }}>
+                {category.items.map(item => (
+                  <li key={item.id}>
+                    <a
+                      href={item.link}
+                      style={{
+                        display: 'block',
+                        padding: '8px 20px',
+                        textDecoration: 'none',
+                        color: '#007bff',
+                        borderLeft: '4px solid #007bff',
+                        marginLeft: '10px'
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        alert(`${item.title} sahifasiga o'tish`);
+                      }}
+                    >
+                      {item.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </nav>
+    </div>
+  );
+}
+```
+
+## 5. Performance va Virtualization
+
+Katta ro'yxatlar uchun performance optimization:
+
+```jsx
+// Virtual List simulatsiya (soddalashtirilgan versiya)
+function VirtualList() {
+  // 1000 ta element yaratish
+  const [items] = useState(() =>
+    Array.from({ length: 1000 }, (_, i) => ({
+      id: i + 1,
+      name: `Element ${i + 1}`,
+      description: `Bu ${i + 1}-element haqida batafsil ma'lumot. Lorem ipsum dolor sit amet.`,
+      value: Math.floor(Math.random() * 1000)
+    }))
+  );
+
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const itemHeight = 80;
+  const containerHeight = 400;
+  const visibleCount = Math.ceil(containerHeight / itemHeight);
+
+  // Filter items
+  const filteredItems = items.filter(item =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Handle scroll
+  const handleScroll = (e) => {
+    const scrollTop = e.target.scrollTop;
+    const start = Math.floor(scrollTop / itemHeight);
+    const end = Math.min(start + visibleCount, filteredItems.length);
+
+    setVisibleRange({ start, end });
+  };
+
+  // Get visible items
+  const visibleItems = filteredItems.slice(visibleRange.start, visibleRange.end);
+
+  return (
+    <div style={{ maxWidth: '600px' }}>
+      <h2>Virtual List (1000 element)</h2>
+
+      <div style={{ marginBottom: '20px' }}>
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Элементlarni qidirish..."
+          style={{ width: '100%', padding: '10px' }}
+        />
+      </div>
+
+      <p>
+        Jami: {filteredItems.length} element
+        {searchTerm && ` (filterlangen)`}
+      </p>
+
+      {/* Virtual List Container */}
+      <div
+        onScroll={handleScroll}
+        style={{
+          height: containerHeight,
+          overflowY: 'auto',
+          border: '1px solid #ddd',
+          position: 'relative'
+        }}
+      >
+        {/* Total height spacer */}
+        <div style={{ height: filteredItems.length * itemHeight }}>
+          {/* Visible items */}
+          <div style={{ transform: `translateY(${visibleRange.start * itemHeight}px)` }}>
+            {visibleItems.map((item, index) => (
+              <div
+                key={item.id}
+                style={{
+                  height: itemHeight,
+                  padding: '10px',
+                  borderBottom: '1px solid #eee',
+                  display: 'flex',
+                  alignItems: 'center',
+                  backgroundColor: index % 2 === 0 ? '#f8f9fa' : 'white'
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: '0 0 5px 0' }}>{item.name}</h4>
+                  <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
+                    {item.description}
+                  </p>
+                </div>
+                <div style={{ fontWeight: 'bold', color: '#007bff' }}>
+                  {item.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
+        Ko'rsatilmoqda: {visibleRange.start + 1} - {visibleRange.end} dan {filteredItems.length}
+      </div>
+    </div>
+  );
+}
+```
+
+## Xulosa va Best Practices
+
+### ✅ Key'lar uchun best practices:
+1. **Unique va stable** key'lar ishlatish
+2. **Index dan saqlanish** - faqat static ro'yxatlar uchun
+3. **ID field** - ma'lumotlar bazasidan kelgan unique ID
+4. **Composite key** - bir nechta field biriktirib
+
+### 🎯 Performance tips:
+1. **React.memo()** - component re-rendering'ni kamaytirish
+2. **Virtualization** - katta ro'yxatlar uchun
+3. **Pagination** - ma'lumotni bo'laklarga ajratish
+4. **Debounced search** - qidiruv performance'ini yaxshilash
+
+### ❌ Tez-tez uchraydigan xatoliklar:
+1. **Array index'ni key sifatida ishlatish**
+2. **Math.random()'ni key sifatida ishlatish**
+3. **Key'ni uncomponent prop sifatida uzatish**
+4. **Nested object'larni key sifatida ishlatish**
+
+### 📚 Keyingi mavzular:
+1. **Context API** - global state boshqarish
+2. **Custom hooks** - list logic'ni qayta ishlatish
+3. **React Query/SWR** - server state management
+4. **Infinite scrolling** - keng tarqalgan pattern
+
+Ro'yxatlar bilan ishlash React development'ning asosiy qismidir va to'g'ri key ishlatish performance va UX uchun juda muhimdir!

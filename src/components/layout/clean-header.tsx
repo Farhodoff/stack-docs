@@ -76,6 +76,7 @@ export function CleanHeader({ onMenuClick, searchIndex = [] }: CleanHeaderProps)
           {/* Center: Search Bar */}
           <div className="flex-1 max-w-md mx-4">
             <button
+              type="button"
               onClick={() => setSearchOpen(true)}
               className={cn(
                 "flex w-full items-center gap-3 rounded-md border border-border/50",

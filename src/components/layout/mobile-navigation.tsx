@@ -83,6 +83,7 @@ export function MobileNavigation({ open, onOpenChange, items }: MobileNavigation
               return (
                 <div key={index}>
                   <button
+                    type="button"
                     onClick={() => toggleSection(group.category)}
                     className={cn(
                       "flex w-full items-center justify-between rounded-md px-3 py-2",

@@ -8,9 +8,7 @@ import {
   isSupabaseAvailable,
   createDocInSupabase,
   updateDocInSupabase,
-  deleteDocInSupabase,
-  getDocBySlugFromSupabase,
-  getAllDocsFromSupabase
+  deleteDocInSupabase
 } from "@/lib/supabase";
 
 const docsDir = path.join(process.cwd(), "docs");

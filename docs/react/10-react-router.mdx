@@ -1,0 +1,1147 @@
+---
+title: "React Router va SPA Navigation"
+description: "React Router bilan Single Page Application, routing, navigation, va URL boshqarish"
+category: "react"
+order: 10
+tags:
+  - react
+  - react-router
+  - spa
+  - navigation
+  - routing
+  - url-params
+difficulty: "advanced"
+readTime: 40
+---
+
+# React Router va SPA Navigation
+
+React Router - React ilovalarida navigation va routing'ni boshqarish uchun eng mashhur library. U Single Page Application (SPA) yaratishda markaziy rol o'ynaydi.
+
+## 1. SPA va Routing Asoslari
+
+### Multi-Page vs Single Page Application:
+
+**Traditional Multi-Page App:**
+- Har bir sahifa uchun alohida HTML fayl
+- Sahifa o'zgarishida server'ga so'rov
+- To'liq sahifa qayta yuklanish
+
+**Single Page App (SPA):**
+- Bitta HTML fayl
+- JavaScript orqali kontent o'zgartirish
+- Faqat kerakli ma'lumotlar yuklanish
+
+### React Router o'rnatish:
+
+```bash
+npm install react-router-dom
+```
+
+### Asosiy setup:
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+// Sahifalar
+function Home() {
+  return (
+    <div>
+      <h1>🏠 Bosh Sahifa</h1>
+      <p>Xush kelibsiz! Bu bosh sahifa.</p>
+    </div>
+  );
+}
+
+function About() {
+  return (
+    <div>
+      <h1>📋 Biz haqimizda</h1>
+      <p>Biz zamonaviy web ilovalar yaratamiz.</p>
+    </div>
+  );
+}
+
+function Contact() {
+  return (
+    <div>
+      <h1>📞 Aloqa</h1>
+      <p>Email: contact@example.com</p>
+      <p>Tel: +998 90 123 45 67</p>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <div>
+        <nav style={{ padding: '20px', borderBottom: '1px solid #ccc' }}>
+          <a href="/" style={{ marginRight: '15px' }}>Bosh sahifa</a>
+          <a href="/about" style={{ marginRight: '15px' }}>Biz haqimizda</a>
+          <a href="/contact">Aloqa</a>
+        </nav>
+
+        <main style={{ padding: '20px' }}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+```
+
+## 2. Link va NavLink Components
+
+HTML `<a>` tag'lari o'rniga React Router'ning komponentlarini ishlatish:
+
+```jsx
+import { Link, NavLink } from 'react-router-dom';
+
+function Navigation() {
+  return (
+    <nav style={{
+      display: 'flex',
+      gap: '20px',
+      padding: '20px',
+      backgroundColor: '#f8f9fa',
+      borderBottom: '1px solid #dee2e6'
+    }}>
+      {/* Link - oddiy navigation */}
+      <Link
+        to="/"
+        style={{
+          textDecoration: 'none',
+          color: '#007bff',
+          padding: '8px 16px',
+          borderRadius: '4px'
+        }}
+      >
+        🏠 Bosh Sahifa
+      </Link>
+
+      {/* NavLink - active state bilan */}
+      <NavLink
+        to="/products"
+        style={({ isActive }) => ({
+          textDecoration: 'none',
+          color: isActive ? '#fff' : '#007bff',
+          backgroundColor: isActive ? '#007bff' : 'transparent',
+          padding: '8px 16px',
+          borderRadius: '4px',
+          border: '1px solid #007bff'
+        })}
+      >
+        📦 Mahsulotlar
+      </NavLink>
+
+      <NavLink
+        to="/services"
+        className={({ isActive }) =>
+          `nav-link ${isActive ? 'active' : ''}`
+        }
+      >
+        🛠 Xizmatlar
+      </NavLink>
+
+      <NavLink to="/about">
+        {({ isActive }) => (
+          <span style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            textDecoration: 'none',
+            color: isActive ? '#28a745' : '#6c757d',
+            fontWeight: isActive ? 'bold' : 'normal'
+          }}>
+            📋 Biz haqimizda
+            {isActive && <span>←</span>}
+          </span>
+        )}
+      </NavLink>
+    </nav>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Navigation />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/about" element={<AboutPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+
+## 3. URL Parameters va Dynamic Routes
+
+URL'dan ma'lumot olish va dynamic sahifalar yaratish:
+
+```jsx
+import { useParams, useSearchParams, Link } from 'react-router-dom';
+
+// Products list
+function ProductsList() {
+  const products = [
+    { id: 1, name: 'iPhone 15', category: 'phone', price: 999 },
+    { id: 2, name: 'MacBook Pro', category: 'laptop', price: 1999 },
+    { id: 3, name: 'AirPods Pro', category: 'audio', price: 249 },
+    { id: 4, name: 'iPad Air', category: 'tablet', price: 599 }
+  ];
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const category = searchParams.get('category') || 'all';
+  const search = searchParams.get('search') || '';
+
+  // Filter products
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = category === 'all' || product.category === category;
+    const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const updateFilter = (key, value) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value) {
+      newParams.set(key, value);
+    } else {
+      newParams.delete(key);
+    }
+    setSearchParams(newParams);
+  };
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1>📦 Mahsulotlar</h1>
+
+      {/* Filters */}
+      <div style={{
+        display: 'flex',
+        gap: '15px',
+        marginBottom: '20px',
+        padding: '15px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px'
+      }}>
+        <div>
+          <label>Qidiruv: </label>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => updateFilter('search', e.target.value)}
+            placeholder="Mahsulot nomi..."
+          />
+        </div>
+
+        <div>
+          <label>Kategoriya: </label>
+          <select
+            value={category}
+            onChange={(e) => updateFilter('category', e.target.value)}
+          >
+            <option value="all">Barchasi</option>
+            <option value="phone">Telefon</option>
+            <option value="laptop">Noutbuk</option>
+            <option value="audio">Audio</option>
+            <option value="tablet">Planshet</option>
+          </select>
+        </div>
+
+        <button
+          onClick={() => setSearchParams({})}
+          style={{
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Tozalash
+        </button>
+      </div>
+
+      {/* Products Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+        gap: '15px'
+      }}>
+        {filteredProducts.map(product => (
+          <div
+            key={product.id}
+            style={{
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              padding: '15px',
+              backgroundColor: 'white'
+            }}
+          >
+            <h3>
+              <Link
+                to={`/products/${product.id}`}
+                style={{ textDecoration: 'none', color: '#007bff' }}
+              >
+                {product.name}
+              </Link>
+            </h3>
+            <p>Kategoriya: {product.category}</p>
+            <p style={{ fontSize: '20px', color: '#28a745', fontWeight: 'bold' }}>
+              ${product.price}
+            </p>
+            <Link
+              to={`/products/${product.id}`}
+              style={{
+                display: 'inline-block',
+                backgroundColor: '#007bff',
+                color: 'white',
+                padding: '8px 16px',
+                textDecoration: 'none',
+                borderRadius: '4px',
+                marginTop: '10px'
+              }}
+            >
+              Batafsil ko'rish
+            </Link>
+          </div>
+        ))}
+      </div>
+
+      {filteredProducts.length === 0 && (
+        <div style={{ textAlign: 'center', color: '#6c757d', marginTop: '40px' }}>
+          🔍 Hech qanday mahsulot topilmadi
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Single product page
+function ProductDetails() {
+  const { productId } = useParams();
+  const [searchParams] = useSearchParams();
+  const from = searchParams.get('from') || '/products';
+
+  // Mock product data
+  const product = {
+    1: { id: 1, name: 'iPhone 15', category: 'phone', price: 999, description: 'Eng yangi iPhone model.' },
+    2: { id: 2, name: 'MacBook Pro', category: 'laptop', price: 1999, description: 'Professional noutbuk.' },
+    3: { id: 3, name: 'AirPods Pro', category: 'audio', price: 249, description: 'Wireless quloqchin.' },
+    4: { id: 4, name: 'iPad Air', category: 'tablet', price: 599, description: 'Yengil va kuchli planshet.' }
+  }[productId];
+
+  if (!product) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h1>❌ Mahsulot topilmadi</h1>
+        <p>ID: {productId} bo'lgan mahsulot mavjud emas.</p>
+        <Link to="/products">👈 Mahsulotlar ro'yxatiga qaytish</Link>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <Link
+        to={from}
+        style={{
+          display: 'inline-block',
+          marginBottom: '20px',
+          textDecoration: 'none',
+          color: '#007bff'
+        }}
+      >
+        👈 Ortga qaytish
+      </Link>
+
+      <div style={{
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        padding: '30px',
+        backgroundColor: 'white'
+      }}>
+        <h1>{product.name}</h1>
+        <p><strong>Kategoriya:</strong> {product.category}</p>
+        <p><strong>Narx:</strong> <span style={{ color: '#28a745', fontSize: '24px' }}>${product.price}</span></p>
+        <p><strong>Tavsif:</strong> {product.description}</p>
+
+        <div style={{ marginTop: '30px', display: 'flex', gap: '10px' }}>
+          <button style={{
+            backgroundColor: '#28a745',
+            color: 'white',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}>
+            🛒 Savotga qo'shish
+          </button>
+
+          <button style={{
+            backgroundColor: '#ffc107',
+            color: 'black',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}>
+            ✉️ So'rov yuborish
+          </button>
+        </div>
+      </div>
+
+      <div style={{ marginTop: '20px', fontSize: '14px', color: '#6c757d' }}>
+        <p>Product ID: {productId}</p>
+        <p>From: {from}</p>
+        <p>URL: {window.location.href}</p>
+      </div>
+    </div>
+  );
+}
+```
+
+## 4. Nested Routes va Layouts
+
+Ichma-ich route'lar va layout komponentlar:
+
+```jsx
+import { Outlet, useLocation } from 'react-router-dom';
+
+// Dashboard Layout
+function DashboardLayout() {
+  const location = useLocation();
+
+  return (
+    <div style={{ display: 'flex', minHeight: 'calc(100vh - 200px)' }}>
+      {/* Sidebar */}
+      <aside style={{
+        width: '250px',
+        backgroundColor: '#f8f9fa',
+        padding: '20px',
+        borderRight: '1px solid #dee2e6'
+      }}>
+        <h3>📊 Dashboard</h3>
+        <nav>
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            <li style={{ marginBottom: '10px' }}>
+              <NavLink
+                to="/dashboard"
+                end
+                style={({ isActive }) => ({
+                  textDecoration: 'none',
+                  color: isActive ? '#007bff' : '#495057',
+                  fontWeight: isActive ? 'bold' : 'normal'
+                })}
+              >
+                📈 Ko'rsatkichlar
+              </NavLink>
+            </li>
+            <li style={{ marginBottom: '10px' }}>
+              <NavLink
+                to="/dashboard/users"
+                style={({ isActive }) => ({
+                  textDecoration: 'none',
+                  color: isActive ? '#007bff' : '#495057',
+                  fontWeight: isActive ? 'bold' : 'normal'
+                })}
+              >
+                👥 Foydalanuvchilar
+              </NavLink>
+            </li>
+            <li style={{ marginBottom: '10px' }}>
+              <NavLink
+                to="/dashboard/products"
+                style={({ isActive }) => ({
+                  textDecoration: 'none',
+                  color: isActive ? '#007bff' : '#495057',
+                  fontWeight: isActive ? 'bold' : 'normal'
+                })}
+              >
+                📦 Mahsulotlar
+              </NavLink>
+            </li>
+            <li style={{ marginBottom: '10px' }}>
+              <NavLink
+                to="/dashboard/settings"
+                style={({ isActive }) => ({
+                  textDecoration: 'none',
+                  color: isActive ? '#007bff' : '#495057',
+                  fontWeight: isActive ? 'bold' : 'normal'
+                })}
+              >
+                ⚙️ Sozlamalar
+              </NavLink>
+            </li>
+          </ul>
+        </nav>
+
+        <div style={{ marginTop: '20px', fontSize: '12px', color: '#6c757d' }}>
+          <p>Joriy yo'l: {location.pathname}</p>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main style={{ flex: 1, padding: '20px' }}>
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+
+// Dashboard pages
+function DashboardHome() {
+  return (
+    <div>
+      <h1>📈 Dashboard Ko'rsatkichlari</h1>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '15px'
+      }}>
+        {[
+          { title: 'Jami foydalanuvchilar', value: '1,234', icon: '👥' },
+          { title: 'Jami mahsulotlar', value: '567', icon: '📦' },
+          { title: 'Bugungi sotuvlar', value: '$12,345', icon: '💰' },
+          { title: 'Faol sessiyalar', value: '89', icon: '🟢' }
+        ].map((stat, index) => (
+          <div
+            key={index}
+            style={{
+              padding: '20px',
+              backgroundColor: '#ffffff',
+              border: '1px solid #dee2e6',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}
+          >
+            <div style={{ fontSize: '24px', marginBottom: '10px' }}>{stat.icon}</div>
+            <h3 style={{ margin: '0 0 5px 0' }}>{stat.value}</h3>
+            <p style={{ margin: 0, fontSize: '14px', color: '#6c757d' }}>{stat.title}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DashboardUsers() {
+  const users = [
+    { id: 1, name: 'Ali Valiyev', email: 'ali@example.com', status: 'active' },
+    { id: 2, name: 'Nigora Karimova', email: 'nigora@example.com', status: 'active' },
+    { id: 3, name: 'Bobur Toshev', email: 'bobur@example.com', status: 'inactive' }
+  ];
+
+  return (
+    <div>
+      <h1>👥 Foydalanuvchilar</h1>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f8f9fa' }}>
+            <th style={{ padding: '10px', textAlign: 'left' }}>ID</th>
+            <th style={{ padding: '10px', textAlign: 'left' }}>Ism</th>
+            <th style={{ padding: '10px', textAlign: 'left' }}>Email</th>
+            <th style={{ padding: '10px', textAlign: 'left' }}>Holat</th>
+            <th style={{ padding: '10px', textAlign: 'left' }}>Amallar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map(user => (
+            <tr key={user.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+              <td style={{ padding: '10px' }}>{user.id}</td>
+              <td style={{ padding: '10px' }}>{user.name}</td>
+              <td style={{ padding: '10px' }}>{user.email}</td>
+              <td style={{ padding: '10px' }}>
+                <span style={{
+                  padding: '3px 8px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  backgroundColor: user.status === 'active' ? '#d4edda' : '#f8d7da',
+                  color: user.status === 'active' ? '#155724' : '#721c24'
+                }}>
+                  {user.status === 'active' ? 'Faol' : 'Faol emas'}
+                </span>
+              </td>
+              <td style={{ padding: '10px' }}>
+                <Link
+                  to={`/dashboard/users/${user.id}`}
+                  style={{
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    padding: '4px 8px',
+                    textDecoration: 'none',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}
+                >
+                  Ko'rish
+                </Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+```
+
+## 5. Programmatic Navigation
+
+useNavigate hook orqali dasturiy navigation:
+
+```jsx
+import { useNavigate, useLocation } from 'react-router-dom';
+
+function LoginForm() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // User login'dan keyin qayerga yo'naltirilgani
+  const from = location.state?.from?.pathname || '/dashboard';
+
+  const [credentials, setCredentials] = useState({
+    username: '',
+    password: ''
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      // Mock login API call
+      if (credentials.username === 'admin' && credentials.password === 'password') {
+        // Login successful
+        localStorage.setItem('isLoggedIn', 'true');
+
+        // Navigate to destination page
+        navigate(from, { replace: true });
+      } else {
+        alert('Noto\'g\'ri login ma\'lumotlari!');
+      }
+    } catch (error) {
+      console.error('Login xatoligi:', error);
+      alert('Login jarayonida xatolik yuz berdi');
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px' }}>
+      <h2>🔐 Tizimga kirish</h2>
+
+      {location.state?.from && (
+        <div style={{
+          padding: '10px',
+          backgroundColor: '#fff3cd',
+          borderRadius: '4px',
+          marginBottom: '20px'
+        }}>
+          <small>
+            <strong>"{from}" sahifasiga</strong> kirish uchun login qiling.
+          </small>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: '15px' }}>
+          <label>Foydalanuvchi nomi:</label>
+          <input
+            type="text"
+            value={credentials.username}
+            onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
+            style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+            placeholder="admin"
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label>Parol:</label>
+          <input
+            type="password"
+            value={credentials.password}
+            onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
+            style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+            placeholder="password"
+          />
+        </div>
+
+        <button
+          type="submit"
+          style={{
+            width: '100%',
+            padding: '12px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Kirish
+        </button>
+      </form>
+
+      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <p style={{ fontSize: '14px', color: '#6c757d' }}>
+          Test login: admin / password
+        </p>
+
+        <div style={{ marginTop: '15px' }}>
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              marginRight: '10px'
+            }}
+          >
+            Bosh sahifaga
+          </button>
+
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            ← Orqaga
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NavigationExamples() {
+  const navigate = useNavigate();
+
+  const navigationExamples = [
+    {
+      label: 'Bosh sahifaga o\'tish',
+      action: () => navigate('/'),
+      description: 'Asosiy sahifaga yo\'naltirish'
+    },
+    {
+      label: 'Mahsulotlar sahifasi (Replace)',
+      action: () => navigate('/products', { replace: true }),
+      description: 'Joriy sahifani history\'dan o\'chirish'
+    },
+    {
+      label: 'State bilan yo\'naltirish',
+      action: () => navigate('/dashboard', {
+        state: { message: 'Salom Dashboard!' }
+      }),
+      description: 'Qo\'shimcha ma\'lumot bilan yo\'naltirish'
+    },
+    {
+      label: 'Query params bilan',
+      action: () => navigate('/products?category=phone&search=iphone'),
+      description: 'URL parametrlar bilan yo\'naltirish'
+    },
+    {
+      label: 'Orqaga qaytish',
+      action: () => navigate(-1),
+      description: 'Tarixdan orqaga qaytish'
+    },
+    {
+      label: 'Oldinga o\'tish',
+      action: () => navigate(1),
+      description: 'Tarixdan oldinga o\'tish'
+    },
+    {
+      label: '2 ta sahifa orqaga',
+      action: () => navigate(-2),
+      description: 'Bir nechta sahifa orqaga'
+    }
+  ];
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h2>🧭 Navigation Examples</h2>
+
+      <div style={{ display: 'grid', gap: '10px', maxWidth: '500px' }}>
+        {navigationExamples.map((example, index) => (
+          <div
+            key={index}
+            style={{
+              border: '1px solid #dee2e6',
+              borderRadius: '8px',
+              padding: '15px'
+            }}
+          >
+            <button
+              onClick={example.action}
+              style={{
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                width: '100%',
+                marginBottom: '8px'
+              }}
+            >
+              {example.label}
+            </button>
+            <p style={{ margin: 0, fontSize: '14px', color: '#6c757d' }}>
+              {example.description}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: '30px', fontSize: '14px', color: '#6c757d' }}>
+        <p><strong>Current URL:</strong> {window.location.href}</p>
+        <p><strong>History length:</strong> {window.history.length}</p>
+      </div>
+    </div>
+  );
+}
+```
+
+## 6. Route Protection
+
+Protected routes va authentication:
+
+```jsx
+import { Navigate, useLocation } from 'react-router-dom';
+
+// Auth Context (simplified)
+function useAuth() {
+  // Real loyihada Context API yoki state management library ishlatiladi
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const userRole = localStorage.getItem('userRole') || 'user';
+
+  const login = () => {
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('userRole', 'user');
+  };
+
+  const logout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userRole');
+  };
+
+  return {
+    isLoggedIn,
+    userRole,
+    login,
+    logout
+  };
+}
+
+// Protected Route component
+function ProtectedRoute({ children, requiredRole = null }) {
+  const { isLoggedIn, userRole } = useAuth();
+  const location = useLocation();
+
+  // Login qilinmaganida login sahifasiga yo'naltirish
+  if (!isLoggedIn) {
+    return (
+      <Navigate
+        to="/login"
+        state={{ from: location }}
+        replace
+      />
+    );
+  }
+
+  // Role tekshirish
+  if (requiredRole && userRole !== requiredRole) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h1>🚫 Ruxsat yo'q</h1>
+        <p>Bu sahifaga kirish uchun "{requiredRole}" roli kerak.</p>
+        <p>Sizning rolingiz: "{userRole}"</p>
+        <Link to="/">Bosh sahifaga qaytish</Link>
+      </div>
+    );
+  }
+
+  return children;
+}
+
+// Public Only Route (login qilinganida boshqa sahifaga yo'naltirish)
+function PublicOnlyRoute({ children }) {
+  const { isLoggedIn } = useAuth();
+
+  if (isLoggedIn) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+}
+
+// Main App with protected routes
+function App() {
+  return (
+    <BrowserRouter>
+      <nav style={{ padding: '20px', backgroundColor: '#f8f9fa' }}>
+        <AuthNavigation />
+      </nav>
+
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+
+        {/* Public only (login sahifa) */}
+        <Route
+          path="/login"
+          element={
+            <PublicOnlyRoute>
+              <LoginPage />
+            </PublicOnlyRoute>
+          }
+        />
+
+        {/* Protected routes */}
+        <Route
+          path="/dashboard/*"
+          element={
+            <ProtectedRoute>
+              <DashboardRoutes />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin only routes */}
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminRoutes />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 404 */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function AuthNavigation() {
+  const { isLoggedIn, logout } = useAuth();
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div>
+        <Link to="/" style={{ marginRight: '15px' }}>Bosh sahifa</Link>
+        <Link to="/about" style={{ marginRight: '15px' }}>Biz haqimizda</Link>
+        {isLoggedIn && (
+          <>
+            <Link to="/dashboard" style={{ marginRight: '15px' }}>Dashboard</Link>
+            <Link to="/profile" style={{ marginRight: '15px' }}>Profil</Link>
+          </>
+        )}
+      </div>
+
+      <div>
+        {isLoggedIn ? (
+          <button
+            onClick={logout}
+            style={{
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            🚪 Chiqish
+          </button>
+        ) : (
+          <Link
+            to="/login"
+            style={{
+              backgroundColor: '#28a745',
+              color: 'white',
+              padding: '8px 16px',
+              textDecoration: 'none',
+              borderRadius: '4px'
+            }}
+          >
+            🔐 Kirish
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+## 7. Error Handling va 404
+
+404 va xato sahifalarini boshqarish:
+
+```jsx
+import { useRouteError, isRouteErrorResponse } from 'react-router-dom';
+
+// 404 Not Found page
+function NotFoundPage() {
+  const location = useLocation();
+
+  return (
+    <div style={{ padding: '40px', textAlign: 'center' }}>
+      <h1 style={{ fontSize: '72px', margin: '20px 0' }}>404</h1>
+      <h2>Sahifa topilmadi</h2>
+      <p style={{ fontSize: '18px', color: '#6c757d', marginBottom: '30px' }}>
+        Kechirasiz, siz qidirayotgan sahifa mavjud emas.
+      </p>
+
+      <div style={{
+        backgroundColor: '#f8f9fa',
+        padding: '15px',
+        borderRadius: '8px',
+        marginBottom: '30px',
+        fontSize: '14px',
+        fontFamily: 'monospace'
+      }}>
+        <strong>Joriy URL:</strong> {location.pathname}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
+        <Link
+          to="/"
+          style={{
+            backgroundColor: '#007bff',
+            color: 'white',
+            padding: '12px 24px',
+            textDecoration: 'none',
+            borderRadius: '4px'
+          }}
+        >
+          🏠 Bosh sahifaga
+        </Link>
+
+        <button
+          onClick={() => window.history.back()}
+          style={{
+            backgroundColor: '#6c757d',
+            color: 'white',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          ← Orqaga qaytish
+        </button>
+      </div>
+
+      <div style={{ marginTop: '30px' }}>
+        <h3>Foydali havolalar:</h3>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+          <Link to="/" style={{ color: '#007bff' }}>Bosh sahifa</Link>
+          <Link to="/products" style={{ color: '#007bff' }}>Mahsulotlar</Link>
+          <Link to="/about" style={{ color: '#007bff' }}>Biz haqimizda</Link>
+          <Link to="/contact" style={{ color: '#007bff' }}>Aloqa</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Error Boundary Component
+function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <h1>{error.status}</h1>
+        <h2>{error.statusText}</h2>
+        {error.data?.message && <p>{error.data.message}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '40px', textAlign: 'center' }}>
+      <h1>⚠️ Kutilmagan xatolik</h1>
+      <p>{error.message}</p>
+      <button onClick={() => window.location.reload()}>
+        Sahifani yangilash
+      </button>
+    </div>
+  );
+}
+```
+
+## Xulosa va Best Practices
+
+### ✅ React Router best practices:
+1. **BrowserRouter** - production uchun
+2. **Nested routes** - layout componentlar uchun
+3. **Protected routes** - authentication va authorization
+4. **Error boundaries** - graceful error handling
+5. **Loading states** - async route loading
+
+### 🎯 Performance Tips:
+1. **Route lazy loading** - React.lazy() bilan
+2. **Route prefetching** - Link hover'da prefetch
+3. **Code splitting** - sahifa bo'yicha bundle split
+4. **Caching strategies** - static routing cache
+
+### 📚 Keyingi mavzular:
+1. **Advanced routing** - nested layouts, modal routes
+2. **State management** - Redux, Zustand integration
+3. **Testing** - routing testlari
+4. **Server-side rendering** - Next.js, Remix
+
+React Router SPA yaratishning asос va zamonaviy web development'da muhim skill hisoblanadi!
+
+---
+
+## 🎉 React Fundamentals Yakunlandi!
+
+Ushbu 10-darslik seriya bilan siz React'ning barcha asosiy konspetlarini o'rgandingiz:
+
+1. **React Hooks** - State management asoslari
+2. **JSX Basics** - React syntax va qoidalar
+3. **Components & Props** - Komponent arxitekturasi
+4. **State & Events** - Interactive UI yaratish
+5. **Lifecycle & useEffect** - Side effects boshqarish
+6. **Forms** - Controlled components va validation
+7. **Lists & Keys** - Data rendering va performance
+8. **Context API** - Global state management
+9. **Custom Hooks** - Logic qayta ishlatish
+10. **React Router** - SPA navigation
+
+**Keyingi qadam:** Real loyihalar yaratish va advanced React patterns'ni o'rganish!

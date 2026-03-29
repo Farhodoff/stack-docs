@@ -1,0 +1,1110 @@
+---
+title: "React State va Events"
+description: "useState hook bilan state boshqarish, event handling va interactive komponentlar yaratish"
+category: "react"
+order: 4
+tags:
+  - react
+  - state
+  - events
+  - usestate
+  - interactive
+difficulty: "beginner"
+readTime: 28
+---
+
+# React State va Events
+
+React'da state komponentning o'zgaruvchan ma'lumotlarini saqlash va boshqarish uchun ishlatiladi. Events esa foydalanuvchi bilan interfeys o'rtasidagi o'zaro ta'sirni ta'minlaydi.
+
+## 1. State Nima?
+
+State - komponentning ichki ma'lumotlar holati bo'lib:
+- **O'zgaruvchan** - vaqt o'tishi bilan o'zgarishi mumkin
+- **Lokal** - faqat o'sha komponentga tegishli
+- **Reactive** - o'zgarganda komponent qayta render bo'ladi
+
+### State vs Props farqi:
+
+| State | Props |
+|-------|-------|
+| Komponent ichida boshqariladi | Tashqaridan uzatiladi |
+| O'zgaruvchan (mutable) | O'zgarmas (immutable) |
+| Komponent qayta render qiladi | Parent'dan keladi |
+| Lokal ma'lumot | Uzatilgan ma'lumot |
+
+## 2. useState Hook
+
+React'da state boshqarish uchun asosiy hook.
+
+### Asosiy sintaksis:
+
+```jsx
+import React, { useState } from 'react';
+
+function Counter() {
+  // State e'lon qilish
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>Hisoblagich: {count}</p>
+      <button onClick={() => setCount(count + 1)}>
+        Oshirish
+      </button>
+    </div>
+  );
+}
+```
+
+### State o'zgarishi misollari:
+
+```jsx
+function StateExamples() {
+  // String state
+  const [name, setName] = useState('');
+
+  // Boolean state
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Number state
+  const [age, setAge] = useState(0);
+
+  // Array state
+  const [items, setItems] = useState([]);
+
+  // Object state
+  const [user, setUser] = useState({
+    name: '',
+    email: '',
+    age: 0
+  });
+
+  return (
+    <div>
+      {/* String state */}
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Ismingiz"
+      />
+      <p>Salom, {name}!</p>
+
+      {/* Boolean state */}
+      <button onClick={() => setIsVisible(!isVisible)}>
+        {isVisible ? 'Yashirish' : 'Ko\'rsatish'}
+      </button>
+      {isVisible && <p>🎉 Bu matn ko'rsatilmoqda!</p>}
+
+      {/* Number state */}
+      <div>
+        <button onClick={() => setAge(age - 1)}>-</button>
+        <span>Yosh: {age}</span>
+        <button onClick={() => setAge(age + 1)}>+</button>
+      </div>
+    </div>
+  );
+}
+```
+
+## 3. Complex State Boshqarish
+
+Murakkab ma'lumot turlarini boshqarish.
+
+### Object State:
+
+```jsx
+function UserProfile() {
+  const [user, setUser] = useState({
+    name: '',
+    email: '',
+    age: 0,
+    city: '',
+    preferences: {
+      theme: 'light',
+      language: 'uz',
+      notifications: true
+    }
+  });
+
+  // Object'ni yangilash (spread operator)
+  const updateUser = (field, value) => {
+    setUser(prevUser => ({
+      ...prevUser,
+      [field]: value
+    }));
+  };
+
+  // Nested object'ni yangilash
+  const updatePreferences = (key, value) => {
+    setUser(prevUser => ({
+      ...prevUser,
+      preferences: {
+        ...prevUser.preferences,
+        [key]: value
+      }
+    }));
+  };
+
+  return (
+    <div>
+      <h2>Foydalanuvchi Profili</h2>
+
+      <div>
+        <label>Ism:</label>
+        <input
+          type="text"
+          value={user.name}
+          onChange={(e) => updateUser('name', e.target.value)}
+        />
+      </div>
+
+      <div>
+        <label>Email:</label>
+        <input
+          type="email"
+          value={user.email}
+          onChange={(e) => updateUser('email', e.target.value)}
+        />
+      </div>
+
+      <div>
+        <label>Yosh:</label>
+        <input
+          type="number"
+          value={user.age}
+          onChange={(e) => updateUser('age', parseInt(e.target.value) || 0)}
+        />
+      </div>
+
+      <div>
+        <label>Mavzu:</label>
+        <select
+          value={user.preferences.theme}
+          onChange={(e) => updatePreferences('theme', e.target.value)}
+        >
+          <option value="light">Yorug'</option>
+          <option value="dark">Qorong'u</option>
+        </select>
+      </div>
+
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={user.preferences.notifications}
+            onChange={(e) => updatePreferences('notifications', e.target.checked)}
+          />
+          Bildirishnomalar
+        </label>
+      </div>
+
+      <div className="preview">
+        <h3>Preview:</h3>
+        <pre>{JSON.stringify(user, null, 2)}</pre>
+      </div>
+    </div>
+  );
+}
+```
+
+### Array State:
+
+```jsx
+function TodoList() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: 'React o\'rganish', completed: false },
+    { id: 2, text: 'Loyiha yaratish', completed: true }
+  ]);
+  const [inputValue, setInputValue] = useState('');
+
+  // Yangi todo qo'shish
+  const addTodo = () => {
+    if (inputValue.trim() !== '') {
+      const newTodo = {
+        id: Date.now(),
+        text: inputValue,
+        completed: false
+      };
+      setTodos(prevTodos => [...prevTodos, newTodo]);
+      setInputValue('');
+    }
+  };
+
+  // Todo'ni o'chirish
+  const deleteTodo = (id) => {
+    setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
+  };
+
+  // Todo'ni toggle qilish
+  const toggleTodo = (id) => {
+    setTodos(prevTodos =>
+      prevTodos.map(todo =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
+  };
+
+  // Todo'ni tahrirlash
+  const editTodo = (id, newText) => {
+    setTodos(prevTodos =>
+      prevTodos.map(todo =>
+        todo.id === id ? { ...todo, text: newText } : todo
+      )
+    );
+  };
+
+  // Hammani tozalash
+  const clearCompleted = () => {
+    setTodos(prevTodos => prevTodos.filter(todo => !todo.completed));
+  };
+
+  return (
+    <div>
+      <h2>📝 Todo Ro'yxati</h2>
+
+      {/* Yangi todo qo'shish */}
+      <div>
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && addTodo()}
+          placeholder="Yangi vazifa..."
+        />
+        <button onClick={addTodo}>Qo'shish</button>
+      </div>
+
+      {/* Statistika */}
+      <div className="stats">
+        <p>
+          Jami: {todos.length} |
+          Tugallangan: {todos.filter(t => t.completed).length} |
+          Qolgan: {todos.filter(t => !t.completed).length}
+        </p>
+        {todos.some(t => t.completed) && (
+          <button onClick={clearCompleted}>
+            Tugallanganlarni tozalash
+          </button>
+        )}
+      </div>
+
+      {/* Todo'lar ro'yxati */}
+      <ul>
+        {todos.map(todo => (
+          <TodoItem
+            key={todo.id}
+            todo={todo}
+            onToggle={toggleTodo}
+            onDelete={deleteTodo}
+            onEdit={editTodo}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function TodoItem({ todo, onToggle, onDelete, onEdit }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(todo.text);
+
+  const handleEdit = () => {
+    onEdit(todo.id, editText);
+    setIsEditing(false);
+  };
+
+  return (
+    <li className={`todo-item ${todo.completed ? 'completed' : ''}`}>
+      <input
+        type="checkbox"
+        checked={todo.completed}
+        onChange={() => onToggle(todo.id)}
+      />
+
+      {isEditing ? (
+        <div>
+          <input
+            type="text"
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleEdit()}
+          />
+          <button onClick={handleEdit}>Saqlash</button>
+          <button onClick={() => setIsEditing(false)}>Bekor qilish</button>
+        </div>
+      ) : (
+        <div>
+          <span onClick={() => onToggle(todo.id)}>
+            {todo.text}
+          </span>
+          <button onClick={() => setIsEditing(true)}>Tahrirlash</button>
+          <button onClick={() => onDelete(todo.id)}>O'chirish</button>
+        </div>
+      )}
+    </li>
+  );
+}
+```
+
+## 4. Event Handling
+
+React'da turli xil event'larga javob berish.
+
+### Asosiy event turlari:
+
+```jsx
+function EventHandlingDemo() {
+  const [logs, setLogs] = useState([]);
+
+  const addLog = (message) => {
+    setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
+
+  // Click events
+  const handleClick = (event) => {
+    addLog(`Button bosildi: ${event.target.textContent}`);
+  };
+
+  const handleDoubleClick = () => {
+    addLog('Double click amalga oshirildi');
+  };
+
+  // Form events
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+    addLog(`Forma yuborildi: ${JSON.stringify(data)}`);
+  };
+
+  const handleInputChange = (event) => {
+    addLog(`Input o'zgartirildi: ${event.target.value}`);
+  };
+
+  const handleSelectChange = (event) => {
+    addLog(`Select tanlanди: ${event.target.value}`);
+  };
+
+  // Keyboard events
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      addLog('Enter tugmasi bosildi');
+    } else if (event.key === 'Escape') {
+      addLog('Escape tugmasi bosildi');
+    }
+  };
+
+  // Mouse events
+  const handleMouseEnter = () => {
+    addLog('Mouse kiritildi');
+  };
+
+  const handleMouseLeave = () => {
+    addLog('Mouse chiqarildi');
+  };
+
+  // Focus events
+  const handleFocus = (event) => {
+    addLog(`Focus oldi: ${event.target.name}`);
+  };
+
+  const handleBlur = (event) => {
+    addLog(`Focus yo'qotildi: ${event.target.name}`);
+  };
+
+  return (
+    <div>
+      <h2>Event Handling Demo</h2>
+
+      {/* Click events */}
+      <div>
+        <button onClick={handleClick}>Oddiy click</button>
+        <button onDoubleClick={handleDoubleClick}>Double click</button>
+      </div>
+
+      {/* Form events */}
+      <form onSubmit={handleSubmit}>
+        <div>
+          <input
+            name="name"
+            type="text"
+            placeholder="Ismingiz"
+            onChange={handleInputChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+          />
+        </div>
+
+        <div>
+          <select name="city" onChange={handleSelectChange}>
+            <option value="">Shahar tanlang</option>
+            <option value="toshkent">Toshkent</option>
+            <option value="samarqand">Samarqand</option>
+            <option value="buxoro">Buxoro</option>
+          </select>
+        </div>
+
+        <button type="submit">Yuborish</button>
+      </form>
+
+      {/* Mouse events */}
+      <div
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          padding: '20px',
+          backgroundColor: '#f0f0f0',
+          margin: '10px 0'
+        }}
+      >
+        Sichqonchani ustiga olib keling
+      </div>
+
+      {/* Event logs */}
+      <div>
+        <h3>Event Logs:</h3>
+        <div style={{
+          height: '200px',
+          overflow: 'auto',
+          border: '1px solid #ccc',
+          padding: '10px'
+        }}>
+          {logs.map((log, index) => (
+            <div key={index}>{log}</div>
+          ))}
+        </div>
+        <button onClick={() => setLogs([])}>Loglarni tozalash</button>
+      </div>
+    </div>
+  );
+}
+```
+
+### Event object tuzilishi:
+
+```jsx
+function EventDetailsDemo() {
+  const [eventInfo, setEventInfo] = useState(null);
+
+  const handleDetailedClick = (event) => {
+    // Event objectning barcha xususiyatlari
+    const details = {
+      type: event.type,
+      target: event.target.tagName,
+      currentTarget: event.currentTarget.tagName,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      screenX: event.screenX,
+      screenY: event.screenY,
+      shiftKey: event.shiftKey,
+      ctrlKey: event.ctrlKey,
+      altKey: event.altKey,
+      button: event.button,
+      buttons: event.buttons
+    };
+
+    setEventInfo(details);
+  };
+
+  return (
+    <div>
+      <h2>Event Object Details</h2>
+
+      <div
+        onClick={handleDetailedClick}
+        style={{
+          padding: '50px',
+          backgroundColor: '#e9ecef',
+          border: '2px dashed #6c757d',
+          textAlign: 'center',
+          cursor: 'pointer'
+        }}
+      >
+        Bu yerga click qiling
+        <br />
+        <small>(Turli tugmalar bilan sinab ko'ring: Shift, Ctrl, Alt)</small>
+      </div>
+
+      {eventInfo && (
+        <div>
+          <h3>Event Ma'lumotlari:</h3>
+          <pre>{JSON.stringify(eventInfo, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+## 5. Controlled Components
+
+Form elementlarini React state bilan boshqarish.
+
+```jsx
+function ContactForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+    category: 'general',
+    priority: 'medium',
+    newsletter: false,
+    age: 18
+  });
+
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form field'larini yangilash
+  const handleInputChange = (event) => {
+    const { name, value, type, checked } = event.target;
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+
+    // Xatolikni tozalash
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  // Form validation
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Ism majburiy';
+    } else if (formData.name.length < 2) {
+      newErrors.name = 'Ism kamida 2 ta harf bo\'lishi kerak';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email majburiy';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email formati noto\'g\'ri';
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Telefon raqami majburiy';
+    } else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) {
+      newErrors.phone = 'Telefon raqami formati noto\'g\'ri';
+    }
+
+    if (!formData.message.trim()) {
+      newErrors.message = 'Xabar majburiy';
+    } else if (formData.message.length < 10) {
+      newErrors.message = 'Xabar kamida 10 ta belgi bo\'lishi kerak';
+    }
+
+    if (formData.age < 16 || formData.age > 100) {
+      newErrors.age = 'Yosh 16 dan 100 gacha bo\'lishi kerak';
+    }
+
+    return newErrors;
+  };
+
+  // Form submit
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const formErrors = validateForm();
+
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // API ga yuborish simulyatsiya
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      alert('Xabar muvaffaqiyatli yuborildi!');
+
+      // Formani tozalash
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        message: '',
+        category: 'general',
+        priority: 'medium',
+        newsletter: false,
+        age: 18
+      });
+    } catch (error) {
+      alert('Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="contact-form">
+      <h2>Aloqa Formasi</h2>
+
+      {/* Ism */}
+      <div className="form-group">
+        <label htmlFor="name">Ism *</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          className={errors.name ? 'error' : ''}
+          placeholder="Ismingizni kiriting"
+        />
+        {errors.name && <span className="error-message">{errors.name}</span>}
+      </div>
+
+      {/* Email */}
+      <div className="form-group">
+        <label htmlFor="email">Email *</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value={formData.email}
+          onChange={handleInputChange}
+          className={errors.email ? 'error' : ''}
+          placeholder="example@email.com"
+        />
+        {errors.email && <span className="error-message">{errors.email}</span>}
+      </div>
+
+      {/* Telefon */}
+      <div className="form-group">
+        <label htmlFor="phone">Telefon *</label>
+        <input
+          type="tel"
+          id="phone"
+          name="phone"
+          value={formData.phone}
+          onChange={handleInputChange}
+          className={errors.phone ? 'error' : ''}
+          placeholder="+998 90 123 45 67"
+        />
+        {errors.phone && <span className="error-message">{errors.phone}</span>}
+      </div>
+
+      {/* Yosh */}
+      <div className="form-group">
+        <label htmlFor="age">Yosh</label>
+        <input
+          type="range"
+          id="age"
+          name="age"
+          min="16"
+          max="100"
+          value={formData.age}
+          onChange={handleInputChange}
+        />
+        <span>Yosh: {formData.age}</span>
+        {errors.age && <span className="error-message">{errors.age}</span>}
+      </div>
+
+      {/* Kategoriya */}
+      <div className="form-group">
+        <label htmlFor="category">Kategoriya</label>
+        <select
+          id="category"
+          name="category"
+          value={formData.category}
+          onChange={handleInputChange}
+        >
+          <option value="general">Umumiy savol</option>
+          <option value="support">Texnik yordam</option>
+          <option value="sales">Sotish bo'limi</option>
+          <option value="complaint">Shikoyat</option>
+        </select>
+      </div>
+
+      {/* Prioritet */}
+      <div className="form-group">
+        <label>Prioritet</label>
+        <div className="radio-group">
+          {['low', 'medium', 'high'].map(priority => (
+            <label key={priority} className="radio-label">
+              <input
+                type="radio"
+                name="priority"
+                value={priority}
+                checked={formData.priority === priority}
+                onChange={handleInputChange}
+              />
+              {priority === 'low' ? 'Past' : priority === 'medium' ? 'O\'rta' : 'Yuqori'}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Xabar */}
+      <div className="form-group">
+        <label htmlFor="message">Xabar *</label>
+        <textarea
+          id="message"
+          name="message"
+          rows="5"
+          value={formData.message}
+          onChange={handleInputChange}
+          className={errors.message ? 'error' : ''}
+          placeholder="Xabaringizni kiriting..."
+        />
+        {errors.message && <span className="error-message">{errors.message}</span>}
+        <small>{formData.message.length}/1000 belgi</small>
+      </div>
+
+      {/* Newsletter */}
+      <div className="form-group">
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            name="newsletter"
+            checked={formData.newsletter}
+            onChange={handleInputChange}
+          />
+          Newsletter obunasiga qo'shilish
+        </label>
+      </div>
+
+      {/* Submit button */}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className={isSubmitting ? 'submitting' : ''}
+      >
+        {isSubmitting ? 'Yuborilmoqda...' : 'Xabar yuborish'}
+      </button>
+
+      {/* Form preview */}
+      <details>
+        <summary>Form Ma'lumotlari (Preview)</summary>
+        <pre>{JSON.stringify(formData, null, 2)}</pre>
+      </details>
+    </form>
+  );
+}
+```
+
+## 6. Amaliy Loyiha - Calculator
+
+State va event'larni amalda qo'llash:
+
+```jsx
+import React, { useState } from 'react';
+
+function Calculator() {
+  const [display, setDisplay] = useState('0');
+  const [previousValue, setPreviousValue] = useState(null);
+  const [operation, setOperation] = useState(null);
+  const [waitingForNewValue, setWaitingForNewValue] = useState(false);
+
+  const inputNumber = (number) => {
+    if (waitingForNewValue) {
+      setDisplay(String(number));
+      setWaitingForNewValue(false);
+    } else {
+      setDisplay(display === '0' ? String(number) : display + number);
+    }
+  };
+
+  const inputDecimal = () => {
+    if (waitingForNewValue) {
+      setDisplay('0.');
+      setWaitingForNewValue(false);
+    } else if (display.indexOf('.') === -1) {
+      setDisplay(display + '.');
+    }
+  };
+
+  const clear = () => {
+    setDisplay('0');
+    setPreviousValue(null);
+    setOperation(null);
+    setWaitingForNewValue(false);
+  };
+
+  const performOperation = (nextOperation) => {
+    const inputValue = parseFloat(display);
+
+    if (previousValue === null) {
+      setPreviousValue(inputValue);
+    } else if (operation) {
+      const currentValue = previousValue || 0;
+      let result;
+
+      switch (operation) {
+        case '+':
+          result = currentValue + inputValue;
+          break;
+        case '-':
+          result = currentValue - inputValue;
+          break;
+        case '*':
+          result = currentValue * inputValue;
+          break;
+        case '/':
+          result = currentValue / inputValue;
+          break;
+        default:
+          return;
+      }
+
+      setPreviousValue(result);
+      setDisplay(String(result));
+    }
+
+    setWaitingForNewValue(true);
+    setOperation(nextOperation);
+  };
+
+  const calculate = () => {
+    if (operation && !waitingForNewValue) {
+      performOperation(null);
+    }
+  };
+
+  const percentage = () => {
+    const value = parseFloat(display) / 100;
+    setDisplay(String(value));
+  };
+
+  const toggleSign = () => {
+    if (display !== '0') {
+      setDisplay(display.startsWith('-') ? display.slice(1) : '-' + display);
+    }
+  };
+
+  const handleKeyPress = (event) => {
+    const { key } = event;
+
+    if (key >= '0' && key <= '9') {
+      inputNumber(parseInt(key));
+    } else if (key === '.') {
+      inputDecimal();
+    } else if (key === '+' || key === '-' || key === '*' || key === '/') {
+      performOperation(key);
+    } else if (key === 'Enter' || key === '=') {
+      event.preventDefault();
+      calculate();
+    } else if (key === 'Escape' || key.toLowerCase() === 'c') {
+      clear();
+    } else if (key === '%') {
+      percentage();
+    }
+  };
+
+  // Keyboard event listener
+  React.useEffect(() => {
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [display, operation, previousValue, waitingForNewValue]);
+
+  return (
+    <div className="calculator">
+      <div className="calculator-screen">
+        <div className="calculator-display">
+          {display}
+        </div>
+        <div className="calculator-info">
+          {operation && previousValue !== null && (
+            <small>
+              {previousValue} {operation} {waitingForNewValue ? '' : display}
+            </small>
+          )}
+        </div>
+      </div>
+
+      <div className="calculator-buttons">
+        {/* 1-qator: Clear, +/-, %, ÷ */}
+        <button onClick={clear} className="btn-function">C</button>
+        <button onClick={toggleSign} className="btn-function">±</button>
+        <button onClick={percentage} className="btn-function">%</button>
+        <button
+          onClick={() => performOperation('/')}
+          className={`btn-operation ${operation === '/' ? 'active' : ''}`}
+        >
+          ÷
+        </button>
+
+        {/* 2-qator: 7, 8, 9, × */}
+        <button onClick={() => inputNumber(7)} className="btn-number">7</button>
+        <button onClick={() => inputNumber(8)} className="btn-number">8</button>
+        <button onClick={() => inputNumber(9)} className="btn-number">9</button>
+        <button
+          onClick={() => performOperation('*')}
+          className={`btn-operation ${operation === '*' ? 'active' : ''}`}
+        >
+          ×
+        </button>
+
+        {/* 3-qator: 4, 5, 6, - */}
+        <button onClick={() => inputNumber(4)} className="btn-number">4</button>
+        <button onClick={() => inputNumber(5)} className="btn-number">5</button>
+        <button onClick={() => inputNumber(6)} className="btn-number">6</button>
+        <button
+          onClick={() => performOperation('-')}
+          className={`btn-operation ${operation === '-' ? 'active' : ''}`}
+        >
+          -
+        </button>
+
+        {/* 4-qator: 1, 2, 3, + */}
+        <button onClick={() => inputNumber(1)} className="btn-number">1</button>
+        <button onClick={() => inputNumber(2)} className="btn-number">2</button>
+        <button onClick={() => inputNumber(3)} className="btn-number">3</button>
+        <button
+          onClick={() => performOperation('+')}
+          className={`btn-operation ${operation === '+' ? 'active' : ''}`}
+        >
+          +
+        </button>
+
+        {/* 5-qator: 0 (keng), ., = */}
+        <button onClick={() => inputNumber(0)} className="btn-number btn-wide">0</button>
+        <button onClick={inputDecimal} className="btn-number">.</button>
+        <button onClick={calculate} className="btn-equals">=</button>
+      </div>
+
+      <div className="calculator-instructions">
+        <small>
+          💡 Klaviatura bilan ham ishlatish mumkin:
+          raqamlar, +, -, *, /, Enter (=), Escape (C)
+        </small>
+      </div>
+    </div>
+  );
+}
+
+// Calculator CSS (alohida faylda bo'lishi kerak)
+const calculatorStyles = `
+.calculator {
+  max-width: 320px;
+  margin: 0 auto;
+  background: #000;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.calculator-screen {
+  background: #000;
+  color: white;
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: right;
+  border-radius: 10px;
+}
+
+.calculator-display {
+  font-size: 48px;
+  font-weight: 200;
+  min-height: 60px;
+  overflow: hidden;
+}
+
+.calculator-info {
+  font-size: 14px;
+  color: #999;
+  min-height: 20px;
+}
+
+.calculator-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+button {
+  height: 60px;
+  border: none;
+  border-radius: 30px;
+  font-size: 24px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-number {
+  background: #333;
+  color: white;
+}
+
+.btn-number:hover {
+  background: #555;
+}
+
+.btn-function {
+  background: #a6a6a6;
+  color: black;
+}
+
+.btn-function:hover {
+  background: #d4d4d4;
+}
+
+.btn-operation {
+  background: #ff9500;
+  color: white;
+}
+
+.btn-operation:hover,
+.btn-operation.active {
+  background: #ffb143;
+}
+
+.btn-equals {
+  background: #ff9500;
+  color: white;
+}
+
+.btn-equals:hover {
+  background: #ffb143;
+}
+
+.btn-wide {
+  grid-column: span 2;
+}
+
+.calculator-instructions {
+  text-align: center;
+  margin-top: 20px;
+  color: #666;
+}
+`;
+
+export default Calculator;
+```
+
+## Xulosa va Best Practices
+
+### ✅ State boshqarish best practices:
+1. **State minimal tutish** - faqat kerakli ma'lumotlarni state da saqlash
+2. **Immutable updates** - state'ni to'g'ridan-to'g'ri o'zgartirmaslik
+3. **Single source of truth** - bir ma'lumot faqat bir joyda saqlansin
+4. **Lifted state** - umumiy state'ni yuqoriga ko'tarish
+
+### 🎯 Event handling tavsiyalari:
+1. **preventDefault()** - default harakatni to'xtatish uchun
+2. **Event delegation** - parent event'lardan foydalanish
+3. **Debouncing** - ko'p marta chaqiriluvchi event'lar uchun
+4. **Cleanup** - event listener'larni tozalash
+
+### 📚 Keyingi mavzular:
+1. **useEffect** - side effect'lar va lifecycle
+2. **useContext** - global state boshqarish
+3. **Custom hooks** - logic'ni qayta ishlatish
+4. **Performance optimization** - useMemo, useCallback
+
+State va event handling React'da interactive UI yaratishning asosini tashkil etadi!

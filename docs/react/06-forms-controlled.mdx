@@ -1,0 +1,1167 @@
+---
+title: "Formalar va Controlled Components"
+description: "React'da form handling, validation, input tiplarini boshqarish va controlled/uncontrolled components"
+category: "react"
+order: 6
+tags:
+  - react
+  - forms
+  - controlled-components
+  - validation
+  - input-handling
+difficulty: "intermediate"
+readTime: 32
+---
+
+# Formalar va Controlled Components
+
+React'da formalar HTML formalaridan farqli ishlaydi. React'da form elementlari **controlled components** bo'lib, ularning qiymati React state orqali boshqariladi.
+
+## 1. Controlled vs Uncontrolled Components
+
+### Controlled Components:
+- Form elementlarining qiymati React state'da saqlanadi
+- `value` prop orqali qiymat o'rnatiladi
+- `onChange` event orqali o'zgarishlar kuzatiladi
+- React form ma'lumotlarini butunlay boshqaradi
+
+### Uncontrolled Components:
+- Form elementlari o'z ichki DOM state'ini saqlaydi
+- `ref` orqali qiymatga murojaat qilinadi
+- HTML form'lariga o'xshash ishlaydi
+
+## 2. Basic Input Handling
+
+### Text input:
+
+```jsx
+import React, { useState } from 'react';
+
+function BasicForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    console.log('Form yuborildi:', formData);
+    alert(`Salom, ${formData.name}! Email: ${formData.email}`);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h2>Asosiy Forma</h2>
+
+      <div>
+        <label htmlFor="name">Ismi:</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          placeholder="To'liq ismingiz"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="email">Email:</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value={formData.email}
+          onChange={handleInputChange}
+          placeholder="email@example.com"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="phone">Telefon:</label>
+        <input
+          type="tel"
+          id="phone"
+          name="phone"
+          value={formData.phone}
+          onChange={handleInputChange}
+          placeholder="+998 90 123 45 67"
+        />
+      </div>
+
+      <button type="submit">Yuborish</button>
+
+      {/* Form preview */}
+      <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f5f5f5' }}>
+        <h4>Live Preview:</h4>
+        <p><strong>Ism:</strong> {formData.name || 'Kiritilmagan'}</p>
+        <p><strong>Email:</strong> {formData.email || 'Kiritilmagan'}</p>
+        <p><strong>Telefon:</strong> {formData.phone || 'Kiritilmagan'}</p>
+      </div>
+    </form>
+  );
+}
+```
+
+## 3. Turli Input Turlari
+
+React'da barcha form element turlarini boshqarish:
+
+```jsx
+function AllInputTypesForm() {
+  const [formData, setFormData] = useState({
+    // Text inputs
+    text: '',
+    email: '',
+    password: '',
+    number: 0,
+    tel: '',
+    url: '',
+    search: '',
+
+    // Selection inputs
+    select: 'option1',
+    radio: 'male',
+    checkbox: false,
+
+    // Date/time inputs
+    date: '',
+    time: '',
+    datetime: '',
+
+    // File input
+    file: null,
+
+    // Other inputs
+    textarea: '',
+    range: 50,
+    color: '#ffffff'
+  });
+
+  const handleChange = (event) => {
+    const { name, type, value, checked, files } = event.target;
+
+    let newValue;
+    if (type === 'checkbox') {
+      newValue = checked;
+    } else if (type === 'file') {
+      newValue = files[0];
+    } else if (type === 'number' || type === 'range') {
+      newValue = parseFloat(value);
+    } else {
+      newValue = value;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: newValue
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    // File'ni handle qilish uchun FormData yaratish
+    const submitData = new FormData();
+
+    Object.keys(formData).forEach(key => {
+      if (formData[key] !== null && formData[key] !== undefined) {
+        submitData.append(key, formData[key]);
+      }
+    });
+
+    console.log('Submit form data:', formData);
+    alert('Forma muvaffaqiyatli yuborildi! Console'ni tekshiring.');
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <h2>Barcha Input Turlari</h2>
+
+      {/* Text Inputs */}
+      <fieldset>
+        <legend>Matn Input'lari</legend>
+
+        <div>
+          <label>Oddiy matn:</label>
+          <input
+            type="text"
+            name="text"
+            value={formData.text}
+            onChange={handleChange}
+            placeholder="Matn kiriting"
+          />
+        </div>
+
+        <div>
+          <label>Email:</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="email@example.com"
+          />
+        </div>
+
+        <div>
+          <label>Parol:</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Parolingiz"
+          />
+        </div>
+
+        <div>
+          <label>Raqam:</label>
+          <input
+            type="number"
+            name="number"
+            value={formData.number}
+            onChange={handleChange}
+            min="0"
+            max="100"
+          />
+        </div>
+
+        <div>
+          <label>Telefon:</label>
+          <input
+            type="tel"
+            name="tel"
+            value={formData.tel}
+            onChange={handleChange}
+            placeholder="+998901234567"
+          />
+        </div>
+
+        <div>
+          <label>URL:</label>
+          <input
+            type="url"
+            name="url"
+            value={formData.url}
+            onChange={handleChange}
+            placeholder="https://example.com"
+          />
+        </div>
+
+        <div>
+          <label>Qidiruv:</label>
+          <input
+            type="search"
+            name="search"
+            value={formData.search}
+            onChange={handleChange}
+            placeholder="Qidirish..."
+          />
+        </div>
+      </fieldset>
+
+      {/* Selection Inputs */}
+      <fieldset>
+        <legend>Tanlash Input'lari</legend>
+
+        <div>
+          <label>Dropdown:</label>
+          <select name="select" value={formData.select} onChange={handleChange}>
+            <option value="option1">Birinchi tanlov</option>
+            <option value="option2">Ikkinchi tanlov</option>
+            <option value="option3">Uchinchi tanlov</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Jins:</label>
+          <div>
+            <label>
+              <input
+                type="radio"
+                name="radio"
+                value="male"
+                checked={formData.radio === 'male'}
+                onChange={handleChange}
+              />
+              Erkak
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="radio"
+                value="female"
+                checked={formData.radio === 'female'}
+                onChange={handleChange}
+              />
+              Ayol
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label>
+            <input
+              type="checkbox"
+              name="checkbox"
+              checked={formData.checkbox}
+              onChange={handleChange}
+            />
+            Newsletter'ga obuna bo'lish
+          </label>
+        </div>
+      </fieldset>
+
+      {/* Date/Time Inputs */}
+      <fieldset>
+        <legend>Sana/Vaqt Input'lari</legend>
+
+        <div>
+          <label>Sana:</label>
+          <input
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <label>Vaqt:</label>
+          <input
+            type="time"
+            name="time"
+            value={formData.time}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <label>Sana va Vaqt:</label>
+          <input
+            type="datetime-local"
+            name="datetime"
+            value={formData.datetime}
+            onChange={handleChange}
+          />
+        </div>
+      </fieldset>
+
+      {/* Other Inputs */}
+      <fieldset>
+        <legend>Boshqa Input'lar</legend>
+
+        <div>
+          <label>Fayl:</label>
+          <input
+            type="file"
+            name="file"
+            onChange={handleChange}
+            accept=".jpg,.jpeg,.png,.pdf"
+          />
+          {formData.file && (
+            <p>Tanlangan fayl: {formData.file.name}</p>
+          )}
+        </div>
+
+        <div>
+          <label>Matn maydon:</label>
+          <textarea
+            name="textarea"
+            value={formData.textarea}
+            onChange={handleChange}
+            rows="4"
+            placeholder="Ko'p qatorli matn..."
+          />
+        </div>
+
+        <div>
+          <label>Range ({formData.range}):</label>
+          <input
+            type="range"
+            name="range"
+            value={formData.range}
+            onChange={handleChange}
+            min="0"
+            max="100"
+          />
+        </div>
+
+        <div>
+          <label>Rang:</label>
+          <input
+            type="color"
+            name="color"
+            value={formData.color}
+            onChange={handleChange}
+          />
+          <span style={{ backgroundColor: formData.color, padding: '5px 10px', marginLeft: '10px' }}>
+            {formData.color}
+          </span>
+        </div>
+      </fieldset>
+
+      <button type="submit">Barchasini yuborish</button>
+
+      {/* Form Data Preview */}
+      <details style={{ marginTop: '20px' }}>
+        <summary>Form Ma'lumotlari</summary>
+        <pre>{JSON.stringify(formData, null, 2)}</pre>
+      </details>
+    </form>
+  );
+}
+```
+
+## 4. Form Validation
+
+Client-side form validation implementing:
+
+```jsx
+function ValidationForm() {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    age: '',
+    website: '',
+    bio: ''
+  });
+
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Validation rules
+  const validationRules = {
+    username: {
+      required: true,
+      minLength: 3,
+      maxLength: 20,
+      pattern: /^[a-zA-Z0-9_]+$/,
+      message: "Username kamida 3 ta belgi bo'lishi va faqat harflar, raqamlar va pastki chiziq bo'lishi kerak"
+    },
+    email: {
+      required: true,
+      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      message: "Haqiqiy email manzilini kiriting"
+    },
+    password: {
+      required: true,
+      minLength: 8,
+      pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+      message: "Parol kamida 8 ta belgi, kichik va katta harf, raqam va maxsus belgi bo'lishi kerak"
+    },
+    confirmPassword: {
+      required: true,
+      mustMatch: 'password',
+      message: "Parollar bir xil bo'lishi kerak"
+    },
+    age: {
+      required: true,
+      min: 18,
+      max: 120,
+      message: "Yosh 18 dan 120 gacha bo'lishi kerak"
+    },
+    website: {
+      pattern: /^https?:\/\/.+/,
+      message: "Haqiqiy URL kiriting (http:// yoki https:// bilan)"
+    }
+  };
+
+  // Validate field
+  const validateField = (name, value) => {
+    const rule = validationRules[name];
+    if (!rule) return '';
+
+    if (rule.required && (!value || value.trim() === '')) {
+      return `${name} majburiy`;
+    }
+
+    if (value && rule.minLength && value.length < rule.minLength) {
+      return `${name} kamida ${rule.minLength} ta belgi bo'lishi kerak`;
+    }
+
+    if (value && rule.maxLength && value.length > rule.maxLength) {
+      return `${name} ko'pi bilan ${rule.maxLength} ta belgi bo'lishi kerak`;
+    }
+
+    if (value && rule.min && parseFloat(value) < rule.min) {
+      return `${name} kamida ${rule.min} bo'lishi kerak`;
+    }
+
+    if (value && rule.max && parseFloat(value) > rule.max) {
+      return `${name} ko'pi bilan ${rule.max} bo'lishi kerak`;
+    }
+
+    if (value && rule.pattern && !rule.pattern.test(value)) {
+      return rule.message || `${name} formati noto'g'ri`;
+    }
+
+    if (rule.mustMatch && value !== formData[rule.mustMatch]) {
+      return rule.message || `${name} mos kelmaydi`;
+    }
+
+    return '';
+  };
+
+  // Handle input change
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Real-time validation
+    if (touched[name]) {
+      const error = validateField(name, value);
+      setErrors(prev => ({
+        ...prev,
+        [name]: error
+      }));
+    }
+  };
+
+  // Handle blur (field touched)
+  const handleBlur = (event) => {
+    const { name, value } = event.target;
+
+    setTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
+
+    const error = validateField(name, value);
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+  };
+
+  // Validate all fields
+  const validateAll = () => {
+    const newErrors = {};
+    Object.keys(validationRules).forEach(field => {
+      const error = validateField(field, formData[field]);
+      if (error) {
+        newErrors[field] = error;
+      }
+    });
+    return newErrors;
+  };
+
+  // Handle submit
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setIsSubmitting(true);
+
+    // Mark all fields as touched
+    const allFields = Object.keys(validationRules);
+    setTouched(allFields.reduce((acc, field) => ({ ...acc, [field]: true }), {}));
+
+    // Validate all fields
+    const validationErrors = validateAll();
+    setErrors(validationErrors);
+
+    // If there are errors, stop submission
+    if (Object.keys(validationErrors).some(key => validationErrors[key])) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      alert('Forma muvaffaqiyatli yuborildi!');
+
+      // Reset form
+      setFormData({
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        age: '',
+        website: '',
+        bio: ''
+      });
+      setErrors({});
+      setTouched({});
+
+    } catch (error) {
+      alert('Xatolik yuz berdi. Qaytadan urinib ko\'ring.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Check if form is valid
+  const isFormValid = Object.keys(validationRules).every(field =>
+    !validateField(field, formData[field])
+  ) && Object.keys(validationRules).every(field =>
+    formData[field] && formData[field].trim() !== ''
+  );
+
+  return (
+    <form onSubmit={handleSubmit} style={{ maxWidth: '500px', margin: '0 auto' }}>
+      <h2>Validation bilan Forma</h2>
+
+      {/* Username */}
+      <div className="form-group">
+        <label htmlFor="username">Username *</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={errors.username ? 'error' : ''}
+          placeholder="myusername123"
+        />
+        {touched.username && errors.username && (
+          <small className="error-message">{errors.username}</small>
+        )}
+      </div>
+
+      {/* Email */}
+      <div className="form-group">
+        <label htmlFor="email">Email *</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={errors.email ? 'error' : ''}
+          placeholder="email@example.com"
+        />
+        {touched.email && errors.email && (
+          <small className="error-message">{errors.email}</small>
+        )}
+      </div>
+
+      {/* Password */}
+      <div className="form-group">
+        <label htmlFor="password">Parol *</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={errors.password ? 'error' : ''}
+          placeholder="Kuchli parol"
+        />
+        {touched.password && errors.password && (
+          <small className="error-message">{errors.password}</small>
+        )}
+        <small>Kamida 8 belgi, katta va kichik harf, raqam va maxsus belgi</small>
+      </div>
+
+      {/* Confirm Password */}
+      <div className="form-group">
+        <label htmlFor="confirmPassword">Parolni tasdiqlash *</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={errors.confirmPassword ? 'error' : ''}
+          placeholder="Parolni qayta kiriting"
+        />
+        {touched.confirmPassword && errors.confirmPassword && (
+          <small className="error-message">{errors.confirmPassword}</small>
+        )}
+      </div>
+
+      {/* Age */}
+      <div className="form-group">
+        <label htmlFor="age">Yosh *</label>
+        <input
+          type="number"
+          id="age"
+          name="age"
+          value={formData.age}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={errors.age ? 'error' : ''}
+          min="18"
+          max="120"
+        />
+        {touched.age && errors.age && (
+          <small className="error-message">{errors.age}</small>
+        )}
+      </div>
+
+      {/* Website */}
+      <div className="form-group">
+        <label htmlFor="website">Veb-sayt</label>
+        <input
+          type="url"
+          id="website"
+          name="website"
+          value={formData.website}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={errors.website ? 'error' : ''}
+          placeholder="https://mywebsite.com"
+        />
+        {touched.website && errors.website && (
+          <small className="error-message">{errors.website}</small>
+        )}
+      </div>
+
+      {/* Bio */}
+      <div className="form-group">
+        <label htmlFor="bio">Bio</label>
+        <textarea
+          id="bio"
+          name="bio"
+          value={formData.bio}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          rows="4"
+          placeholder="O'zingiz haqingizda qisqacha..."
+        />
+        <small>{formData.bio.length}/500 belgi</small>
+      </div>
+
+      {/* Submit Button */}
+      <button
+        type="submit"
+        disabled={!isFormValid || isSubmitting}
+        className={isFormValid && !isSubmitting ? 'valid' : 'invalid'}
+      >
+        {isSubmitting ? 'Yuborilmoqda...' : 'Ro\'yxatdan o\'tish'}
+      </button>
+
+      {/* Form Status */}
+      <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f8f9fa' }}>
+        <h4>Forma holati:</h4>
+        <p>Valid: {isFormValid ? '✅ Ha' : '❌ Yo\'q'}</p>
+        <p>Yuborilmoqda: {isSubmitting ? '🔄 Ha' : '⏸ Yo\'q'}</p>
+
+        <details>
+          <summary>Xatoliklar</summary>
+          <pre>{JSON.stringify(errors, null, 2)}</pre>
+        </details>
+      </div>
+
+      <style jsx>{`
+        .form-group {
+          margin-bottom: 20px;
+        }
+
+        .form-group label {
+          display: block;
+          margin-bottom: 5px;
+          font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+          width: 100%;
+          padding: 10px;
+          border: 2px solid #ddd;
+          border-radius: 4px;
+          font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+          outline: none;
+          border-color: #007bff;
+        }
+
+        .form-group input.error,
+        .form-group textarea.error {
+          border-color: #dc3545;
+        }
+
+        .error-message {
+          color: #dc3545;
+          display: block;
+          margin-top: 5px;
+        }
+
+        .form-group small {
+          color: #6c757d;
+          font-size: 14px;
+        }
+
+        button[type="submit"] {
+          width: 100%;
+          padding: 15px;
+          font-size: 18px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+
+        button[type="submit"].valid {
+          background-color: #28a745;
+          color: white;
+        }
+
+        button[type="submit"].invalid {
+          background-color: #6c757d;
+          color: white;
+          cursor: not-allowed;
+        }
+
+        button[type="submit"]:disabled {
+          opacity: 0.6;
+        }
+      `}</style>
+    </form>
+  );
+}
+```
+
+## 5. Dynamic Forms
+
+Dinamik form field'lar yaratish:
+
+```jsx
+function DynamicForm() {
+  const [form, setForm] = useState({
+    name: '',
+    skills: [{ skill: '', experience: '' }],
+    projects: [{ title: '', description: '', technologies: '' }],
+    education: [{ degree: '', institution: '', year: '' }]
+  });
+
+  // Add new skill
+  const addSkill = () => {
+    setForm(prev => ({
+      ...prev,
+      skills: [...prev.skills, { skill: '', experience: '' }]
+    }));
+  };
+
+  // Remove skill
+  const removeSkill = (index) => {
+    setForm(prev => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update skill
+  const updateSkill = (index, field, value) => {
+    setForm(prev => ({
+      ...prev,
+      skills: prev.skills.map((skill, i) =>
+        i === index ? { ...skill, [field]: value } : skill
+      )
+    }));
+  };
+
+  // Add new project
+  const addProject = () => {
+    setForm(prev => ({
+      ...prev,
+      projects: [...prev.projects, { title: '', description: '', technologies: '' }]
+    }));
+  };
+
+  // Remove project
+  const removeProject = (index) => {
+    setForm(prev => ({
+      ...prev,
+      projects: prev.projects.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update project
+  const updateProject = (index, field, value) => {
+    setForm(prev => ({
+      ...prev,
+      projects: prev.projects.map((project, i) =>
+        i === index ? { ...project, [field]: value } : project
+      )
+    }));
+  };
+
+  // Add new education
+  const addEducation = () => {
+    setForm(prev => ({
+      ...prev,
+      education: [...prev.education, { degree: '', institution: '', year: '' }]
+    }));
+  };
+
+  // Remove education
+  const removeEducation = (index) => {
+    setForm(prev => ({
+      ...prev,
+      education: prev.education.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update education
+  const updateEducation = (index, field, value) => {
+    setForm(prev => ({
+      ...prev,
+      education: prev.education.map((edu, i) =>
+        i === index ? { ...edu, [field]: value } : edu
+      )
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    console.log('Dinamik forma ma\'lumotlari:', form);
+    alert('Dinamik forma yuborildi! Console\'ni tekshiring.');
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <h2>Dinamik CV Forma</h2>
+
+      {/* Basic Info */}
+      <fieldset>
+        <legend>Asosiy Ma'lumotlar</legend>
+        <div>
+          <label>To'liq ism:</label>
+          <input
+            type="text"
+            value={form.name}
+            onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="To'liq ismingiz"
+            required
+          />
+        </div>
+      </fieldset>
+
+      {/* Skills */}
+      <fieldset>
+        <legend>Malakalar</legend>
+        {form.skills.map((skill, index) => (
+          <div key={index} style={{ border: '1px solid #ddd', padding: '10px', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input
+                type="text"
+                placeholder="Malaka nomi"
+                value={skill.skill}
+                onChange={(e) => updateSkill(index, 'skill', e.target.value)}
+                style={{ flex: 1 }}
+              />
+              <select
+                value={skill.experience}
+                onChange={(e) => updateSkill(index, 'experience', e.target.value)}
+                style={{ flex: 1 }}
+              >
+                <option value="">Tajriba darajasi</option>
+                <option value="beginner">Boshlang'ich</option>
+                <option value="intermediate">O'rta</option>
+                <option value="advanced">Yuqori</option>
+                <option value="expert">Mutaxassis</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => removeSkill(index)}
+                disabled={form.skills.length === 1}
+                style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '5px 10px' }}
+              >
+                O'chirish
+              </button>
+            </div>
+          </div>
+        ))}
+        <button type="button" onClick={addSkill}>
+          ➕ Yangi malaka qo'shish
+        </button>
+      </fieldset>
+
+      {/* Projects */}
+      <fieldset>
+        <legend>Loyihalar</legend>
+        {form.projects.map((project, index) => (
+          <div key={index} style={{ border: '1px solid #ddd', padding: '15px', marginBottom: '10px' }}>
+            <div>
+              <input
+                type="text"
+                placeholder="Loyiha nomi"
+                value={project.title}
+                onChange={(e) => updateProject(index, 'title', e.target.value)}
+                style={{ width: '100%', marginBottom: '10px' }}
+              />
+            </div>
+            <div>
+              <textarea
+                placeholder="Loyiha tavsifi"
+                value={project.description}
+                onChange={(e) => updateProject(index, 'description', e.target.value)}
+                rows="3"
+                style={{ width: '100%', marginBottom: '10px' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input
+                type="text"
+                placeholder="Ishlatilgan texnologiyalar (vergul bilan ajrating)"
+                value={project.technologies}
+                onChange={(e) => updateProject(index, 'technologies', e.target.value)}
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={() => removeProject(index)}
+                disabled={form.projects.length === 1}
+                style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '5px 10px' }}
+              >
+                O'chirish
+              </button>
+            </div>
+          </div>
+        ))}
+        <button type="button" onClick={addProject}>
+          ➕ Yangi loyiha qo'shish
+        </button>
+      </fieldset>
+
+      {/* Education */}
+      <fieldset>
+        <legend>Ta'lim</legend>
+        {form.education.map((edu, index) => (
+          <div key={index} style={{ border: '1px solid #ddd', padding: '10px', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input
+                type="text"
+                placeholder="Ilmiy daraja / Mutaxassislik"
+                value={edu.degree}
+                onChange={(e) => updateEducation(index, 'degree', e.target.value)}
+                style={{ flex: 2 }}
+              />
+              <input
+                type="text"
+                placeholder="Ta'lim muassasasi"
+                value={edu.institution}
+                onChange={(e) => updateEducation(index, 'institution', e.target.value)}
+                style={{ flex: 2 }}
+              />
+              <input
+                type="number"
+                placeholder="Yil"
+                value={edu.year}
+                onChange={(e) => updateEducation(index, 'year', e.target.value)}
+                min="1950"
+                max={new Date().getFullYear()}
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={() => removeEducation(index)}
+                disabled={form.education.length === 1}
+                style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '5px 10px' }}
+              >
+                O'chirish
+              </button>
+            </div>
+          </div>
+        ))}
+        <button type="button" onClick={addEducation}>
+          ➕ Yangi ta'lim qo'shish
+        </button>
+      </fieldset>
+
+      <button
+        type="submit"
+        style={{
+          width: '100%',
+          padding: '15px',
+          backgroundColor: '#007bff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          fontSize: '18px',
+          cursor: 'pointer'
+        }}
+      >
+        CV ni saqlash
+      </button>
+
+      {/* Preview */}
+      <details style={{ marginTop: '20px' }}>
+        <summary>CV Preview</summary>
+        <div style={{ backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px' }}>
+          <h3>{form.name || 'Ism kiritilmagan'}</h3>
+
+          <h4>Malakalar:</h4>
+          <ul>
+            {form.skills.map((skill, index) => (
+              <li key={index}>
+                {skill.skill} - {skill.experience}
+              </li>
+            ))}
+          </ul>
+
+          <h4>Loyihalar:</h4>
+          {form.projects.map((project, index) => (
+            <div key={index}>
+              <h5>{project.title}</h5>
+              <p>{project.description}</p>
+              <p><strong>Texnologiyalar:</strong> {project.technologies}</p>
+            </div>
+          ))}
+
+          <h4>Ta'lim:</h4>
+          <ul>
+            {form.education.map((edu, index) => (
+              <li key={index}>
+                {edu.degree} - {edu.institution} ({edu.year})
+              </li>
+            ))}
+          </ul>
+        </div>
+      </details>
+    </form>
+  );
+}
+```
+
+## Xulosa va Best Practices
+
+### ✅ Form handling best practices:
+1. **Controlled components** - React state orqali form'larni boshqarish
+2. **Real-time validation** - foydalanuvchi yozgan paytda tekshirish
+3. **Accessibility** - label, aria-* attributelar ishlatish
+4. **Error handling** - aniq va foydali xatolik xabarlari
+5. **UX** - loading states, disable vs busy states
+
+### 🎯 Validation strategiyalari:
+1. **Client-side** - tez feedback uchun
+2. **Server-side** - xavfsizlik uchun
+3. **Progressive enhancement** - HTML5 validation + JS
+4. **Custom rules** - business logic uchun
+
+### 📚 Keyingi mavzular:
+1. **Lists va Keys** - optimized list rendering
+2. **Context API** - form state ni global boshqarish
+3. **Custom hooks** - form logic'ni qayta ishlatish
+4. **Third-party libraries** - Formik, React Hook Form
+
+Form'lar zamonaviy web ilovalarning markazidir va React'da ularni to'g'ri boshqarish user experience'ni sezilarli darajada yaxshilaydi!

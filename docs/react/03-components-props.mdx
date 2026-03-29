@@ -1,0 +1,893 @@
+---
+title: "React Komponentlar va Props"
+description: "React komponentlar yaratish, props orqali ma'lumot uzatish va component composition asoslari"
+category: "react"
+order: 3
+tags:
+  - react
+  - components
+  - props
+  - composition
+  - frontend
+difficulty: "beginner"
+readTime: 25
+---
+
+# React Komponentlar va Props
+
+React komponentlar - bu foydalanuvchi interfyesini tuzish uchun ishlatiladigan qayta ishlatilishi mumkin bo'lgan kod bloklari. Props (properties) orqali esa komponentlar o'rtasida ma'lumot uzatiladi.
+
+## 1. React Komponent Nima?
+
+React komponent - bu:
+- **Qayta ishlatilishi mumkin** kod bloki
+- **Mustaqil** va izolyatsiya qilingan
+- **Props** orqali ma'lumot qabul qiladi
+- **JSX** qaytaradi
+
+### Komponent turlari:
+
+1. **Function Components** (Zamonaviy yondashuv)
+2. ~~Class Components~~ (Eski yondashuv)
+
+## 2. Function Components
+
+Function komponentlar - oddiy JavaScript funksiyalari bo'lib, JSX qaytaradi.
+
+### Eng oddiy komponent:
+
+```jsx
+function Welcome() {
+  return <h1>Salom, React!</h1>;
+}
+
+// Yoki Arrow function
+const Welcome = () => {
+  return <h1>Salom, React!</h1>;
+};
+
+// Qisqartirilgan ko'rinish
+const Welcome = () => <h1>Salom, React!</h1>;
+```
+
+### Komponentni ishlatish:
+
+```jsx
+function App() {
+  return (
+    <div>
+      <Welcome />
+      <Welcome />
+      <Welcome />
+    </div>
+  );
+}
+```
+
+## 3. Props - Ma'lumot Uzatish
+
+Props orqali komponentlarga ma'lumot va funksiyalar uzatiladi.
+
+### Asosiy props ishlatish:
+
+```jsx
+// Props qabul qiluvchi komponent
+function Greeting(props) {
+  return <h1>Salom, {props.name}!</h1>;
+}
+
+// Komponentni props bilan chaqirish
+function App() {
+  return (
+    <div>
+      <Greeting name="Ali" />
+      <Greeting name="Vali" />
+      <Greeting name="Guli" />
+    </div>
+  );
+}
+```
+
+### Destructuring bilan:
+
+```jsx
+// Object destructuring
+function Greeting({ name, age }) {
+  return (
+    <div>
+      <h1>Salom, {name}!</h1>
+      <p>Yosh: {age}</p>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div>
+      <Greeting name="Ali" age={25} />
+      <Greeting name="Vali" age={30} />
+    </div>
+  );
+}
+```
+
+### Turli xil props turlari:
+
+```jsx
+function UserCard({
+  name,
+  age,
+  isOnline,
+  hobbies,
+  address,
+  avatar
+}) {
+  return (
+    <div className="user-card">
+      {/* String prop */}
+      <h2>{name}</h2>
+
+      {/* Number prop */}
+      <p>Yosh: {age} yoshda</p>
+
+      {/* Boolean prop */}
+      <span className={isOnline ? 'online' : 'offline'}>
+        {isOnline ? '🟢 Onlayn' : '🔴 Oflayn'}
+      </span>
+
+      {/* Array prop */}
+      <div>
+        <strong>Qiziqishlar:</strong>
+        <ul>
+          {hobbies.map((hobby, index) => (
+            <li key={index}>{hobby}</li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Object prop */}
+      <div>
+        <strong>Manzil:</strong>
+        <p>{address.city}, {address.country}</p>
+      </div>
+
+      {/* URL/Image prop */}
+      {avatar && <img src={avatar} alt={`${name} avatar`} />}
+    </div>
+  );
+}
+
+function App() {
+  const userData = {
+    name: "Ali Valiyev",
+    age: 28,
+    isOnline: true,
+    hobbies: ["Kitob o'qish", "Futbol", "Dasturlash"],
+    address: {
+      city: "Toshkent",
+      country: "O'zbekiston"
+    },
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+  };
+
+  return (
+    <div>
+      <UserCard {...userData} />
+    </div>
+  );
+}
+```
+
+## 4. Props Default Qiymatlari
+
+Komponentlarga default props berish:
+
+```jsx
+// ES6 default parametrlar
+function Button({
+  text = "Tugma",
+  type = "button",
+  onClick = () => {},
+  disabled = false,
+  variant = "primary"
+}) {
+  const getButtonClass = () => {
+    const baseClass = "btn";
+    const variantClass = `btn-${variant}`;
+    const disabledClass = disabled ? "btn-disabled" : "";
+
+    return `${baseClass} ${variantClass} ${disabledClass}`.trim();
+  };
+
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={getButtonClass()}
+    >
+      {text}
+    </button>
+  );
+}
+
+function App() {
+  return (
+    <div>
+      {/* Default qiymatlar bilan */}
+      <Button />
+
+      {/* Custom qiymatlar bilan */}
+      <Button
+        text="Saqlash"
+        variant="success"
+        onClick={() => alert('Saqlandi!')}
+      />
+
+      <Button
+        text="O'chirish"
+        variant="danger"
+        onClick={() => alert('O\'chirildi!')}
+      />
+
+      <Button
+        text="Yuklayapti..."
+        disabled={true}
+      />
+    </div>
+  );
+}
+```
+
+## 5. Props Validation (Prop Types)
+
+Props turlari va majburiyligini tekshirish:
+
+```jsx
+import PropTypes from 'prop-types';
+
+function StudentCard({ name, age, grade, subjects, isActive }) {
+  return (
+    <div className={`student-card ${!isActive ? 'inactive' : ''}`}>
+      <h3>{name}</h3>
+      <p>Yosh: {age}</p>
+      <p>Sinf: {grade}</p>
+      <div>
+        <strong>Fanlar:</strong>
+        <ul>
+          {subjects.map((subject, index) => (
+            <li key={index}>{subject}</li>
+          ))}
+        </ul>
+      </div>
+      <p>Holat: {isActive ? 'Faol' : 'Faol emas'}</p>
+    </div>
+  );
+}
+
+// PropTypes validation
+StudentCard.propTypes = {
+  name: PropTypes.string.isRequired,
+  age: PropTypes.number.isRequired,
+  grade: PropTypes.number.isRequired,
+  subjects: PropTypes.arrayOf(PropTypes.string).isRequired,
+  isActive: PropTypes.bool
+};
+
+// Default props
+StudentCard.defaultProps = {
+  isActive: true
+};
+
+function App() {
+  const students = [
+    {
+      name: "Ali Karimov",
+      age: 16,
+      grade: 10,
+      subjects: ["Matematika", "Fizika", "Tarix"],
+      isActive: true
+    },
+    {
+      name: "Zarina Tosheva",
+      age: 15,
+      grade: 9,
+      subjects: ["Kimyo", "Biologiya", "Ingliz tili"],
+      isActive: false
+    }
+  ];
+
+  return (
+    <div>
+      {students.map((student, index) => (
+        <StudentCard key={index} {...student} />
+      ))}
+    </div>
+  );
+}
+```
+
+## 6. Component Composition
+
+Kichik komponentlardan katta komponentlar tuzish.
+
+### Card komponent tizimi:
+
+```jsx
+// Asosiy Card komponenti
+function Card({ children, className = "" }) {
+  return (
+    <div className={`card ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+// Card qismlari
+function CardHeader({ children }) {
+  return <div className="card-header">{children}</div>;
+}
+
+function CardBody({ children }) {
+  return <div className="card-body">{children}</div>;
+}
+
+function CardFooter({ children }) {
+  return <div className="card-footer">{children}</div>;
+}
+
+// Maxsus komponentlar
+function BlogPost({ title, content, author, publishDate, tags }) {
+  return (
+    <Card className="blog-post">
+      <CardHeader>
+        <h2>{title}</h2>
+        <div className="meta">
+          <span>Muallif: {author}</span>
+          <span>Sana: {new Date(publishDate).toLocaleDateString()}</span>
+        </div>
+      </CardHeader>
+
+      <CardBody>
+        <p>{content}</p>
+
+        <div className="tags">
+          {tags.map((tag, index) => (
+            <span key={index} className="tag">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      </CardBody>
+
+      <CardFooter>
+        <button>Batafsil</button>
+        <button>Ulashish</button>
+        <button>Saqlab qo'yish</button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function ProductCard({ name, price, image, discount, rating }) {
+  const discountedPrice = discount ? price - (price * discount / 100) : price;
+
+  return (
+    <Card className="product-card">
+      <div className="product-image">
+        <img src={image} alt={name} />
+        {discount && (
+          <div className="discount-badge">
+            -{discount}%
+          </div>
+        )}
+      </div>
+
+      <CardBody>
+        <h3>{name}</h3>
+        <div className="price">
+          {discount && (
+            <span className="old-price">${price}</span>
+          )}
+          <span className="current-price">${discountedPrice}</span>
+        </div>
+
+        <div className="rating">
+          {'⭐'.repeat(Math.floor(rating))} ({rating}/5)
+        </div>
+      </CardBody>
+
+      <CardFooter>
+        <button className="btn-primary">Savotga qo'shish</button>
+      </CardFooter>
+    </Card>
+  );
+}
+```
+
+## 7. Children Prop
+
+Komponentlar ichiga boshqa komponentlar joylash:
+
+```jsx
+function Modal({ isOpen, title, children, onClose }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{title}</h2>
+          <button className="close-btn" onClick={onClose}>
+            ✕
+          </button>
+        </div>
+
+        <div className="modal-body">
+          {children}
+        </div>
+
+        <div className="modal-footer">
+          <button onClick={onClose}>Yopish</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmationModal({ isOpen, onConfirm, onCancel, children }) {
+  return (
+    <Modal isOpen={isOpen} title="Tasdiqlash" onClose={onCancel}>
+      {children}
+      <div className="confirmation-buttons">
+        <button className="btn-danger" onClick={onConfirm}>
+          Ha, tasdiqlash
+        </button>
+        <button className="btn-secondary" onClick={onCancel}>
+          Bekor qilish
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+function App() {
+  const [showModal, setShowModal] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setShowModal(true)}>
+        Modal ochish
+      </button>
+
+      <button onClick={() => setShowConfirm(true)}>
+        Tasdiqlash modal
+      </button>
+
+      <Modal
+        isOpen={showModal}
+        title="Ma'lumot modali"
+        onClose={() => setShowModal(false)}
+      >
+        <p>Bu yerda istalgan kontent bo'lishi mumkin:</p>
+        <ul>
+          <li>Ro'yxat elementlari</li>
+          <li>Formalar</li>
+          <li>Rasmlar va boshqalar</li>
+        </ul>
+        <img
+          src="https://via.placeholder.com/300x200"
+          alt="Namuna rasm"
+        />
+      </Modal>
+
+      <ConfirmationModal
+        isOpen={showConfirm}
+        onConfirm={() => {
+          alert('Tasdiqlandi!');
+          setShowConfirm(false);
+        }}
+        onCancel={() => setShowConfirm(false)}
+      >
+        <p>
+          Bu amaliyotni bajarishni tasdiqlaysizmi?
+          Bu amal qaytarib bo'lmasligi mumkin.
+        </p>
+      </ConfirmationModal>
+    </div>
+  );
+}
+```
+
+## 8. Render Props Pattern
+
+Funksiya orqali komponent tarkibini aniqlash:
+
+```jsx
+function MouseTracker({ children }) {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (event) => {
+      setMousePosition({
+        x: event.clientX,
+        y: event.clientY
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
+  return children(mousePosition);
+}
+
+function App() {
+  return (
+    <div>
+      <h2>Mouse Tracker Demo</h2>
+
+      <MouseTracker>
+        {({ x, y }) => (
+          <div>
+            <p>Sichqoncha pozitsiyasi: ({x}, {y})</p>
+            <div
+              style={{
+                position: 'fixed',
+                left: x + 10,
+                top: y + 10,
+                width: '20px',
+                height: '20px',
+                backgroundColor: 'red',
+                borderRadius: '50%',
+                pointerEvents: 'none'
+              }}
+            />
+          </div>
+        )}
+      </MouseTracker>
+
+      <MouseTracker>
+        {({ x, y }) => (
+          <div style={{
+            position: 'fixed',
+            left: x - 50,
+            top: y - 50,
+            width: '100px',
+            height: '100px',
+            border: '2px solid blue',
+            borderRadius: '50%',
+            pointerEvents: 'none'
+          }} />
+        )}
+      </MouseTracker>
+    </div>
+  );
+}
+```
+
+## 9. Higher-Order Components (HOC)
+
+Komponentlarni wrapper qiluvchi funksiyalar:
+
+```jsx
+// HOC yaratish
+function withLoading(WrappedComponent) {
+  return function WithLoadingComponent(props) {
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+      // Simulyatsiya qilingan loading
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }, []);
+
+    if (isLoading) {
+      return (
+        <div className="loading">
+          <p>Yuklanmoqda...</p>
+          <div className="spinner"></div>
+        </div>
+      );
+    }
+
+    return <WrappedComponent {...props} />;
+  };
+}
+
+// HOC bilan wrapper qilish
+function UserList({ users }) {
+  return (
+    <div>
+      <h2>Foydalanuvchilar ro'yxati</h2>
+      {users.map(user => (
+        <div key={user.id} className="user-item">
+          <h3>{user.name}</h3>
+          <p>{user.email}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const UserListWithLoading = withLoading(UserList);
+
+function App() {
+  const users = [
+    { id: 1, name: "Ali", email: "ali@example.com" },
+    { id: 2, name: "Vali", email: "vali@example.com" },
+  ];
+
+  return (
+    <div>
+      <UserListWithLoading users={users} />
+    </div>
+  );
+}
+```
+
+## 10. Amaliy Loyiha - E-commerce Card System
+
+Komponentlar va props bilimini qo'llash:
+
+```jsx
+import React, { useState } from 'react';
+
+// Asosiy ikonka komponentlari
+function StarIcon({ filled = false }) {
+  return (
+    <span className={`star ${filled ? 'filled' : ''}`}>
+      {filled ? '⭐' : '☆'}
+    </span>
+  );
+}
+
+function HeartIcon({ liked = false, onClick }) {
+  return (
+    <button
+      className={`heart-btn ${liked ? 'liked' : ''}`}
+      onClick={onClick}
+    >
+      {liked ? '❤️' : '🤍'}
+    </button>
+  );
+}
+
+// Rating komponenti
+function Rating({ rating, maxRating = 5, reviewCount = 0 }) {
+  return (
+    <div className="rating">
+      <div className="stars">
+        {Array.from({ length: maxRating }, (_, index) => (
+          <StarIcon key={index} filled={index < Math.floor(rating)} />
+        ))}
+      </div>
+      <span className="rating-text">
+        {rating} ({reviewCount} sharh)
+      </span>
+    </div>
+  );
+}
+
+// Narx komponenti
+function Price({
+  currentPrice,
+  originalPrice,
+  currency = "UZS",
+  discount
+}) {
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('uz-UZ').format(price);
+  };
+
+  return (
+    <div className="price">
+      <span className="current-price">
+        {formatPrice(currentPrice)} {currency}
+      </span>
+
+      {originalPrice && originalPrice > currentPrice && (
+        <span className="original-price">
+          {formatPrice(originalPrice)} {currency}
+        </span>
+      )}
+
+      {discount && (
+        <span className="discount-badge">
+          -{discount}%
+        </span>
+      )}
+    </div>
+  );
+}
+
+// Mahsulot kartasi
+function ProductCard({
+  id,
+  title,
+  description,
+  image,
+  currentPrice,
+  originalPrice,
+  rating,
+  reviewCount,
+  category,
+  isNew = false,
+  discount,
+  onAddToCart,
+  onToggleFavorite,
+  isFavorite = false
+}) {
+  return (
+    <div className="product-card">
+      {/* Rasm va bejlar */}
+      <div className="product-image">
+        <img src={image} alt={title} />
+
+        <div className="badges">
+          {isNew && <span className="new-badge">Yangi</span>}
+          {discount && <span className="discount-badge">-{discount}%</span>}
+        </div>
+
+        <div className="heart-container">
+          <HeartIcon
+            liked={isFavorite}
+            onClick={() => onToggleFavorite(id)}
+          />
+        </div>
+      </div>
+
+      {/* Mahsulot ma'lumotlari */}
+      <div className="product-info">
+        <div className="category">{category}</div>
+
+        <h3 className="title">{title}</h3>
+
+        <p className="description">{description}</p>
+
+        <Rating
+          rating={rating}
+          reviewCount={reviewCount}
+        />
+
+        <Price
+          currentPrice={currentPrice}
+          originalPrice={originalPrice}
+          discount={discount}
+        />
+
+        <button
+          className="add-to-cart-btn"
+          onClick={() => onAddToCart({ id, title, price: currentPrice })}
+        >
+          🛒 Savotga qo'shish
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Mahsulotlar grid
+function ProductGrid({ products, favorites, onAddToCart, onToggleFavorite }) {
+  if (products.length === 0) {
+    return (
+      <div className="empty-state">
+        <p>Mahsulotlar topilmadi</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="product-grid">
+      {products.map(product => (
+        <ProductCard
+          key={product.id}
+          {...product}
+          isFavorite={favorites.includes(product.id)}
+          onAddToCart={onAddToCart}
+          onToggleFavorite={onToggleFavorite}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Asosiy App
+function App() {
+  const [cart, setCart] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+
+  const products = [
+    {
+      id: 1,
+      title: "Samsung Galaxy S24",
+      description: "Eng yangi Samsung smartfoni",
+      image: "https://via.placeholder.com/300x300",
+      currentPrice: 12000000,
+      originalPrice: 15000000,
+      rating: 4.5,
+      reviewCount: 128,
+      category: "Smartfonlar",
+      isNew: true,
+      discount: 20
+    },
+    {
+      id: 2,
+      title: "MacBook Pro M3",
+      description: "Apple'ning eng kuchli noutbuki",
+      image: "https://via.placeholder.com/300x300",
+      currentPrice: 25000000,
+      rating: 4.8,
+      reviewCount: 89,
+      category: "Noutbuklar",
+      isNew: false
+    }
+  ];
+
+  const addToCart = (product) => {
+    setCart([...cart, product]);
+    alert(`${product.title} savotga qo'shildi!`);
+  };
+
+  const toggleFavorite = (productId) => {
+    if (favorites.includes(productId)) {
+      setFavorites(favorites.filter(id => id !== productId));
+    } else {
+      setFavorites([...favorites, productId]);
+    }
+  };
+
+  return (
+    <div className="app">
+      <header>
+        <h1>🛍️ Onlayn Do'kon</h1>
+        <div className="header-stats">
+          <span>Savatda: {cart.length} ta mahsulot</span>
+          <span>Sevimlilar: {favorites.length} ta</span>
+        </div>
+      </header>
+
+      <main>
+        <ProductGrid
+          products={products}
+          favorites={favorites}
+          onAddToCart={addToCart}
+          onToggleFavorite={toggleFavorite}
+        />
+      </main>
+    </div>
+  );
+}
+
+export default App;
+```
+
+## Xulosa va Best Practices
+
+### ✅ Komponentlar uchun best practices:
+1. **Kichik va fokusli** komponentlar yarating
+2. **Descriptive names** - komponent nomi vazifasini aks ettirsin
+3. **Props validation** - PropTypes yoki TypeScript ishlatib
+4. **Default values** - komponentni ishlatishni osonlashtiradi
+5. **Pure components** - bir xil props uchun bir xil natija
+
+### 🎯 Props bo'yicha tavsiyalar:
+1. **Destructuring** - props'ni destructure qiling
+2. **Spread operator** - ko'p props'ni uzatish uchun
+3. **Boolean props** - default true qiymatlar uchun
+4. **Functions as props** - parent-child aloqa uchun
+
+### 📚 Keyingi mavzular:
+1. **State management** - useState va stateful komponentlar
+2. **Event handling** - foydalanuvchi bilan o'zaro aloqa
+3. **Lifecycle methods** - useEffect va komponent hayotiy sikli
+4. **Context API** - global state boshqarish
+
+Komponentlar va props'ni yaxshi bilish React development'da muvaffaqiyat kafolatidir!

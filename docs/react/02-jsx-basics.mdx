@@ -1,0 +1,673 @@
+---
+title: "JSX Asoslari va Sintaksis"
+description: "JSX nima, qanday ishlaydi va React komponentlarda elementlar yaratish asoslari"
+category: "react"
+order: 2
+tags:
+  - react
+  - jsx
+  - syntax
+  - frontend
+  - javascript
+difficulty: "beginner"
+readTime: 20
+---
+
+# JSX Asoslari va Sintaksis
+
+JSX (JavaScript XML) - bu JavaScript uchun sintaksis kengaytma bo'lib, React elementlarini yaratishda HTML ga o'xshash sintaksisdan foydalanish imkonini beradi. JSX React'ning eng muhim qismlaridan biri hisoblanadi.
+
+## JSX nima?
+
+JSX HTML va JavaScript'ni birlashtiruvchi sintaksis bo'lib, React komponentalarda UI strukturasini aniqlash uchun ishlatiladi.
+
+### JSX vs oddiy JavaScript:
+
+```jsx
+// JSX yozuvi
+const element = <h1>Hello, JSX!</h1>;
+
+// Oddiy JavaScript'da (JSX kompayl qilinganidan keyin):
+const element = React.createElement('h1', null, 'Hello, JSX!');
+```
+
+## 1. JSX Sintaksis Qoidalari
+
+### Asosiy qoidalar:
+- **Bitta parent element** - JSX faqat bitta root element qaytarishi kerak
+- **Tag'lar yopilib turishi kerak** - HTML'dan farqli ravishda barcha tag'lar yopilishi shart
+- **camelCase attributelar** - CSS va HTML attributelar camelCase formatida yoziladi
+
+### ✅ To'g'ri yozilishi:
+
+```jsx
+// ✅ Bitta parent element
+function MyComponent() {
+  return (
+    <div>
+      <h1>Sarlavha</h1>
+      <p>Paragraf matni</p>
+    </div>
+  );
+}
+
+// ✅ React Fragment orqali
+function MyComponent() {
+  return (
+    <>
+      <h1>Sarlavha</h1>
+      <p>Paragraf matni</p>
+    </>
+  );
+}
+
+// ✅ React.Fragment orqali
+function MyComponent() {
+  return (
+    <React.Fragment>
+      <h1>Sarlavha</h1>
+      <p>Paragraf matni</p>
+    </React.Fragment>
+  );
+}
+```
+
+### ❌ Noto'g'ri yozilishi:
+
+```jsx
+// ❌ Bir nechta root element
+function MyComponent() {
+  return (
+    <h1>Sarlavha</h1>
+    <p>Paragraf</p>  // Xatolik!
+  );
+}
+
+// ❌ Yopilmagan tag'lar
+function MyComponent() {
+  return (
+    <div>
+      <img src="image.jpg">  // ❌ Yopilmagan
+      <br>                    // ❌ Yopilmagan
+    </div>
+  );
+}
+
+// ✅ To'g'ri yozilishi:
+function MyComponent() {
+  return (
+    <div>
+      <img src="image.jpg" />
+      <br />
+    </div>
+  );
+}
+```
+
+## 2. JavaScript Ifodalar JSX da
+
+JSX ichida JavaScript ifodalarni `{}` (jingalak qavslar) ichiga yozish mumkin.
+
+### O'zgaruvchilar va funksiyalar:
+
+```jsx
+function WelcomeMessage() {
+  const userName = "Ali";
+  const currentTime = new Date().toLocaleTimeString();
+  const isLoggedIn = true;
+
+  return (
+    <div>
+      <h1>Salom, {userName}!</h1>
+      <p>Hozirgi vaqt: {currentTime}</p>
+      <p>Holat: {isLoggedIn ? "Kirishgan" : "Chiqishgan"}</p>
+    </div>
+  );
+}
+```
+
+### Matematik amallar va funksiya chaqiruv:
+
+```jsx
+function Calculator() {
+  const a = 10;
+  const b = 5;
+
+  const getRandomNumber = () => Math.floor(Math.random() * 100);
+
+  return (
+    <div>
+      <p>Yig'indi: {a + b}</p>
+      <p>Ko'paytma: {a * b}</p>
+      <p>Tasodifiy son: {getRandomNumber()}</p>
+      <p>Kapital harflar: {"salom".toUpperCase()}</p>
+    </div>
+  );
+}
+```
+
+### Array'lar bilan ishlash:
+
+```jsx
+function TodoList() {
+  const todos = [
+    { id: 1, text: "React o'rganish", completed: false },
+    { id: 2, text: "Loyiha yaratish", completed: true },
+    { id: 3, text: "Portfolio tayyorlash", completed: false }
+  ];
+
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo.id}>
+          {todo.text} - {todo.completed ? "✅" : "❌"}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## 3. JSX Attributelar
+
+HTML attributelariga o'xshash, lekin ba'zi farqlar mavjud.
+
+### HTML vs JSX attributelar:
+
+| HTML | JSX | Sabab |
+|------|-----|--------|
+| `class` | `className` | JavaScript'da class - reserved keyword |
+| `for` | `htmlFor` | JavaScript'da for - reserved keyword |
+| `onclick` | `onClick` | CamelCase formatda |
+| `onchange` | `onChange` | CamelCase formatda |
+| `tabindex` | `tabIndex` | CamelCase formatda |
+
+### Misollar:
+
+```jsx
+function LoginForm() {
+  const handleSubmit = () => {
+    console.log("Forma yuborildi");
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="username">Foydalanuvchi nomi:</label>
+      <input
+        id="username"
+        type="text"
+        className="input-field"
+        placeholder="Nomingizni kiriting"
+        autoComplete="username"
+      />
+
+      <label htmlFor="password">Parol:</label>
+      <input
+        id="password"
+        type="password"
+        className="input-field secure"
+        autoComplete="current-password"
+      />
+
+      <button
+        type="submit"
+        className="btn btn-primary"
+        onClick={handleSubmit}
+      >
+        Kirish
+      </button>
+    </form>
+  );
+}
+```
+
+### Style attributi:
+
+```jsx
+function StyledComponent() {
+  const containerStyle = {
+    backgroundColor: "#f0f0f0",
+    padding: "20px",
+    border: "1px solid #ccc",
+    borderRadius: "8px"
+  };
+
+  const titleStyle = {
+    color: "#333",
+    fontSize: "24px",
+    fontWeight: "bold",
+    marginBottom: "10px"
+  };
+
+  return (
+    <div style={containerStyle}>
+      <h1 style={titleStyle}>Sarlavha</h1>
+      <p style={{ color: "blue", fontSize: "16px" }}>
+        Shartli matn
+      </p>
+    </div>
+  );
+}
+```
+
+## 4. Shartli Rendering
+
+JSX da element yoki kontentni shartli ravishda ko'rsatish.
+
+### Ternary operator:
+
+```jsx
+function UserProfile({ user }) {
+  return (
+    <div>
+      {user ? (
+        <div>
+          <h2>Salom, {user.name}!</h2>
+          <p>Email: {user.email}</p>
+        </div>
+      ) : (
+        <p>Iltimos, tizimga kiring.</p>
+      )}
+    </div>
+  );
+}
+```
+
+### Logical && operator:
+
+```jsx
+function NotificationBadge({ count }) {
+  return (
+    <div>
+      <h3>Bildirishnomalar</h3>
+      {count > 0 && (
+        <span className="badge">
+          {count} ta yangi xabar
+        </span>
+      )}
+    </div>
+  );
+}
+```
+
+### Switch case uslubida:
+
+```jsx
+function StatusMessage({ status }) {
+  const renderStatus = () => {
+    switch (status) {
+      case 'loading':
+        return <p>Yuklanmoqda...</p>;
+      case 'success':
+        return <p style={{ color: 'green' }}>Muvaffaqiyatli!</p>;
+      case 'error':
+        return <p style={{ color: 'red' }}>Xatolik yuz berdi!</p>;
+      default:
+        return <p>Noma'lum holat</p>;
+    }
+  };
+
+  return (
+    <div>
+      <h3>Tizim holati</h3>
+      {renderStatus()}
+    </div>
+  );
+}
+```
+
+## 5. Event Handler'lar
+
+JSX da voqealarga javob berish.
+
+### Asosiy event'lar:
+
+```jsx
+function EventExample() {
+  const handleClick = (event) => {
+    console.log("Bosildi!", event.target);
+  };
+
+  const handleChange = (event) => {
+    console.log("Qiymat o'zgartirildi:", event.target.value);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault(); // Standart form submit ni to'xtatish
+    console.log("Forma yuborildi");
+  };
+
+  const handleMouseEnter = () => {
+    console.log("Sichqoncha kiritildi");
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      console.log("Enter tugmasi bosildi");
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleClick}>
+        Click me
+      </button>
+
+      <input
+        type="text"
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        placeholder="Matn kiriting"
+      />
+
+      <form onSubmit={handleSubmit}>
+        <input type="text" placeholder="Forma input" />
+        <button type="submit">Yuborish</button>
+      </form>
+
+      <div
+        onMouseEnter={handleMouseEnter}
+        style={{
+          padding: "20px",
+          backgroundColor: "#f0f0f0",
+          cursor: "pointer"
+        }}
+      >
+        Sichqonchani ustiga olib keling
+      </div>
+    </div>
+  );
+}
+```
+
+### Parametrli event handler'lar:
+
+```jsx
+function ButtonGroup() {
+  const handleButtonClick = (buttonName) => {
+    alert(`${buttonName} tugmasi bosildi!`);
+  };
+
+  const buttons = ['Saqlash', 'O\'chirish', 'Bekor qilish'];
+
+  return (
+    <div>
+      {buttons.map((buttonName, index) => (
+        <button
+          key={index}
+          onClick={() => handleButtonClick(buttonName)}
+          style={{ margin: '5px', padding: '10px' }}
+        >
+          {buttonName}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+## 6. JSX da Comments (Izohlar)
+
+```jsx
+function CommentExample() {
+  return (
+    <div>
+      {/* Bu JSX da izoh - brauzerda ko'rinmaydi */}
+      <h1>Sarlavha</h1>
+
+      {/*
+        Bir nechta qatorli izoh
+        JSX da faqat bunday ko'rinishda yoziladi
+      */}
+
+      <p>Paragraf matni</p>
+
+      {/* Shartli comment */}
+      {false && <span>Bu ko'rinmaydi</span>}
+    </div>
+  );
+}
+```
+
+## 7. JSX va Accessibility (A11y)
+
+Foydalanuvchilar uchun qulay interfeys yaratish:
+
+```jsx
+function AccessibleForm() {
+  return (
+    <form>
+      {/* Label va input ni bog'lash */}
+      <label htmlFor="email">
+        Email manzil *
+      </label>
+      <input
+        id="email"
+        type="email"
+        required
+        aria-describedby="email-help"
+        placeholder="example@email.com"
+      />
+      <div id="email-help">
+        Haqiqiy email manzilini kiriting
+      </div>
+
+      {/* ARIA attributes */}
+      <button
+        type="submit"
+        aria-label="Formani yuborish"
+        disabled={false}
+      >
+        Yuborish
+      </button>
+
+      {/* Screen reader uchun */}
+      <div aria-live="polite" aria-atomic="true">
+        <span className="sr-only">Forma muvaffaqiyatli yuborildi</span>
+      </div>
+    </form>
+  );
+}
+```
+
+## 8. Amaliy Loyiha - Todo App
+
+JSX bilimlarini qo'llash:
+
+```jsx
+import React, { useState } from 'react';
+
+function TodoApp() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: "JSX o'rganish", completed: true },
+    { id: 2, text: "React hooks o'rganish", completed: false }
+  ]);
+
+  const [inputValue, setInputValue] = useState('');
+
+  const addTodo = () => {
+    if (inputValue.trim() !== '') {
+      const newTodo = {
+        id: Date.now(),
+        text: inputValue,
+        completed: false
+      };
+      setTodos([...todos, newTodo]);
+      setInputValue('');
+    }
+  };
+
+  const toggleTodo = (id) => {
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+
+  const deleteTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  const completedCount = todos.filter(todo => todo.completed).length;
+
+  return (
+    <div style={{ maxWidth: '400px', margin: '0 auto', padding: '20px' }}>
+      <h1>📝 Todo Ro'yxati</h1>
+
+      {/* Statistika */}
+      <div style={{
+        backgroundColor: '#f8f9fa',
+        padding: '10px',
+        borderRadius: '5px',
+        marginBottom: '20px'
+      }}>
+        <p>
+          Jami: {todos.length} |
+          Tugallangan: {completedCount} |
+          Qolgan: {todos.length - completedCount}
+        </p>
+      </div>
+
+      {/* Yangi todo qo'shish */}
+      <div style={{ marginBottom: '20px' }}>
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && addTodo()}
+          placeholder="Yangi vazifa kiriting..."
+          style={{
+            width: '70%',
+            padding: '8px',
+            fontSize: '16px'
+          }}
+        />
+        <button
+          onClick={addTodo}
+          style={{
+            width: '25%',
+            padding: '8px',
+            marginLeft: '5%',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '3px',
+            cursor: 'pointer'
+          }}
+        >
+          ➕ Qo'shish
+        </button>
+      </div>
+
+      {/* Todo ro'yxati */}
+      <ul style={{ listStyle: 'none', padding: 0 }}>
+        {todos.length === 0 ? (
+          <li style={{ textAlign: 'center', color: '#666' }}>
+            Hech qanday vazifa yo'q! Yangi vazifa qo'shing.
+          </li>
+        ) : (
+          todos.map(todo => (
+            <li
+              key={todo.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '10px',
+                backgroundColor: todo.completed ? '#d4edda' : '#fff',
+                border: '1px solid #ddd',
+                borderRadius: '5px',
+                marginBottom: '5px'
+              }}
+            >
+              {/* Checkbox */}
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => toggleTodo(todo.id)}
+                style={{ marginRight: '10px', transform: 'scale(1.2)' }}
+              />
+
+              {/* Todo matni */}
+              <span
+                style={{
+                  flex: 1,
+                  textDecoration: todo.completed ? 'line-through' : 'none',
+                  color: todo.completed ? '#666' : '#000',
+                  cursor: 'pointer'
+                }}
+                onClick={() => toggleTodo(todo.id)}
+              >
+                {todo.text}
+              </span>
+
+              {/* O'chirish tugmasi */}
+              <button
+                onClick={() => deleteTodo(todo.id)}
+                style={{
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  padding: '5px 10px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+                aria-label={`"${todo.text}"ni o'chirish`}
+              >
+                🗑️ O'chirish
+              </button>
+            </li>
+          ))
+        )}
+      </ul>
+
+      {/* Barchasini tozalash tugmasi */}
+      {todos.length > 0 && (
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <button
+            onClick={() => {
+              if (window.confirm('Hamma vazifalarni o\'chirmoqchimisiz?')) {
+                setTodos([]);
+              }
+            }}
+            style={{
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '3px',
+              padding: '8px 16px',
+              cursor: 'pointer'
+            }}
+          >
+            🗑️ Barchasini o'chirish
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default TodoApp;
+```
+
+## Xulosa va Keyingi Qadamlar
+
+JSX React'ning asosiy qismi bo'lib, HTML va JavaScript'ni birlashtiradi. Asosiy xususiyatlari:
+
+### ✅ JSX afzalliklari:
+- **Oson o'qiladi** - HTML ga o'xshash sintaksis
+- **Kuchli** - JavaScript ifodalarini ichiga olish mumkin
+- **Xavfsiz** - XSS hujumlariga qarshi himoya
+- **Performance** - Kompilyatsiya paytida optimizatsiya qilinadi
+
+### 📚 Keyingi o'rganilishi kerak mavzular:
+1. **Props** - Komponentlar o'rtasida ma'lumot uzatish
+2. **State** - Komponent holatini boshqarish
+3. **Events** - Foydalanuvchi interfeysi bilan o'zaro aloqa
+4. **Lifecycle** - Komponent hayotiy sikli
+
+### 🎯 Amaliyot uchun vazifalar:
+1. Oddiy Calculator yarating (JSX va event handler'lar)
+2. Image Gallery yarating (map funksiya va shartli rendering)
+3. Contact Form yarating (form input'lar va validation)
+
+JSX ni yaxshi o'zlashtirish React development'da muvaffaqiyat kaliti hisoblanadi!

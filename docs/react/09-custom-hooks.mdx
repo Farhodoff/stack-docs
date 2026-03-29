@@ -1,0 +1,1129 @@
+---
+title: "Custom Hooks va Logic Qayta Ishlatish"
+description: "O'zingizning React hook'laringizni yaratish, logic qayta ishlatish va hook patterns"
+category: "react"
+order: 9
+tags:
+  - react
+  - custom-hooks
+  - reusability
+  - patterns
+  - logic-composition
+difficulty: "advanced"
+readTime: 35
+---
+
+# Custom Hooks va Logic Qayta Ishlatish
+
+Custom hooks - React'da logic'ni qayta ishlatishning eng kuchli usuli. Ular komponentlar o'rtasida stateful logic'ni ulashish imkonini beradi.
+
+## 1. Custom Hook Nima?
+
+Custom hook - odatiy JavaScript funksiya bo'lib:
+- **"use"** bilan boshlanadi (masalan: `useCounter`, `useApi`)
+- **Boshqa hook'larni chaqirishi mumkin** (useState, useEffect, va h.k.)
+- **Stateful logic'ni qayta ishlatish** imkonini beradi
+- **Komponent emas** - JSX qaytarmaydi
+
+### Oddiy misol:
+
+```jsx
+import { useState } from 'react';
+
+// Custom hook yaratish
+function useCounter(initialValue = 0) {
+  const [count, setCount] = useState(initialValue);
+
+  const increment = () => setCount(prev => prev + 1);
+  const decrement = () => setCount(prev => prev - 1);
+  const reset = () => setCount(initialValue);
+
+  return {
+    count,
+    increment,
+    decrement,
+    reset
+  };
+}
+
+// Custom hook'dan foydalanish
+function CounterComponent() {
+  const { count, increment, decrement, reset } = useCounter(10);
+
+  return (
+    <div>
+      <h2>Hisoblagich: {count}</h2>
+      <button onClick={increment}>+</button>
+      <button onClick={decrement}>-</button>
+      <button onClick={reset}>Reset</button>
+    </div>
+  );
+}
+
+function AnotherCounterComponent() {
+  const { count, increment, decrement } = useCounter(100);
+
+  return (
+    <div>
+      <p>Boshqa hisoblagich: {count}</p>
+      <div>
+        <button onClick={increment}>Oshirish</button>
+        <button onClick={decrement}>Kamaytirish</button>
+      </div>
+    </div>
+  );
+}
+```
+
+## 2. Local Storage Custom Hook
+
+LocalStorage bilan ishlash uchun hook:
+
+```jsx
+import { useState, useEffect } from 'react';
+
+function useLocalStorage(key, initialValue) {
+  // State'ni localStorage'dan olish yoki initial value qo'yish
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(`localStorage'dan ${key} olib bo'lmadi:`, error);
+      return initialValue;
+    }
+  });
+
+  // Value'ni o'zgartirganda localStorage'ga saqlash
+  const setValue = (value) => {
+    try {
+      // Value function yoki oddiy qiymat bo'lishi mumkin
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+
+      // localStorage'ga saqlash
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      }
+    } catch (error) {
+      console.error(`localStorage'ga ${key} saqlab bo'lmadi:`, error);
+    }
+  };
+
+  // localStorage o'zgarishlarini kuzatish (boshqa tab'lardan)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === key && e.newValue !== null) {
+        try {
+          setStoredValue(JSON.parse(e.newValue));
+        } catch (error) {
+          console.error('Storage change parse error:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [key]);
+
+  return [storedValue, setValue];
+}
+
+// LocalStorage Hook'dan foydalanish
+function UserPreferences() {
+  const [theme, setTheme] = useLocalStorage('theme', 'light');
+  const [language, setLanguage] = useLocalStorage('language', 'uz');
+  const [fontSize, setFontSize] = useLocalStorage('fontSize', 16);
+
+  return (
+    <div style={{
+      backgroundColor: theme === 'dark' ? '#121212' : '#ffffff',
+      color: theme === 'dark' ? '#ffffff' : '#000000',
+      fontSize: `${fontSize}px`,
+      padding: '20px'
+    }}>
+      <h2>Foydalanuvchi sozlamalari</h2>
+
+      <div style={{ marginBottom: '15px' }}>
+        <label>Mavzu: </label>
+        <select
+          value={theme}
+          onChange={(e) => setTheme(e.target.value)}
+        >
+          <option value="light">Yorug'</option>
+          <option value="dark">Qorong'u</option>
+        </select>
+      </div>
+
+      <div style={{ marginBottom: '15px' }}>
+        <label>Til: </label>
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+        >
+          <option value="uz">O'zbek</option>
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+        </select>
+      </div>
+
+      <div style={{ marginBottom: '15px' }}>
+        <label>Shrift o'lchami: {fontSize}px </label>
+        <input
+          type="range"
+          min="12"
+          max="24"
+          value={fontSize}
+          onChange={(e) => setFontSize(parseInt(e.target.value))}
+        />
+      </div>
+
+      <p>
+        Bu sozlamalar localStorage'da saqlanadi va sahifani yangilaganingizda ham saqlanib qoladi.
+        Boshqa tab ochib, sozlamalarni o'zgartirib ko'ring - bu tab ham avtomatik yangilanadi!
+      </p>
+    </div>
+  );
+}
+```
+
+## 3. API Data Fetching Hook
+
+Data fetching uchun umumiy hook:
+
+```jsx
+import { useState, useEffect } from 'react';
+
+function useFetch(url, options = {}) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let abortController = new AbortController();
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(url, {
+          ...options,
+          signal: abortController.signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!abortController.signal.aborted) {
+          setData(result);
+        }
+      } catch (error) {
+        if (error.name !== 'AbortError' && !abortController.signal.aborted) {
+          setError(error.message);
+        }
+      } finally {
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      abortController.abort();
+    };
+  }, [url, JSON.stringify(options)]);
+
+  const refetch = () => {
+    setLoading(true);
+    setError(null);
+    // URL'ni o'zgartirib, useEffect'ni qayta ishga tushirish
+    // Real implementatsiyada requestId'ni increment qilish mumkin
+  };
+
+  return { data, loading, error, refetch };
+}
+
+// Advanced API hook with caching
+function useApi(url, options = {}) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [cache] = useState(new Map());
+
+  const fetchData = async (fetchUrl = url, fetchOptions = options) => {
+    // Cache kaliti yaratish
+    const cacheKey = `${fetchUrl}:${JSON.stringify(fetchOptions)}`;
+
+    // Cache'da mavjudligini tekshirish
+    if (cache.has(cacheKey)) {
+      const cachedData = cache.get(cacheKey);
+      const isExpired = Date.now() - cachedData.timestamp > 300000; // 5 minut
+
+      if (!isExpired) {
+        setData(cachedData.data);
+        setLoading(false);
+        return cachedData.data;
+      }
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(fetchUrl, fetchOptions);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Cache'ga saqlash
+      cache.set(cacheKey, {
+        data: result,
+        timestamp: Date.now()
+      });
+
+      setData(result);
+      return result;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Post, Put, Delete methodlari
+  const post = (postUrl, body) => {
+    return fetchData(postUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      },
+      body: JSON.stringify(body)
+    });
+  };
+
+  const put = (putUrl, body) => {
+    return fetchData(putUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      },
+      body: JSON.stringify(body)
+    });
+  };
+
+  const del = (deleteUrl) => {
+    return fetchData(deleteUrl, {
+      method: 'DELETE',
+      ...options
+    });
+  };
+
+  useEffect(() => {
+    if (url) {
+      fetchData();
+    }
+  }, [url]);
+
+  return {
+    data,
+    loading,
+    error,
+    refetch: () => fetchData(),
+    post,
+    put,
+    delete: del
+  };
+}
+
+// API Hook'dan foydalanish
+function UsersList() {
+  const { data: users, loading, error, refetch } = useFetch(
+    'https://jsonplaceholder.typicode.com/users'
+  );
+
+  if (loading) return <div>Foydalanuvchilar yuklanmoqda...</div>;
+  if (error) return <div>Xatolik: {error}</div>;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <h2>Foydalanuvchilar ro'yxati</h2>
+        <button onClick={refetch}>🔄 Yangilash</button>
+      </div>
+
+      <div style={{ display: 'grid', gap: '10px' }}>
+        {users?.map(user => (
+          <div
+            key={user.id}
+            style={{
+              border: '1px solid #ddd',
+              padding: '15px',
+              borderRadius: '8px'
+            }}
+          >
+            <h3>{user.name}</h3>
+            <p>Email: {user.email}</p>
+            <p>Phone: {user.phone}</p>
+            <p>Website: {user.website}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function UserCRUD() {
+  const { data, post, put, delete: deleteUser, loading } = useApi();
+
+  const createUser = async () => {
+    try {
+      const newUser = {
+        name: 'Yangi Foydalanuvchi',
+        email: 'yangi@example.com',
+        phone: '+998901234567'
+      };
+
+      const result = await post('https://jsonplaceholder.typicode.com/users', newUser);
+      console.log('Yaratilgan user:', result);
+      alert('Foydalanuvchi muvaffaqiyatli yaratildi!');
+    } catch (error) {
+      alert('Xatolik: ' + error.message);
+    }
+  };
+
+  return (
+    <div>
+      <h2>User CRUD Operations</h2>
+      <button onClick={createUser} disabled={loading}>
+        {loading ? 'Yaratilmoqda...' : 'Yangi foydalanuvchi yaratish'}
+      </button>
+    </div>
+  );
+}
+```
+
+## 4. Form Management Hook
+
+Form'larni boshqarish uchun universal hook:
+
+```jsx
+import { useState } from 'react';
+
+function useForm(initialValues, validationRules = {}) {
+  const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  // Field value'ni o'zgartirish
+  const setValue = (name, value) => {
+    setValues(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Real-time validation
+    if (touched[name]) {
+      validateField(name, value);
+    }
+  };
+
+  // Input change handler
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    const fieldValue = type === 'checkbox' ? checked : value;
+    setValue(name, fieldValue);
+  };
+
+  // Field blur handler
+  const handleBlur = (event) => {
+    const { name } = event.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    validateField(name, values[name]);
+  };
+
+  // Bitta field'ni validation qilish
+  const validateField = (name, value) => {
+    const rule = validationRules[name];
+    let error = '';
+
+    if (rule) {
+      if (rule.required && (!value || value.toString().trim() === '')) {
+        error = rule.requiredMessage || `${name} majburiy`;
+      } else if (value && rule.minLength && value.toString().length < rule.minLength) {
+        error = rule.minLengthMessage || `${name} kamida ${rule.minLength} belgi bo'lishi kerak`;
+      } else if (value && rule.pattern && !rule.pattern.test(value)) {
+        error = rule.patternMessage || `${name} formati noto'g'ri`;
+      } else if (rule.custom && typeof rule.custom === 'function') {
+        error = rule.custom(value, values) || '';
+      }
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+
+    return error === '';
+  };
+
+  // Barcha field'larni validation qilish
+  const validateAll = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    Object.keys(validationRules).forEach(fieldName => {
+      const fieldValue = values[fieldName];
+      const isFieldValid = validateField(fieldName, fieldValue);
+
+      if (!isFieldValid) {
+        isValid = false;
+      }
+    });
+
+    // Barcha field'larni touched deb belgilash
+    setTouched(
+      Object.keys(validationRules).reduce((acc, field) => ({
+        ...acc,
+        [field]: true
+      }), {})
+    );
+
+    return isValid;
+  };
+
+  // Form'ni reset qilish
+  const reset = () => {
+    setValues(initialValues);
+    setErrors({});
+    setTouched({});
+  };
+
+  // Form submit handler
+  const handleSubmit = (submitCallback) => (event) => {
+    event.preventDefault();
+
+    if (validateAll()) {
+      submitCallback(values);
+    }
+  };
+
+  // Form holati
+  const isValid = Object.keys(errors).every(key => !errors[key]);
+  const isDirty = Object.keys(values).some(key => values[key] !== initialValues[key]);
+
+  return {
+    values,
+    errors,
+    touched,
+    setValue,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    validateField,
+    validateAll,
+    reset,
+    isValid,
+    isDirty
+  };
+}
+
+// Form Hook'dan foydalanish
+function RegistrationForm() {
+  const initialValues = {
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    age: '',
+    terms: false
+  };
+
+  const validationRules = {
+    name: {
+      required: true,
+      minLength: 2,
+      requiredMessage: 'Ism majburiy',
+      minLengthMessage: 'Ism kamida 2 ta harf bo\'lishi kerak'
+    },
+    email: {
+      required: true,
+      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      requiredMessage: 'Email majburiy',
+      patternMessage: 'Email formati noto\'g\'ri'
+    },
+    password: {
+      required: true,
+      minLength: 8,
+      pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      requiredMessage: 'Parol majburiy',
+      patternMessage: 'Parol kichik, katta harf va raqam bo\'lishi kerak'
+    },
+    confirmPassword: {
+      required: true,
+      custom: (value, allValues) => {
+        if (value !== allValues.password) {
+          return 'Parollar mos kelmaydi';
+        }
+        return '';
+      }
+    },
+    age: {
+      required: true,
+      custom: (value) => {
+        const age = parseInt(value);
+        if (age < 18 || age > 120) {
+          return 'Yosh 18 dan 120 gacha bo\'lishi kerak';
+        }
+        return '';
+      }
+    },
+    terms: {
+      custom: (value) => {
+        if (!value) {
+          return 'Shartlarni qabul qilish majburiy';
+        }
+        return '';
+      }
+    }
+  };
+
+  const {
+    values,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    reset,
+    isValid,
+    isDirty
+  } = useForm(initialValues, validationRules);
+
+  const onSubmit = (formData) => {
+    console.log('Form yuborildi:', formData);
+    alert('Ro\'yxatdan muvaffaqiyatli o\'tdingiz!');
+    reset();
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} style={{ maxWidth: '500px', margin: '0 auto' }}>
+      <h2>Ro'yxatdan o'tish</h2>
+
+      {/* Name */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>Ism:</label>
+        <input
+          type="text"
+          name="name"
+          value={values.name}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          style={{
+            width: '100%',
+            padding: '10px',
+            border: touched.name && errors.name ? '2px solid red' : '1px solid #ccc'
+          }}
+        />
+        {touched.name && errors.name && (
+          <div style={{ color: 'red', fontSize: '14px' }}>{errors.name}</div>
+        )}
+      </div>
+
+      {/* Email */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>Email:</label>
+        <input
+          type="email"
+          name="email"
+          value={values.email}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          style={{
+            width: '100%',
+            padding: '10px',
+            border: touched.email && errors.email ? '2px solid red' : '1px solid #ccc'
+          }}
+        />
+        {touched.email && errors.email && (
+          <div style={{ color: 'red', fontSize: '14px' }}>{errors.email}</div>
+        )}
+      </div>
+
+      {/* Password */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>Parol:</label>
+        <input
+          type="password"
+          name="password"
+          value={values.password}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          style={{
+            width: '100%',
+            padding: '10px',
+            border: touched.password && errors.password ? '2px solid red' : '1px solid #ccc'
+          }}
+        />
+        {touched.password && errors.password && (
+          <div style={{ color: 'red', fontSize: '14px' }}>{errors.password}</div>
+        )}
+      </div>
+
+      {/* Confirm Password */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>Parolni tasdiqlash:</label>
+        <input
+          type="password"
+          name="confirmPassword"
+          value={values.confirmPassword}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          style={{
+            width: '100%',
+            padding: '10px',
+            border: touched.confirmPassword && errors.confirmPassword ? '2px solid red' : '1px solid #ccc'
+          }}
+        />
+        {touched.confirmPassword && errors.confirmPassword && (
+          <div style={{ color: 'red', fontSize: '14px' }}>{errors.confirmPassword}</div>
+        )}
+      </div>
+
+      {/* Age */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>Yosh:</label>
+        <input
+          type="number"
+          name="age"
+          value={values.age}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          style={{
+            width: '100%',
+            padding: '10px',
+            border: touched.age && errors.age ? '2px solid red' : '1px solid #ccc'
+          }}
+        />
+        {touched.age && errors.age && (
+          <div style={{ color: 'red', fontSize: '14px' }}>{errors.age}</div>
+        )}
+      </div>
+
+      {/* Terms */}
+      <div style={{ marginBottom: '15px' }}>
+        <label>
+          <input
+            type="checkbox"
+            name="terms"
+            checked={values.terms}
+            onChange={handleChange}
+            style={{ marginRight: '10px' }}
+          />
+          Foydalanish shartlarini qabul qilaman
+        </label>
+        {touched.terms && errors.terms && (
+          <div style={{ color: 'red', fontSize: '14px' }}>{errors.terms}</div>
+        )}
+      </div>
+
+      {/* Buttons */}
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button
+          type="submit"
+          disabled={!isValid}
+          style={{
+            flex: 1,
+            padding: '15px',
+            backgroundColor: isValid ? '#28a745' : '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: isValid ? 'pointer' : 'not-allowed'
+          }}
+        >
+          Ro'yxatdan o'tish
+        </button>
+
+        <button
+          type="button"
+          onClick={reset}
+          disabled={!isDirty}
+          style={{
+            padding: '15px 30px',
+            backgroundColor: '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: isDirty ? 'pointer' : 'not-allowed'
+          }}
+        >
+          Reset
+        </button>
+      </div>
+
+      {/* Form Status */}
+      <div style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
+        <p>Form holati: {isValid ? '✅ Valid' : '❌ Invalid'}</p>
+        <p>O'zgargan: {isDirty ? 'Ha' : 'Yo\'q'}</p>
+      </div>
+    </form>
+  );
+}
+```
+
+## 5. Timer va Animation Hooks
+
+Vaqt bilan bog'liq operatsiyalar uchun hooks:
+
+```jsx
+import { useState, useEffect, useRef } from 'react';
+
+// Interval hook
+function useInterval(callback, delay) {
+  const savedCallback = useRef();
+
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  useEffect(() => {
+    if (delay !== null) {
+      const id = setInterval(() => savedCallback.current(), delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}
+
+// Countdown hook
+function useCountdown(targetDate) {
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(targetDate));
+
+  useInterval(() => {
+    setTimeLeft(calculateTimeLeft(targetDate));
+  }, 1000);
+
+  function calculateTimeLeft(target) {
+    const difference = +new Date(target) - +new Date();
+    let timeLeft = {};
+
+    if (difference > 0) {
+      timeLeft = {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      };
+    }
+
+    return timeLeft;
+  }
+
+  const isFinished = Object.keys(timeLeft).length === 0;
+
+  return { timeLeft, isFinished };
+}
+
+// Stopwatch hook
+function useStopwatch() {
+  const [time, setTime] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+
+  useInterval(
+    () => {
+      setTime(time => time + 10);
+    },
+    isRunning ? 10 : null
+  );
+
+  const start = () => setIsRunning(true);
+  const stop = () => setIsRunning(false);
+  const reset = () => {
+    setTime(0);
+    setIsRunning(false);
+  };
+
+  const formatTime = (totalMs) => {
+    const minutes = Math.floor(totalMs / 60000);
+    const seconds = Math.floor((totalMs % 60000) / 1000);
+    const milliseconds = Math.floor((totalMs % 1000) / 10);
+
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
+  };
+
+  return {
+    time: formatTime(time),
+    isRunning,
+    start,
+    stop,
+    reset
+  };
+}
+
+// Timer komponentlari
+function CountdownTimer() {
+  // 10 daqiqadan keyin
+  const targetDate = new Date(Date.now() + 10 * 60 * 1000);
+  const { timeLeft, isFinished } = useCountdown(targetDate);
+
+  if (isFinished) {
+    return <div style={{ fontSize: '24px', color: 'red' }}>⏰ Vaqt tugadi!</div>;
+  }
+
+  return (
+    <div style={{ textAlign: 'center', padding: '20px' }}>
+      <h2>Countdown Timer</h2>
+      <div style={{ fontSize: '36px', fontFamily: 'monospace', margin: '20px 0' }}>
+        {timeLeft.minutes || 0}:{(timeLeft.seconds || 0).toString().padStart(2, '0')}
+      </div>
+      <div style={{ fontSize: '14px', color: '#666' }}>
+        {timeLeft.days > 0 && `${timeLeft.days} kun, `}
+        {timeLeft.hours > 0 && `${timeLeft.hours} soat, `}
+        {timeLeft.minutes} daqiqa, {timeLeft.seconds} soniya
+      </div>
+    </div>
+  );
+}
+
+function StopwatchComponent() {
+  const { time, isRunning, start, stop, reset } = useStopwatch();
+
+  return (
+    <div style={{ textAlign: 'center', padding: '20px' }}>
+      <h2>Stopwatch</h2>
+      <div style={{ fontSize: '48px', fontFamily: 'monospace', margin: '20px 0' }}>
+        {time}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+        {!isRunning ? (
+          <button onClick={start} style={{ padding: '10px 20px', fontSize: '16px' }}>
+            ▶️ Start
+          </button>
+        ) : (
+          <button onClick={stop} style={{ padding: '10px 20px', fontSize: '16px' }}>
+            ⏸️ Stop
+          </button>
+        )}
+        <button onClick={reset} style={{ padding: '10px 20px', fontSize: '16px' }}>
+          🔄 Reset
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+## 6. Advanced Custom Hooks
+
+Murakkab hooks misollari:
+
+```jsx
+// Online/Offline detector
+function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return isOnline;
+}
+
+// Window size tracker
+function useWindowSize() {
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+  });
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return windowSize;
+}
+
+// Mouse position tracker
+function useMousePosition() {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const updateMousePosition = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+
+    window.addEventListener('mousemove', updateMousePosition);
+    return () => window.removeEventListener('mousemove', updateMousePosition);
+  }, []);
+
+  return mousePosition;
+}
+
+// Previous value tracker
+function usePrevious(value) {
+  const ref = useRef();
+
+  useEffect(() => {
+    ref.current = value;
+  });
+
+  return ref.current;
+}
+
+// Debounced value
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+// Combined hook usage example
+function SmartComponent() {
+  const isOnline = useOnlineStatus();
+  const windowSize = useWindowSize();
+  const mousePosition = useMousePosition();
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const previousSearchTerm = usePrevious(debouncedSearchTerm);
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h2>Smart Component with Multiple Hooks</h2>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '15px',
+        marginBottom: '20px'
+      }}>
+        <div style={{ padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
+          <h3>Connection Status</h3>
+          <p style={{ color: isOnline ? 'green' : 'red' }}>
+            {isOnline ? '🟢 Online' : '🔴 Offline'}
+          </p>
+        </div>
+
+        <div style={{ padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
+          <h3>Window Size</h3>
+          <p>{windowSize.width} × {windowSize.height}</p>
+        </div>
+
+        <div style={{ padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
+          <h3>Mouse Position</h3>
+          <p>X: {mousePosition.x}, Y: {mousePosition.y}</p>
+        </div>
+      </div>
+
+      <div style={{ padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
+        <h3>Debounced Search</h3>
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Qidirish..."
+          style={{ padding: '10px', width: '300px' }}
+        />
+
+        <div style={{ marginTop: '10px' }}>
+          <p><strong>Joriy qidiruv:</strong> "{searchTerm}"</p>
+          <p><strong>Debounced qidiruv:</strong> "{debouncedSearchTerm}"</p>
+          <p><strong>Oldingi qidiruv:</strong> "{previousSearchTerm || 'Yo\'q'}"</p>
+        </div>
+      </div>
+
+      {/* Responsive grid based on window size */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: windowSize.width > 768
+          ? 'repeat(3, 1fr)'
+          : windowSize.width > 480
+            ? 'repeat(2, 1fr)'
+            : '1fr',
+        gap: '10px',
+        marginTop: '20px'
+      }}>
+        {[1, 2, 3, 4, 5, 6].map(num => (
+          <div
+            key={num}
+            style={{
+              padding: '20px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}
+          >
+            Item {num}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+## Xulosa va Best Practices
+
+### ✅ Custom hooks best practices:
+1. **"use" prefixi** - har doim "use" bilan boshlash
+2. **Single responsibility** - bitta vazifalı hook'lar yaratish
+3. **Parameters** - hook'larni parametrize qilish
+4. **Return object** - named return qilish (destructuring uchun)
+5. **Error handling** - xatoliklarni to'g'ri handle qilish
+
+### 🎯 Custom hook'lar uchun ideal case'lar:
+1. **API calls** - data fetching patterns
+2. **Form management** - validation va state
+3. **Event listeners** - DOM event'larni boshqarish
+4. **Storage** - localStorage, sessionStorage
+5. **Timers** - interval, timeout, countdown
+
+### 📚 Keyingi mavzular:
+1. **Testing custom hooks** - hook'larni test qilish
+2. **Performance optimization** - useMemo, useCallback
+3. **React Router** - navigation hooks
+4. **State management** - Redux, Zustand hooks
+
+Custom hooks - React'da code reusability va maintainability'ni ta'minlashning eng samarali usuli!

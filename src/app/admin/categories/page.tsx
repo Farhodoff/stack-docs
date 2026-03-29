@@ -112,8 +112,11 @@ export default function CategoriesPage() {
                 {editingCategory ? "Kategoriyani Tahrirlash" : "Yangi Kategoriya"}
               </h2>
               <button
+                type="button"
                 onClick={() => setShowDialog(false)}
                 className="text-muted-foreground hover:text-foreground"
+                aria-label="Dialogni yopish"
+                title="Dialogni yopish"
               >
                 <X className="w-4 h-4" />
               </button>
