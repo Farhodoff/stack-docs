@@ -1,0 +1,1724 @@
+---
+title: "JavaScript Modules va Classes (OOP)"
+description: "JavaScript'da modullar va sinf-oriented dasturlash: ES6 classes, inheritance, modules, import/export, design patterns va OOP principles."
+order: 9
+category: javascript
+tags: ["javascript", "modules", "classes", "oop", "inheritance", "import", "export"]
+difficulty: advanced
+readTime: 45
+---
+
+# JavaScript Modules va Classes (OOP)
+
+Zamonaviy JavaScript dasturlashda modullar va sinf-oriented programming eng muhim kontseptsiyalar. Bu dars orqali katta loyihalarni tartibli qilish va code reusability'ni oshirishni o'rganamiz.
+
+## ES6 Classes
+
+### Basic Class Syntax
+
+```javascript
+// Class declaration
+class Person {
+    // Constructor method
+    constructor(name, age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    // Instance methods
+    introduce() {
+        return `Salom, men ${this.name}, yoshim ${this.age}`;
+    }
+
+    celebrateBirthday() {
+        this.age++;
+        console.log(`Happy Birthday! Hozir ${this.age} yoshdasiz`);
+    }
+
+    // Getter
+    get info() {
+        return `${this.name} (${this.age} yosh)`;
+    }
+
+    // Setter
+    set fullName(value) {
+        let parts = value.split(' ');
+        this.firstName = parts[0];
+        this.lastName = parts[1];
+        this.name = value;
+    }
+
+    // Static method
+    static createChild(name) {
+        return new Person(name, 0);
+    }
+
+    // Static property
+    static species = "Homo sapiens";
+}
+
+// Usage
+let person1 = new Person("Ali", 25);
+console.log(person1.introduce()); // "Salom, men Ali, yoshim 25"
+console.log(person1.info);        // "Ali (25 yosh)"
+
+person1.fullName = "Ali Karimov";
+console.log(person1.firstName);   // "Ali"
+
+let baby = Person.createChild("Bobur");
+console.log(Person.species);      // "Homo sapiens"
+
+// Class expression
+let Developer = class {
+    constructor(name, language) {
+        this.name = name;
+        this.favoriteLanguage = language;
+    }
+
+    code() {
+        return `${this.name} ${this.favoriteLanguage}da dasturlayapti`;
+    }
+};
+
+let dev = new Developer("Fatima", "JavaScript");
+console.log(dev.code()); // "Fatima JavaScriptda dasturlayapti"
+```
+
+### Private Fields va Methods (ES2022)
+
+```javascript
+class BankAccount {
+    // Private fields
+    #balance = 0;
+    #accountNumber;
+    #pin;
+
+    constructor(accountNumber, pin) {
+        this.#accountNumber = accountNumber;
+        this.#pin = pin;
+    }
+
+    // Private method
+    #validatePin(pin) {
+        return this.#pin === pin;
+    }
+
+    // Public methods
+    deposit(amount, pin) {
+        if (!this.#validatePin(pin)) {
+            throw new Error("Noto'g'ri PIN kod");
+        }
+
+        if (amount <= 0) {
+            throw new Error("Miqdor musbat bo'lishi kerak");
+        }
+
+        this.#balance += amount;
+        console.log(`${amount} so'm qo'shildi. Balans: ${this.#balance}`);
+    }
+
+    withdraw(amount, pin) {
+        if (!this.#validatePin(pin)) {
+            throw new Error("Noto'g'ri PIN kod");
+        }
+
+        if (amount > this.#balance) {
+            throw new Error("Yetarli mablag' yo'q");
+        }
+
+        this.#balance -= amount;
+        console.log(`${amount} so'm yechildi. Balans: ${this.#balance}`);
+    }
+
+    getBalance(pin) {
+        if (!this.#validatePin(pin)) {
+            throw new Error("Noto'g'ri PIN kod");
+        }
+        return this.#balance;
+    }
+
+    // Static private method
+    static #generateAccountNumber() {
+        return 'ACC' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    }
+
+    static createAccount(pin) {
+        let accountNumber = this.#generateAccountNumber();
+        return new BankAccount(accountNumber, pin);
+    }
+}
+
+// Usage
+let account = BankAccount.createAccount("1234");
+account.deposit(1000, "1234");
+account.withdraw(300, "1234");
+console.log(account.getBalance("1234")); // 700
+
+// console.log(account.#balance);     // SyntaxError: Private field accessible
+// console.log(account.#validatePin); // SyntaxError: Private method accessible
+```
+
+### Inheritance (Meros)
+
+```javascript
+// Base class
+class Animal {
+    constructor(name, species) {
+        this.name = name;
+        this.species = species;
+        this.energy = 100;
+    }
+
+    eat(food) {
+        this.energy += 20;
+        console.log(`${this.name} ${food} yedi. Energiya: ${this.energy}`);
+    }
+
+    sleep() {
+        this.energy = 100;
+        console.log(`${this.name} uxladi. Energiya to'liq tiklandi.`);
+    }
+
+    makeSound() {
+        console.log(`${this.name} tovush chiqaradi`);
+    }
+}
+
+// Derived class
+class Dog extends Animal {
+    constructor(name, breed) {
+        super(name, "Dog"); // Parent constructor call
+        this.breed = breed;
+        this.tricks = [];
+    }
+
+    // Override parent method
+    makeSound() {
+        console.log(`${this.name} vovullaydi: Vov vov!`);
+    }
+
+    // New methods
+    bark() {
+        this.makeSound(); // Call overridden method
+    }
+
+    learnTrick(trick) {
+        this.tricks.push(trick);
+        console.log(`${this.name} yangi hiyla o'rgandi: ${trick}`);
+    }
+
+    performTrick() {
+        if (this.tricks.length === 0) {
+            console.log(`${this.name} hali hiyla bilmaydi`);
+            return;
+        }
+
+        let randomTrick = this.tricks[Math.floor(Math.random() * this.tricks.length)];
+        console.log(`${this.name} hiyla ko'rsatdi: ${randomTrick}`);
+    }
+}
+
+class Cat extends Animal {
+    constructor(name, color) {
+        super(name, "Cat");
+        this.color = color;
+        this.livesRemaining = 9;
+    }
+
+    makeSound() {
+        console.log(`${this.name} miyovlaydi: Miyov miyov!`);
+    }
+
+    climb() {
+        if (this.energy < 30) {
+            console.log(`${this.name} charchagan, ko'tarolmaydi`);
+            return;
+        }
+
+        this.energy -= 30;
+        console.log(`${this.name} daraxtga chiqdi! Energiya: ${this.energy}`);
+    }
+}
+
+// Usage
+let dog = new Dog("Rex", "Golden Retriever");
+let cat = new Cat("Mashka", "Qora");
+
+dog.eat("suyak");        // "Rex suyak yedi. Energiya: 120"
+dog.bark();              // "Rex vovullaydi: Vov vov!"
+dog.learnTrick("o'tir");
+dog.performTrick();      // "Rex hiyla ko'rsatdi: o'tir"
+
+cat.makeSound();         // "Mashka miyovlaydi: Miyov miyov!"
+cat.climb();             // "Mashka daraxtga chiqdi! Energiya: 70"
+
+// Polymorphism example
+function animalSounds(animals) {
+    animals.forEach(animal => {
+        animal.makeSound(); // Each animal makes different sound
+    });
+}
+
+animalSounds([dog, cat]);
+```
+
+### Advanced Inheritance Patterns
+
+```javascript
+// Mixin pattern
+let Flyable = {
+    fly() {
+        console.log(`${this.name} uchmoqda!`);
+    },
+
+    land() {
+        console.log(`${this.name} qo'ndi`);
+    }
+};
+
+let Swimmable = {
+    swim() {
+        console.log(`${this.name} suzmoqda!`);
+    },
+
+    dive() {
+        console.log(`${this.name} suv ostiga sho'ng'idi`);
+    }
+};
+
+class Bird extends Animal {
+    constructor(name, species) {
+        super(name, species);
+        // Add mixin methods
+        Object.assign(this, Flyable);
+    }
+
+    makeSound() {
+        console.log(`${this.name} qushqo'ndi: Chiv chiv!`);
+    }
+}
+
+class Duck extends Bird {
+    constructor(name) {
+        super(name, "Duck");
+        // Duck can fly and swim
+        Object.assign(this, Swimmable);
+    }
+
+    makeSound() {
+        console.log(`${this.name} g'aġ-g'aġ qiladi!`);
+    }
+}
+
+let duck = new Duck("Donald");
+duck.fly();        // "Donald uchmoqda!"
+duck.swim();       // "Donald suzmoqda!"
+duck.makeSound();  // "Donald g'aġ-g'aġ qiladi!"
+
+// Abstract class simulation
+class Shape {
+    constructor() {
+        if (new.target === Shape) {
+            throw new Error("Shape abstract class, to'g'ridan-to'g'ri instantiate qilib bo'lmaydi");
+        }
+    }
+
+    // Abstract method
+    area() {
+        throw new Error("area() metodi subclass'da implement qilinishi kerak");
+    }
+
+    perimeter() {
+        throw new Error("perimeter() metodi subclass'da implement qilinishi kerak");
+    }
+
+    describe() {
+        return `Bu ${this.constructor.name}, maydoni: ${this.area()}, perimetri: ${this.perimeter()}`;
+    }
+}
+
+class Rectangle extends Shape {
+    constructor(width, height) {
+        super();
+        this.width = width;
+        this.height = height;
+    }
+
+    area() {
+        return this.width * this.height;
+    }
+
+    perimeter() {
+        return 2 * (this.width + this.height);
+    }
+}
+
+class Circle extends Shape {
+    constructor(radius) {
+        super();
+        this.radius = radius;
+    }
+
+    area() {
+        return Math.PI * this.radius * this.radius;
+    }
+
+    perimeter() {
+        return 2 * Math.PI * this.radius;
+    }
+}
+
+// let shape = new Shape(); // Error: Abstract class
+let rect = new Rectangle(5, 3);
+let circle = new Circle(4);
+
+console.log(rect.describe());   // Area: 15, perimetr: 16
+console.log(circle.describe()); // Area: 50.27, perimetr: 25.13
+```
+
+## Modules System
+
+### Basic Export/Import
+
+```javascript
+// mathUtils.js - Named exports
+export function add(a, b) {
+    return a + b;
+}
+
+export function multiply(a, b) {
+    return a * b;
+}
+
+export const PI = 3.14159;
+
+export class Calculator {
+    constructor() {
+        this.result = 0;
+    }
+
+    add(value) {
+        this.result += value;
+        return this;
+    }
+
+    multiply(value) {
+        this.result *= value;
+        return this;
+    }
+
+    getResult() {
+        return this.result;
+    }
+
+    reset() {
+        this.result = 0;
+        return this;
+    }
+}
+
+// String operations - Default export
+// stringUtils.js
+export default class StringUtils {
+    static capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    static reverse(str) {
+        return str.split('').reverse().join('');
+    }
+
+    static truncate(str, length) {
+        return str.length > length ? str.substring(0, length) + '...' : str;
+    }
+
+    static slugify(str) {
+        return str
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_-]+/g, '-')
+            .trim();
+    }
+}
+
+// main.js - Importing
+// Named imports
+import { add, multiply, PI, Calculator } from './mathUtils.js';
+
+// Default import
+import StringUtils from './stringUtils.js';
+
+// Mixed imports
+import StringUtilsClass, { add as addNumbers } from './mathUtils.js';
+
+// Import everything
+import * as Math from './mathUtils.js';
+
+// Usage
+console.log(add(5, 3));              // 8
+console.log(PI);                     // 3.14159
+
+let calc = new Calculator();
+console.log(calc.add(10).multiply(2).getResult()); // 20
+
+console.log(StringUtils.capitalize("salom"));      // "Salom"
+console.log(StringUtils.slugify("Salom Dunyo!")); // "salom-dunyo"
+
+// Using namespace import
+console.log(Math.add(1, 2));        // 3
+let mathCalc = new Math.Calculator();
+```
+
+### Advanced Module Patterns
+
+```javascript
+// config.js - Configuration module
+const ENV = process.env.NODE_ENV || 'development';
+
+const config = {
+    development: {
+        apiUrl: 'http://localhost:3000/api',
+        debug: true,
+        cacheEnabled: false
+    },
+    production: {
+        apiUrl: 'https://api.myapp.com',
+        debug: false,
+        cacheEnabled: true
+    },
+    test: {
+        apiUrl: 'http://localhost:3001/api',
+        debug: true,
+        cacheEnabled: false
+    }
+};
+
+export default config[ENV];
+
+// logger.js - Singleton pattern with modules
+class Logger {
+    constructor() {
+        if (Logger.instance) {
+            return Logger.instance;
+        }
+
+        this.logs = [];
+        this.level = 'info';
+        Logger.instance = this;
+    }
+
+    setLevel(level) {
+        this.level = level;
+    }
+
+    log(level, message, data = null) {
+        if (this.shouldLog(level)) {
+            let logEntry = {
+                timestamp: new Date().toISOString(),
+                level,
+                message,
+                data
+            };
+
+            this.logs.push(logEntry);
+            console.log(`[${level.toUpperCase()}] ${message}`, data || '');
+        }
+    }
+
+    shouldLog(level) {
+        let levels = { error: 0, warn: 1, info: 2, debug: 3 };
+        return levels[level] <= levels[this.level];
+    }
+
+    info(message, data) {
+        this.log('info', message, data);
+    }
+
+    warn(message, data) {
+        this.log('warn', message, data);
+    }
+
+    error(message, data) {
+        this.log('error', message, data);
+    }
+
+    debug(message, data) {
+        this.log('debug', message, data);
+    }
+}
+
+// Export singleton instance
+export default new Logger();
+
+// apiClient.js - Module with dependencies
+import config from './config.js';
+import logger from './logger.js';
+
+class APIClient {
+    constructor() {
+        this.baseUrl = config.apiUrl;
+        this.cache = new Map();
+    }
+
+    async request(endpoint, options = {}) {
+        let url = `${this.baseUrl}${endpoint}`;
+        let cacheKey = `${options.method || 'GET'}:${url}`;
+
+        // Check cache
+        if (config.cacheEnabled && options.method !== 'POST') {
+            let cached = this.cache.get(cacheKey);
+            if (cached && Date.now() - cached.timestamp < 60000) { // 1 minute
+                logger.debug('Cache hit', { endpoint, cached: true });
+                return cached.data;
+            }
+        }
+
+        try {
+            logger.info('API request', { method: options.method || 'GET', url });
+
+            let response = await fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            let data = await response.json();
+
+            // Cache successful GET requests
+            if (config.cacheEnabled && (!options.method || options.method === 'GET')) {
+                this.cache.set(cacheKey, {
+                    data,
+                    timestamp: Date.now()
+                });
+            }
+
+            logger.debug('API response', { endpoint, status: response.status });
+            return data;
+        } catch (error) {
+            logger.error('API error', { endpoint, error: error.message });
+            throw error;
+        }
+    }
+
+    get(endpoint, params = {}) {
+        let queryString = new URLSearchParams(params).toString();
+        let url = queryString ? `${endpoint}?${queryString}` : endpoint;
+        return this.request(url);
+    }
+
+    post(endpoint, data) {
+        return this.request(endpoint, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    put(endpoint, data) {
+        return this.request(endpoint, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+
+    delete(endpoint) {
+        return this.request(endpoint, {
+            method: 'DELETE'
+        });
+    }
+}
+
+export default new APIClient();
+```
+
+### Dynamic Imports
+
+```javascript
+// Dynamic import for code splitting
+async function loadUtilities() {
+    try {
+        // Dynamic import returns a promise
+        let { add, multiply, Calculator } = await import('./mathUtils.js');
+        let StringUtils = await import('./stringUtils.js');
+
+        console.log('Utilities loaded');
+        return { add, multiply, Calculator, StringUtils: StringUtils.default };
+    } catch (error) {
+        console.error('Failed to load utilities:', error);
+    }
+}
+
+// Conditional loading
+async function loadFeature(featureName) {
+    switch (featureName) {
+        case 'charts':
+            let chartModule = await import('./features/charts.js');
+            return chartModule.default;
+
+        case 'maps':
+            let mapModule = await import('./features/maps.js');
+            return mapModule.default;
+
+        case 'analytics':
+            let analyticsModule = await import('./features/analytics.js');
+            return analyticsModule.default;
+
+        default:
+            throw new Error(`Unknown feature: ${featureName}`);
+    }
+}
+
+// Plugin system with dynamic imports
+class PluginManager {
+    constructor() {
+        this.plugins = new Map();
+    }
+
+    async loadPlugin(name, path) {
+        try {
+            let pluginModule = await import(path);
+            let plugin = new pluginModule.default();
+
+            if (!plugin.name || typeof plugin.execute !== 'function') {
+                throw new Error('Plugin must have name and execute method');
+            }
+
+            this.plugins.set(name, plugin);
+            console.log(`Plugin "${name}" loaded successfully`);
+        } catch (error) {
+            console.error(`Failed to load plugin "${name}":`, error);
+        }
+    }
+
+    async executePlugin(name, ...args) {
+        let plugin = this.plugins.get(name);
+        if (!plugin) {
+            throw new Error(`Plugin "${name}" not found`);
+        }
+
+        return await plugin.execute(...args);
+    }
+
+    listPlugins() {
+        return Array.from(this.plugins.keys());
+    }
+}
+
+// Usage
+let pluginManager = new PluginManager();
+
+// Load plugins dynamically
+async function initializeApp() {
+    await pluginManager.loadPlugin('validator', './plugins/validator.js');
+    await pluginManager.loadPlugin('formatter', './plugins/formatter.js');
+
+    // Use plugins
+    let validationResult = await pluginManager.executePlugin('validator', 'email@test.com');
+    console.log('Validation result:', validationResult);
+}
+```
+
+## Design Patterns
+
+### Observer Pattern
+
+```javascript
+// Event emitter pattern
+class EventEmitter {
+    constructor() {
+        this.events = new Map();
+    }
+
+    on(eventName, callback) {
+        if (!this.events.has(eventName)) {
+            this.events.set(eventName, []);
+        }
+        this.events.get(eventName).push(callback);
+
+        // Return unsubscribe function
+        return () => this.off(eventName, callback);
+    }
+
+    off(eventName, callback) {
+        if (!this.events.has(eventName)) return;
+
+        let callbacks = this.events.get(eventName);
+        let index = callbacks.indexOf(callback);
+        if (index !== -1) {
+            callbacks.splice(index, 1);
+        }
+    }
+
+    emit(eventName, ...args) {
+        if (!this.events.has(eventName)) return;
+
+        this.events.get(eventName).forEach(callback => {
+            try {
+                callback(...args);
+            } catch (error) {
+                console.error(`Error in event listener for "${eventName}":`, error);
+            }
+        });
+    }
+
+    once(eventName, callback) {
+        let unsubscribe = this.on(eventName, (...args) => {
+            unsubscribe();
+            callback(...args);
+        });
+    }
+}
+
+// Observable data store
+class Store extends EventEmitter {
+    constructor(initialState = {}) {
+        super();
+        this.state = { ...initialState };
+    }
+
+    getState() {
+        return { ...this.state };
+    }
+
+    setState(newState) {
+        let oldState = { ...this.state };
+        this.state = { ...this.state, ...newState };
+
+        this.emit('stateChanged', this.state, oldState);
+
+        // Emit specific property changes
+        for (let key in newState) {
+            if (oldState[key] !== newState[key]) {
+                this.emit(`${key}Changed`, newState[key], oldState[key]);
+            }
+        }
+    }
+
+    subscribe(callback) {
+        return this.on('stateChanged', callback);
+    }
+}
+
+// Usage
+let store = new Store({ count: 0, user: null });
+
+// Subscribe to changes
+let unsubscribe = store.subscribe((newState, oldState) => {
+    console.log('State changed:', { newState, oldState });
+});
+
+store.on('countChanged', (newCount, oldCount) => {
+    console.log(`Count: ${oldCount} → ${newCount}`);
+});
+
+store.setState({ count: 5 });         // Triggers both callbacks
+store.setState({ user: 'Ali' });      // Triggers state change callback
+```
+
+### Factory Pattern
+
+```javascript
+// Abstract factory for creating different types of users
+class UserFactory {
+    static createUser(type, data) {
+        switch (type) {
+            case 'admin':
+                return new AdminUser(data);
+            case 'moderator':
+                return new ModeratorUser(data);
+            case 'regular':
+                return new RegularUser(data);
+            default:
+                throw new Error(`Unknown user type: ${type}`);
+        }
+    }
+
+    static fromJSON(json) {
+        let data = typeof json === 'string' ? JSON.parse(json) : json;
+        return this.createUser(data.type, data);
+    }
+}
+
+// Base user class
+class User {
+    constructor(data) {
+        this.id = data.id || Date.now();
+        this.name = data.name;
+        this.email = data.email;
+        this.createdAt = data.createdAt || new Date();
+    }
+
+    toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            email: this.email,
+            type: this.constructor.name.replace('User', '').toLowerCase(),
+            createdAt: this.createdAt,
+            permissions: this.getPermissions()
+        };
+    }
+
+    getPermissions() {
+        return ['read'];
+    }
+
+    can(permission) {
+        return this.getPermissions().includes(permission);
+    }
+}
+
+class RegularUser extends User {
+    getPermissions() {
+        return ['read', 'comment'];
+    }
+}
+
+class ModeratorUser extends User {
+    getPermissions() {
+        return ['read', 'comment', 'moderate', 'delete_comments'];
+    }
+
+    moderate(content) {
+        console.log(`${this.name} moderating content`);
+        return { approved: true, reason: null };
+    }
+}
+
+class AdminUser extends User {
+    getPermissions() {
+        return ['read', 'comment', 'moderate', 'delete_comments', 'admin', 'delete_users'];
+    }
+
+    deleteUser(userId) {
+        if (!this.can('delete_users')) {
+            throw new Error('Permission denied');
+        }
+        console.log(`${this.name} deleted user ${userId}`);
+    }
+}
+
+// Usage
+let admin = UserFactory.createUser('admin', {
+    name: 'Super Admin',
+    email: 'admin@test.com'
+});
+
+let regularUser = UserFactory.createUser('regular', {
+    name: 'John Doe',
+    email: 'john@test.com'
+});
+
+console.log(admin.can('delete_users'));    // true
+console.log(regularUser.can('admin'));     // false
+
+// JSON serialization/deserialization
+let userJSON = admin.toJSON();
+let restoredUser = UserFactory.fromJSON(userJSON);
+console.log(restoredUser instanceof AdminUser); // true
+```
+
+### Strategy Pattern
+
+```javascript
+// Payment processing with different strategies
+class PaymentStrategy {
+    process(amount) {
+        throw new Error('process() method must be implemented');
+    }
+
+    validate() {
+        throw new Error('validate() method must be implemented');
+    }
+}
+
+class CreditCardPayment extends PaymentStrategy {
+    constructor(cardNumber, expiryDate, cvv) {
+        super();
+        this.cardNumber = cardNumber;
+        this.expiryDate = expiryDate;
+        this.cvv = cvv;
+    }
+
+    validate() {
+        // Simple validation
+        if (!this.cardNumber || this.cardNumber.length < 13) {
+            throw new Error('Invalid card number');
+        }
+        if (!this.cvv || this.cvv.length < 3) {
+            throw new Error('Invalid CVV');
+        }
+        return true;
+    }
+
+    async process(amount) {
+        this.validate();
+
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        console.log(`Processing $${amount} via Credit Card ending in ${this.cardNumber.slice(-4)}`);
+        return {
+            success: true,
+            transactionId: 'cc_' + Date.now(),
+            method: 'credit_card'
+        };
+    }
+}
+
+class PayPalPayment extends PaymentStrategy {
+    constructor(email, password) {
+        super();
+        this.email = email;
+        this.password = password;
+    }
+
+    validate() {
+        if (!this.email || !this.email.includes('@')) {
+            throw new Error('Invalid PayPal email');
+        }
+        return true;
+    }
+
+    async process(amount) {
+        this.validate();
+
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        console.log(`Processing $${amount} via PayPal account ${this.email}`);
+        return {
+            success: true,
+            transactionId: 'pp_' + Date.now(),
+            method: 'paypal'
+        };
+    }
+}
+
+class BitcoinPayment extends PaymentStrategy {
+    constructor(walletAddress) {
+        super();
+        this.walletAddress = walletAddress;
+    }
+
+    validate() {
+        if (!this.walletAddress || this.walletAddress.length < 20) {
+            throw new Error('Invalid Bitcoin wallet address');
+        }
+        return true;
+    }
+
+    async process(amount) {
+        this.validate();
+
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Bitcoin is slower
+
+        console.log(`Processing $${amount} via Bitcoin to ${this.walletAddress}`);
+        return {
+            success: true,
+            transactionId: 'btc_' + Date.now(),
+            method: 'bitcoin'
+        };
+    }
+}
+
+// Payment processor
+class PaymentProcessor {
+    constructor() {
+        this.strategies = new Map();
+        this.registerStrategy('credit_card', CreditCardPayment);
+        this.registerStrategy('paypal', PayPalPayment);
+        this.registerStrategy('bitcoin', BitcoinPayment);
+    }
+
+    registerStrategy(name, strategyClass) {
+        this.strategies.set(name, strategyClass);
+    }
+
+    createPaymentMethod(type, ...args) {
+        let StrategyClass = this.strategies.get(type);
+        if (!StrategyClass) {
+            throw new Error(`Unknown payment method: ${type}`);
+        }
+        return new StrategyClass(...args);
+    }
+
+    async processPayment(amount, paymentMethod) {
+        try {
+            let result = await paymentMethod.process(amount);
+            console.log('Payment successful:', result);
+            return result;
+        } catch (error) {
+            console.error('Payment failed:', error.message);
+            throw error;
+        }
+    }
+}
+
+// Usage
+async function demonstratePayments() {
+    let processor = new PaymentProcessor();
+
+    // Create different payment methods
+    let creditCard = processor.createPaymentMethod('credit_card', '4111111111111111', '12/25', '123');
+    let paypal = processor.createPaymentMethod('paypal', 'user@paypal.com', 'password');
+    let bitcoin = processor.createPaymentMethod('bitcoin', '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa');
+
+    // Process payments
+    await processor.processPayment(100, creditCard);
+    await processor.processPayment(200, paypal);
+    await processor.processPayment(50, bitcoin);
+}
+
+demonstratePayments();
+```
+
+### Decorator Pattern
+
+```javascript
+// Component interface
+class Coffee {
+    cost() {
+        throw new Error('cost() method must be implemented');
+    }
+
+    description() {
+        throw new Error('description() method must be implemented');
+    }
+}
+
+// Concrete component
+class SimpleCoffee extends Coffee {
+    cost() {
+        return 2;
+    }
+
+    description() {
+        return 'Simple coffee';
+    }
+}
+
+// Base decorator
+class CoffeeDecorator extends Coffee {
+    constructor(coffee) {
+        super();
+        this.coffee = coffee;
+    }
+
+    cost() {
+        return this.coffee.cost();
+    }
+
+    description() {
+        return this.coffee.description();
+    }
+}
+
+// Concrete decorators
+class MilkDecorator extends CoffeeDecorator {
+    cost() {
+        return this.coffee.cost() + 0.5;
+    }
+
+    description() {
+        return this.coffee.description() + ', milk';
+    }
+}
+
+class SugarDecorator extends CoffeeDecorator {
+    cost() {
+        return this.coffee.cost() + 0.2;
+    }
+
+    description() {
+        return this.coffee.description() + ', sugar';
+    }
+}
+
+class WhipCreamDecorator extends CoffeeDecorator {
+    cost() {
+        return this.coffee.cost() + 1.0;
+    }
+
+    description() {
+        return this.coffee.description() + ', whip cream';
+    }
+}
+
+// Function decorator pattern for JavaScript
+function withLogging(target, propertyName, descriptor) {
+    let originalMethod = descriptor.value;
+
+    descriptor.value = function(...args) {
+        console.log(`Calling ${propertyName} with:`, args);
+        let result = originalMethod.apply(this, args);
+        console.log(`${propertyName} returned:`, result);
+        return result;
+    };
+
+    return descriptor;
+}
+
+function withTimer(target, propertyName, descriptor) {
+    let originalMethod = descriptor.value;
+
+    descriptor.value = function(...args) {
+        let start = performance.now();
+        let result = originalMethod.apply(this, args);
+        let end = performance.now();
+        console.log(`${propertyName} took ${(end - start).toFixed(2)}ms`);
+        return result;
+    };
+
+    return descriptor;
+}
+
+// Usage with coffee
+let coffee = new SimpleCoffee();
+coffee = new MilkDecorator(coffee);
+coffee = new SugarDecorator(coffee);
+coffee = new WhipCreamDecorator(coffee);
+
+console.log(`${coffee.description()} costs $${coffee.cost()}`);
+// "Simple coffee, milk, sugar, whip cream costs $3.7"
+
+// Class with decorators (requires transpiler like Babel for current support)
+class Calculator {
+    @withLogging
+    @withTimer
+    add(a, b) {
+        return a + b;
+    }
+
+    @withLogging
+    multiply(a, b) {
+        // Simulate slow operation
+        let result = 0;
+        for (let i = 0; i < 1000000; i++) {
+            result = a * b;
+        }
+        return result;
+    }
+}
+
+// Manual decoration without decorator syntax
+function decorateMethod(obj, methodName, decorators) {
+    let originalMethod = obj[methodName];
+
+    decorators.reverse().forEach(decorator => {
+        let descriptor = { value: originalMethod };
+        originalMethod = decorator(obj, methodName, descriptor).value;
+    });
+
+    obj[methodName] = originalMethod;
+}
+
+let calc = new Calculator();
+decorateMethod(calc, 'add', [withTimer, withLogging]);
+decorateMethod(calc, 'multiply', [withLogging]);
+
+calc.add(5, 3);        // Logs timing and arguments
+calc.multiply(4, 6);   // Logs arguments and result
+```
+
+## Modern Class Features
+
+### Private fields va Getters/Setters
+
+```javascript
+class SmartThermostat {
+    // Private fields
+    #temperature = 20;
+    #targetTemperature = 22;
+    #isHeating = false;
+    #isCooling = false;
+    #schedule = new Map();
+
+    constructor(initialTemp = 20) {
+        this.#temperature = initialTemp;
+        this.#targetTemperature = initialTemp;
+        this.#startMainLoop();
+    }
+
+    // Getters
+    get temperature() {
+        return this.#temperature;
+    }
+
+    get targetTemperature() {
+        return this.#targetTemperature;
+    }
+
+    get isHeating() {
+        return this.#isHeating;
+    }
+
+    get isCooling() {
+        return this.#isCooling;
+    }
+
+    get status() {
+        if (this.#isHeating) return 'heating';
+        if (this.#isCooling) return 'cooling';
+        return 'idle';
+    }
+
+    // Setters with validation
+    set targetTemperature(temp) {
+        if (typeof temp !== 'number') {
+            throw new Error('Temperature must be a number');
+        }
+        if (temp < 10 || temp > 30) {
+            throw new Error('Temperature must be between 10-30°C');
+        }
+
+        console.log(`Target temperature set to ${temp}°C`);
+        this.#targetTemperature = temp;
+        this.#updateSystem();
+    }
+
+    // Private methods
+    #updateSystem() {
+        let diff = this.#targetTemperature - this.#temperature;
+
+        if (Math.abs(diff) < 0.5) {
+            this.#isHeating = false;
+            this.#isCooling = false;
+            console.log('Temperature reached target');
+        } else if (diff > 0) {
+            this.#isHeating = true;
+            this.#isCooling = false;
+            console.log('Heating system activated');
+        } else {
+            this.#isHeating = false;
+            this.#isCooling = true;
+            console.log('Cooling system activated');
+        }
+    }
+
+    #startMainLoop() {
+        setInterval(() => {
+            if (this.#isHeating) {
+                this.#temperature += 0.1;
+            } else if (this.#isCooling) {
+                this.#temperature -= 0.1;
+            }
+
+            this.#updateSystem();
+            this.#checkSchedule();
+        }, 1000);
+    }
+
+    #checkSchedule() {
+        let now = new Date();
+        let timeKey = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+        if (this.#schedule.has(timeKey)) {
+            let scheduledTemp = this.#schedule.get(timeKey);
+            console.log(`Scheduled temperature change: ${scheduledTemp}°C`);
+            this.targetTemperature = scheduledTemp;
+        }
+    }
+
+    // Public methods
+    setSchedule(time, temperature) {
+        this.#schedule.set(time, temperature);
+        console.log(`Scheduled: ${temperature}°C at ${time}`);
+    }
+
+    getSchedule() {
+        return new Map(this.#schedule); // Return copy
+    }
+
+    clearSchedule() {
+        this.#schedule.clear();
+        console.log('Schedule cleared');
+    }
+
+    getReport() {
+        return {
+            current: this.#temperature.toFixed(1),
+            target: this.#targetTemperature,
+            status: this.status,
+            schedule: Object.fromEntries(this.#schedule)
+        };
+    }
+}
+
+// Usage
+let thermostat = new SmartThermostat(18);
+thermostat.targetTemperature = 24;  // Uses setter with validation
+thermostat.setSchedule('22:00', 20); // Night time
+thermostat.setSchedule('08:00', 22); // Morning
+
+console.log(thermostat.getReport());
+// console.log(thermostat.#temperature); // SyntaxError: Private field
+```
+
+## Practical Example: E-commerce System
+
+```javascript
+// Base product class
+class Product {
+    constructor(id, name, price, category) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.category = category;
+        this.reviews = [];
+    }
+
+    addReview(rating, comment, reviewerName) {
+        this.reviews.push({
+            rating,
+            comment,
+            reviewerName,
+            date: new Date()
+        });
+    }
+
+    getAverageRating() {
+        if (this.reviews.length === 0) return 0;
+        let sum = this.reviews.reduce((total, review) => total + review.rating, 0);
+        return sum / this.reviews.length;
+    }
+
+    getDetails() {
+        return {
+            id: this.id,
+            name: this.name,
+            price: this.price,
+            category: this.category,
+            averageRating: this.getAverageRating(),
+            reviewCount: this.reviews.length
+        };
+    }
+}
+
+// Digital product
+class DigitalProduct extends Product {
+    constructor(id, name, price, downloadUrl, fileSize) {
+        super(id, name, price, 'digital');
+        this.downloadUrl = downloadUrl;
+        this.fileSize = fileSize;
+    }
+
+    download() {
+        console.log(`Downloading ${this.name} (${this.fileSize})`);
+        return this.downloadUrl;
+    }
+}
+
+// Physical product
+class PhysicalProduct extends Product {
+    constructor(id, name, price, weight, dimensions) {
+        super(id, name, price, 'physical');
+        this.weight = weight;
+        this.dimensions = dimensions;
+        this.stock = 0;
+    }
+
+    setStock(quantity) {
+        this.stock = quantity;
+    }
+
+    isInStock() {
+        return this.stock > 0;
+    }
+
+    purchase(quantity = 1) {
+        if (quantity > this.stock) {
+            throw new Error(`Not enough stock. Available: ${this.stock}`);
+        }
+        this.stock -= quantity;
+        return quantity;
+    }
+}
+
+// Shopping cart
+class ShoppingCart {
+    constructor() {
+        this.items = [];
+        this.discounts = [];
+    }
+
+    addItem(product, quantity = 1) {
+        let existingItem = this.items.find(item => item.product.id === product.id);
+
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            this.items.push({ product, quantity });
+        }
+
+        console.log(`Added ${quantity}x ${product.name} to cart`);
+    }
+
+    removeItem(productId, quantity = null) {
+        let itemIndex = this.items.findIndex(item => item.product.id === productId);
+
+        if (itemIndex === -1) return;
+
+        if (quantity === null) {
+            // Remove entire item
+            this.items.splice(itemIndex, 1);
+        } else {
+            // Remove specific quantity
+            this.items[itemIndex].quantity -= quantity;
+            if (this.items[itemIndex].quantity <= 0) {
+                this.items.splice(itemIndex, 1);
+            }
+        }
+    }
+
+    getTotal() {
+        let subtotal = this.items.reduce((total, item) => {
+            return total + (item.product.price * item.quantity);
+        }, 0);
+
+        let discountAmount = this.discounts.reduce((total, discount) => {
+            return total + discount.calculate(subtotal);
+        }, 0);
+
+        return Math.max(0, subtotal - discountAmount);
+    }
+
+    applyDiscount(discount) {
+        this.discounts.push(discount);
+    }
+
+    clear() {
+        this.items = [];
+        this.discounts = [];
+    }
+
+    getSummary() {
+        return {
+            items: this.items.map(item => ({
+                product: item.product.getDetails(),
+                quantity: item.quantity,
+                subtotal: item.product.price * item.quantity
+            })),
+            total: this.getTotal(),
+            itemCount: this.items.length
+        };
+    }
+}
+
+// Discount strategies
+class PercentageDiscount {
+    constructor(percentage) {
+        this.percentage = percentage;
+    }
+
+    calculate(subtotal) {
+        return subtotal * (this.percentage / 100);
+    }
+}
+
+class FixedDiscount {
+    constructor(amount) {
+        this.amount = amount;
+    }
+
+    calculate(subtotal) {
+        return Math.min(this.amount, subtotal);
+    }
+}
+
+// Order management
+class Order {
+    static #nextOrderId = 1;
+
+    constructor(cart, customer) {
+        this.id = Order.#nextOrderId++;
+        this.customer = customer;
+        this.items = [...cart.items];
+        this.total = cart.getTotal();
+        this.status = 'pending';
+        this.createdAt = new Date();
+        this.shippingAddress = null;
+    }
+
+    setShippingAddress(address) {
+        this.shippingAddress = address;
+    }
+
+    updateStatus(newStatus) {
+        this.status = newStatus;
+        console.log(`Order ${this.id} status updated to: ${newStatus}`);
+    }
+
+    getTrackingInfo() {
+        return {
+            orderId: this.id,
+            status: this.status,
+            createdAt: this.createdAt,
+            estimatedDelivery: this.#calculateEstimatedDelivery()
+        };
+    }
+
+    #calculateEstimatedDelivery() {
+        let deliveryDate = new Date(this.createdAt);
+
+        // Physical products take longer
+        let hasPhysical = this.items.some(item =>
+            item.product instanceof PhysicalProduct
+        );
+
+        if (hasPhysical) {
+            deliveryDate.setDate(deliveryDate.getDate() + 5); // 5 days
+        } else {
+            deliveryDate = this.createdAt; // Digital products available immediately
+        }
+
+        return deliveryDate;
+    }
+}
+
+// Usage example
+async function demonstrateEcommerce() {
+    // Create products
+    let laptop = new PhysicalProduct(1, 'MacBook Pro', 1999, '1.4kg', '30x21x1.6cm');
+    laptop.setStock(10);
+
+    let ebook = new DigitalProduct(2, 'JavaScript Guide', 29.99, 'https://download.link', '5MB');
+
+    let software = new DigitalProduct(3, 'Design Software', 99.99, 'https://download.link', '200MB');
+
+    // Add reviews
+    laptop.addReview(5, 'Excellent laptop!', 'Ali K.');
+    laptop.addReview(4.5, 'Great performance', 'Fatima S.');
+    ebook.addReview(4, 'Very helpful', 'Ahmad T.');
+
+    console.log('Product ratings:');
+    console.log(`${laptop.name}: ${laptop.getAverageRating().toFixed(1)}/5`);
+    console.log(`${ebook.name}: ${ebook.getAverageRating().toFixed(1)}/5`);
+
+    // Shopping
+    let cart = new ShoppingCart();
+    cart.addItem(laptop, 1);
+    cart.addItem(ebook, 1);
+    cart.addItem(software, 2);
+
+    console.log('\nCart summary:', cart.getSummary());
+
+    // Apply discounts
+    cart.applyDiscount(new PercentageDiscount(10)); // 10% off
+    cart.applyDiscount(new FixedDiscount(50));       // $50 off
+
+    console.log('\nAfter discounts:', cart.getTotal());
+
+    // Create order
+    let order = new Order(cart, { name: 'John Doe', email: 'john@test.com' });
+    order.setShippingAddress('123 Main St, City, Country');
+
+    console.log('\nOrder tracking:', order.getTrackingInfo());
+
+    // Process order
+    order.updateStatus('processing');
+    order.updateStatus('shipped');
+    order.updateStatus('delivered');
+}
+
+demonstrateEcommerce();
+```
+
+## Module Bundling va Build Process
+
+```javascript
+// webpack.config.js örnek
+const path = require('path');
+
+module.exports = {
+    entry: './src/index.js',
+    output: {
+        filename: 'bundle.js',
+        path: path.resolve(__dirname, 'dist'),
+        library: 'MyLibrary',
+        libraryTarget: 'umd'
+    },
+    module: {
+        rules: [
+            {
+                test: /\.js$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: ['@babel/preset-env'],
+                        plugins: [
+                            '@babel/plugin-proposal-class-properties',
+                            '@babel/plugin-proposal-private-methods'
+                        ]
+                    }
+                }
+            }
+        ]
+    },
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, 'src'),
+            '@components': path.resolve(__dirname, 'src/components'),
+            '@utils': path.resolve(__dirname, 'src/utils')
+        }
+    }
+};
+
+// package.json scripts
+{
+    "scripts": {
+        "build": "webpack --mode production",
+        "dev": "webpack --mode development --watch",
+        "test": "jest",
+        "lint": "eslint src/",
+        "start": "webpack serve --mode development"
+    }
+}
+
+// Tree shaking example
+// utils/math.js
+export function add(a, b) {
+    return a + b;
+}
+
+export function multiply(a, b) { // Won't be included if not used
+    return a * b;
+}
+
+export function divide(a, b) { // Won't be included if not used
+    return a / b;
+}
+
+// main.js - Only 'add' will be bundled
+import { add } from './utils/math.js';
+
+console.log(add(2, 3));
+```
+
+## Xulosa
+
+Bu darsda JavaScript Modules va OOP'ning ilg'or konceptlarini o'rgandik:
+
+- ✅ **ES6 Classes** - Constructor, methods, inheritance
+- ✅ **Private Fields** - Encapsulation va data hiding
+- ✅ **Modules** - Import/export, dynamic imports
+- ✅ **Design Patterns** - Observer, Factory, Strategy, Decorator
+- ✅ **Advanced OOP** - Abstract classes, mixins, polymorphism
+- ✅ **Real-world Project** - E-commerce system implementation
+- ✅ **Build Process** - Webpack, tree shaking, module bundling
+
+Bu bilimlar bilan siz enterprise-level JavaScript applications yaray olasiz! 🏗️
+
+## Qo'shimcha Resurslar
+
+- [MDN Classes Guide](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes)
+- [JavaScript Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
+
+---
+
+⚡ **Oxirgi dars**: Browser APIs va Local Storage o'rganamiz va JavaScript kursini yakunlaymiz!

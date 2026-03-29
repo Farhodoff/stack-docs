@@ -1,0 +1,1302 @@
+---
+title: "JavaScript Error Handling & Debugging"
+description: "JavaScript'da xatolik boshqaruvi va debugging: try/catch/finally, custom errors, debugging tools, logging strategies va professional error handling."
+order: 8
+category: javascript
+tags: ["javascript", "debugging", "errors", "try-catch", "console", "testing"]
+difficulty: advanced
+readTime: 40
+---
+
+# JavaScript Error Handling & Debugging
+
+Professional dasturlashda xatolik boshqaruvi va debugging eng muhim ko'nikmalardan biri. Bu dars orqali JavaScript'da xatoliklarni to'g'ri boshqarishni va code'ni debug qilishni o'rganamiz.
+
+## Error Types (Xatolik Turlari)
+
+### JavaScript Built-in Errors
+
+```javascript
+// 1. SyntaxError - Sintaksis xatoligi
+try {
+    eval('function test() { console.log("broken syntax" }'); // Missing )
+} catch (error) {
+    console.log("SyntaxError:", error.message);
+}
+
+// 2. ReferenceError - O'zgaruvchi topilmagan
+try {
+    console.log(undefinedVariable);
+} catch (error) {
+    console.log("ReferenceError:", error.message); // "undefinedVariable is not defined"
+}
+
+// 3. TypeError - Noto'g'ri tur ishlatildi
+try {
+    let str = "salom";
+    str.push("dunyo"); // String'da push metodi yo'q
+} catch (error) {
+    console.log("TypeError:", error.message); // "str.push is not a function"
+}
+
+// 4. RangeError - Chegaradan tashqari qiymat
+try {
+    let arr = new Array(-1); // Manfiy o'lcham
+} catch (error) {
+    console.log("RangeError:", error.message); // "Invalid array length"
+}
+
+// 5. URIError - URI bilan bog'liq xatolik
+try {
+    decodeURIComponent('%'); // Noto'g'ri URI
+} catch (error) {
+    console.log("URIError:", error.message);
+}
+
+// 6. EvalError - eval() bilan bog'liq (kamdan-kam)
+// Zamonaviy JavaScript'da deyarli ishlatilmaydi
+```
+
+### Error Object Properties
+
+```javascript
+try {
+    throw new Error("Bu test xatoligi");
+} catch (error) {
+    console.log("Name:", error.name);         // "Error"
+    console.log("Message:", error.message);   // "Bu test xatoligi"
+    console.log("Stack:", error.stack);       // Stack trace
+
+    // Additional properties (browser-specific)
+    console.log("Line:", error.lineNumber);   // Firefox
+    console.log("Column:", error.columnNumber); // Firefox
+    console.log("File:", error.fileName);     // Firefox
+}
+```
+
+## Try/Catch/Finally
+
+### Basic Try/Catch
+
+```javascript
+function safeParseJSON(jsonString) {
+    try {
+        let parsed = JSON.parse(jsonString);
+        console.log("JSON parsed successfully:", parsed);
+        return parsed;
+    } catch (error) {
+        console.error("JSON parse xatoligi:", error.message);
+        return null;
+    }
+}
+
+// Test
+safeParseJSON('{"name": "Ali"}');     // ✅ Success
+safeParseJSON('{"name": "Ali"');      // ❌ Invalid JSON
+```
+
+### Finally Block
+
+```javascript
+function processFile(fileName) {
+    let file = null;
+
+    try {
+        file = openFile(fileName);  // Hypothetical function
+        let content = file.read();
+        return processContent(content);
+    } catch (error) {
+        console.error("Fayl ishlatishda xatolik:", error.message);
+        return null;
+    } finally {
+        // Bu blok har doim ishlaydi
+        if (file) {
+            file.close(); // Resource'ni tozalash
+            console.log("Fayl yopildi");
+        }
+    }
+}
+
+// Async/await bilan finally
+async function fetchDataSafely(url) {
+    let controller = new AbortController();
+
+    try {
+        // 5 sekund timeout
+        setTimeout(() => controller.abort(), 5000);
+
+        let response = await fetch(url, {
+            signal: controller.signal
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.error("Request timeout yoki cancel qilindi");
+        } else {
+            console.error("Network xatoligi:", error.message);
+        }
+        return null;
+    } finally {
+        console.log("Cleanup: Request tugadi");
+    }
+}
+```
+
+### Nested Try/Catch
+
+```javascript
+function complexOperation() {
+    try {
+        // Tashqi operatsiya
+        let data = fetchData(); // Bu o'zida try/catch bo'lishi mumkin
+
+        try {
+            // Ichki operatsiya
+            let processed = processData(data);
+            return processed;
+        } catch (processingError) {
+            console.error("Ma'lumot ishlashda xatolik:", processingError.message);
+
+            try {
+                // Fallback operatsiya
+                return defaultProcessing(data);
+            } catch (fallbackError) {
+                console.error("Fallback ham ishlamadi:", fallbackError.message);
+                throw new Error("Barcha operatsiyalar ishlamadi");
+            }
+        }
+    } catch (fetchError) {
+        console.error("Ma'lumot olishda xatolik:", fetchError.message);
+        throw fetchError; // Re-throw
+    }
+}
+```
+
+## Custom Errors
+
+### Basic Custom Errors
+
+```javascript
+// Custom error class
+class ValidationError extends Error {
+    constructor(message, field = null) {
+        super(message);
+        this.name = "ValidationError";
+        this.field = field;
+
+        // Stack trace uchun (V8 engine)
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, ValidationError);
+        }
+    }
+}
+
+class NetworkError extends Error {
+    constructor(message, status = null, url = null) {
+        super(message);
+        this.name = "NetworkError";
+        this.status = status;
+        this.url = url;
+    }
+}
+
+class BusinessLogicError extends Error {
+    constructor(message, code = null) {
+        super(message);
+        this.name = "BusinessLogicError";
+        this.code = code;
+    }
+}
+
+// Custom error'larni ishlatish
+function validateUser(user) {
+    if (!user.name) {
+        throw new ValidationError("Ism majburiy", "name");
+    }
+
+    if (!user.email || !user.email.includes("@")) {
+        throw new ValidationError("To'g'ri email kiriting", "email");
+    }
+
+    if (user.age < 0 || user.age > 150) {
+        throw new ValidationError("Yosh 0-150 oralig'ida bo'lishi kerak", "age");
+    }
+}
+
+// Error handling with custom errors
+function processUserRegistration(userData) {
+    try {
+        validateUser(userData);
+
+        // Simulate API call
+        if (userData.email === "test@test.com") {
+            throw new BusinessLogicError("Bu email allaqachon mavjud", "DUPLICATE_EMAIL");
+        }
+
+        console.log("User muvaffaqiyatli ro'yxatdan o'tdi");
+        return { success: true, user: userData };
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return {
+                success: false,
+                type: "validation",
+                field: error.field,
+                message: error.message
+            };
+        } else if (error instanceof BusinessLogicError) {
+            return {
+                success: false,
+                type: "business",
+                code: error.code,
+                message: error.message
+            };
+        } else {
+            return {
+                success: false,
+                type: "unknown",
+                message: "Noma'lum xatolik yuz berdi"
+            };
+        }
+    }
+}
+
+// Test
+console.log(processUserRegistration({ name: "Ali", email: "ali@test.com", age: 25 }));
+console.log(processUserRegistration({ name: "", email: "invalid", age: -5 }));
+```
+
+### Advanced Error Handling Patterns
+
+```javascript
+// Error Builder Pattern
+class ErrorBuilder {
+    constructor(message) {
+        this.error = new Error(message);
+        this.error.name = "CustomError";
+        this.error.details = {};
+    }
+
+    withCode(code) {
+        this.error.code = code;
+        return this;
+    }
+
+    withField(field) {
+        this.error.field = field;
+        return this;
+    }
+
+    withDetails(details) {
+        this.error.details = { ...this.error.details, ...details };
+        return this;
+    }
+
+    withCause(cause) {
+        this.error.cause = cause;
+        return this;
+    }
+
+    build() {
+        return this.error;
+    }
+}
+
+// Usage
+function validateComplexData(data) {
+    if (!data.user) {
+        throw new ErrorBuilder("User ma'lumotlari yo'q")
+            .withCode("MISSING_USER")
+            .withField("user")
+            .withDetails({ timestamp: Date.now(), context: "validation" })
+            .build();
+    }
+
+    try {
+        validateUser(data.user);
+    } catch (originalError) {
+        throw new ErrorBuilder("User validation xatoligi")
+            .withCode("USER_VALIDATION_FAILED")
+            .withCause(originalError)
+            .build();
+    }
+}
+```
+
+## Debugging Tools va Techniques
+
+### Console Methods
+
+```javascript
+// 1. Basic logging
+console.log("Simple log");
+console.info("Information message");
+console.warn("Warning message");
+console.error("Error message");
+
+// 2. Object inspection
+let user = { name: "Ali", age: 25, skills: ["JavaScript", "React"] };
+console.log("User:", user);
+console.dir(user); // More detailed object view
+console.table([user, { name: "Fatima", age: 28, skills: ["Python"] }]);
+
+// 3. Grouping
+console.group("User Processing");
+console.log("Step 1: Validate");
+console.log("Step 2: Save");
+console.groupCollapsed("Database Operations");
+console.log("Connect to DB");
+console.log("Execute query");
+console.groupEnd();
+console.groupEnd();
+
+// 4. Timing
+console.time("data-processing");
+// ... some operation
+setTimeout(() => {
+    console.timeEnd("data-processing"); // Shows elapsed time
+}, 1000);
+
+// 5. Counting
+function processItem(item) {
+    console.count("processItem"); // Counts how many times called
+    console.count(`processItem-${item.type}`); // Count by category
+}
+
+// 6. Stack trace
+function funcA() {
+    funcB();
+}
+
+function funcB() {
+    funcC();
+}
+
+function funcC() {
+    console.trace("Stack trace from funcC");
+}
+
+funcA(); // Shows full call stack
+
+// 7. Conditional logging
+function debugLog(condition, message, ...args) {
+    console.assert(condition, message, ...args);
+}
+
+debugLog(user.age > 18, "User must be adult", user);
+
+// 8. Memory usage (Chrome DevTools)
+console.memory; // Shows memory info
+```
+
+### Debugging Patterns
+
+```javascript
+// 1. Debugger statement
+function complexCalculation(data) {
+    let result = 0;
+
+    for (let i = 0; i < data.length; i++) {
+        debugger; // Browser will pause here
+        result += data[i] * 2;
+    }
+
+    return result;
+}
+
+// 2. Debug helper functions
+const DEBUG = true; // Environment variable
+
+function debug(message, data = null) {
+    if (!DEBUG) return;
+
+    console.log(`[DEBUG] ${message}`, data || '');
+}
+
+function debugMethod(target, methodName) {
+    let original = target[methodName];
+
+    target[methodName] = function(...args) {
+        console.log(`[METHOD] ${methodName} called with:`, args);
+        let result = original.apply(this, args);
+        console.log(`[METHOD] ${methodName} returned:`, result);
+        return result;
+    };
+}
+
+// Usage
+class Calculator {
+    add(a, b) {
+        return a + b;
+    }
+
+    multiply(a, b) {
+        return a * b;
+    }
+}
+
+let calc = new Calculator();
+debugMethod(calc, 'add');
+debugMethod(calc, 'multiply');
+
+calc.add(5, 3);      // Logs input and output
+calc.multiply(4, 6); // Logs input and output
+
+// 3. Performance monitoring
+function performanceWrapper(func, name) {
+    return function(...args) {
+        let start = performance.now();
+        let result = func.apply(this, args);
+        let end = performance.now();
+
+        console.log(`[PERF] ${name} took ${(end - start).toFixed(2)}ms`);
+        return result;
+    };
+}
+
+// 4. Error boundary simulation
+function withErrorBoundary(func, fallback = null) {
+    return function(...args) {
+        try {
+            return func.apply(this, args);
+        } catch (error) {
+            console.error(`Error in ${func.name}:`, error);
+
+            if (fallback) {
+                console.log("Using fallback function");
+                return fallback.apply(this, args);
+            }
+
+            return null;
+        }
+    };
+}
+
+let safeFunction = withErrorBoundary(
+    function riskyOperation(data) {
+        return JSON.parse(data);
+    },
+    function fallback() {
+        return { error: "Invalid JSON" };
+    }
+);
+```
+
+## Logging Strategies
+
+### Advanced Logger Implementation
+
+```javascript
+class Logger {
+    constructor(options = {}) {
+        this.level = options.level || 'info';
+        this.prefix = options.prefix || '';
+        this.enableColors = options.colors !== false;
+        this.enableTimestamp = options.timestamp !== false;
+        this.storage = options.storage || null; // localStorage, server, etc.
+
+        this.levels = {
+            error: 0,
+            warn: 1,
+            info: 2,
+            debug: 3,
+            trace: 4
+        };
+
+        this.colors = {
+            error: '#ff4757',
+            warn: '#ffa502',
+            info: '#2ed573',
+            debug: '#5352ed',
+            trace: '#222f3e'
+        };
+    }
+
+    _shouldLog(level) {
+        return this.levels[level] <= this.levels[this.level];
+    }
+
+    _formatMessage(level, message, data) {
+        let parts = [];
+
+        if (this.enableTimestamp) {
+            parts.push(`[${new Date().toISOString()}]`);
+        }
+
+        if (this.prefix) {
+            parts.push(`[${this.prefix}]`);
+        }
+
+        parts.push(`[${level.toUpperCase()}]`);
+        parts.push(message);
+
+        let formatted = parts.join(' ');
+
+        if (data !== undefined) {
+            formatted += '\n' + JSON.stringify(data, null, 2);
+        }
+
+        return formatted;
+    }
+
+    _log(level, message, data) {
+        if (!this._shouldLog(level)) return;
+
+        let formatted = this._formatMessage(level, message, data);
+
+        // Console output with color
+        if (this.enableColors && typeof window !== 'undefined') {
+            console.log(`%c${formatted}`, `color: ${this.colors[level]}`);
+        } else {
+            console[level === 'trace' ? 'log' : level](formatted);
+        }
+
+        // Storage
+        if (this.storage) {
+            this.storage.save({
+                level,
+                message,
+                data,
+                timestamp: new Date().toISOString(),
+                prefix: this.prefix
+            });
+        }
+    }
+
+    error(message, data) {
+        this._log('error', message, data);
+    }
+
+    warn(message, data) {
+        this._log('warn', message, data);
+    }
+
+    info(message, data) {
+        this._log('info', message, data);
+    }
+
+    debug(message, data) {
+        this._log('debug', message, data);
+    }
+
+    trace(message, data) {
+        this._log('trace', message, data);
+    }
+
+    // Performance logging
+    time(label) {
+        this[`_time_${label}`] = performance.now();
+    }
+
+    timeEnd(label) {
+        let start = this[`_time_${label}`];
+        if (start) {
+            let duration = performance.now() - start;
+            this.info(`Timer ${label}`, { duration: `${duration.toFixed(2)}ms` });
+            delete this[`_time_${label}`];
+        }
+    }
+
+    // Create child logger
+    child(prefix) {
+        return new Logger({
+            level: this.level,
+            prefix: this.prefix ? `${this.prefix}:${prefix}` : prefix,
+            colors: this.enableColors,
+            timestamp: this.enableTimestamp,
+            storage: this.storage
+        });
+    }
+}
+
+// Storage implementations
+class LocalStorageLogStorage {
+    constructor(maxEntries = 1000) {
+        this.maxEntries = maxEntries;
+        this.key = 'app_logs';
+    }
+
+    save(logEntry) {
+        try {
+            let logs = this.getLogs();
+            logs.push(logEntry);
+
+            // Keep only recent entries
+            if (logs.length > this.maxEntries) {
+                logs = logs.slice(-this.maxEntries);
+            }
+
+            localStorage.setItem(this.key, JSON.stringify(logs));
+        } catch (error) {
+            console.error('Failed to save log to localStorage:', error);
+        }
+    }
+
+    getLogs() {
+        try {
+            return JSON.parse(localStorage.getItem(this.key) || '[]');
+        } catch (error) {
+            return [];
+        }
+    }
+
+    clear() {
+        localStorage.removeItem(this.key);
+    }
+
+    export() {
+        let logs = this.getLogs();
+        let blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+        let url = URL.createObjectURL(blob);
+
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = `app-logs-${new Date().toISOString()}.json`;
+        a.click();
+
+        URL.revokeObjectURL(url);
+    }
+}
+
+// Usage
+let storage = new LocalStorageLogStorage();
+let logger = new Logger({
+    level: 'debug',
+    prefix: 'MyApp',
+    storage: storage
+});
+
+let apiLogger = logger.child('API');
+let dbLogger = logger.child('Database');
+
+apiLogger.info('Starting API call', { url: '/api/users', method: 'GET' });
+dbLogger.debug('Executing query', { sql: 'SELECT * FROM users' });
+
+logger.error('Application error', {
+    error: 'Database connection failed',
+    stack: new Error().stack
+});
+```
+
+### Remote Logging
+
+```javascript
+class RemoteLogger extends Logger {
+    constructor(options = {}) {
+        super(options);
+        this.endpoint = options.endpoint;
+        this.apiKey = options.apiKey;
+        this.batchSize = options.batchSize || 10;
+        this.flushInterval = options.flushInterval || 5000;
+
+        this.batch = [];
+        this.setupAutoFlush();
+    }
+
+    setupAutoFlush() {
+        setInterval(() => {
+            if (this.batch.length > 0) {
+                this.flush();
+            }
+        }, this.flushInterval);
+
+        // Flush on page unload
+        if (typeof window !== 'undefined') {
+            window.addEventListener('beforeunload', () => {
+                this.flush();
+            });
+        }
+    }
+
+    _log(level, message, data) {
+        super._log(level, message, data);
+
+        // Add to batch for remote logging
+        this.batch.push({
+            level,
+            message,
+            data,
+            timestamp: new Date().toISOString(),
+            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+            url: typeof window !== 'undefined' ? window.location.href : '',
+            sessionId: this.getSessionId()
+        });
+
+        if (this.batch.length >= this.batchSize) {
+            this.flush();
+        }
+    }
+
+    async flush() {
+        if (!this.endpoint || this.batch.length === 0) return;
+
+        let logsToSend = [...this.batch];
+        this.batch = [];
+
+        try {
+            await fetch(this.endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`
+                },
+                body: JSON.stringify({
+                    logs: logsToSend,
+                    metadata: {
+                        timestamp: new Date().toISOString(),
+                        source: 'browser'
+                    }
+                })
+            });
+        } catch (error) {
+            console.error('Failed to send logs to server:', error);
+            // Re-add to batch for retry
+            this.batch.unshift(...logsToSend);
+        }
+    }
+
+    getSessionId() {
+        if (!this._sessionId) {
+            this._sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+        return this._sessionId;
+    }
+}
+```
+
+## Error Monitoring va Crash Reporting
+
+### Custom Error Reporter
+
+```javascript
+class ErrorReporter {
+    constructor(options = {}) {
+        this.endpoint = options.endpoint;
+        this.apiKey = options.apiKey;
+        this.userId = options.userId;
+        this.enableAutoCapture = options.autoCapture !== false;
+        this.enableConsoleCapture = options.consoleCapture === true;
+
+        this.breadcrumbs = [];
+        this.maxBreadcrumbs = options.maxBreadcrumbs || 50;
+
+        if (this.enableAutoCapture) {
+            this.setupAutoCapture();
+        }
+
+        if (this.enableConsoleCapture) {
+            this.setupConsoleCapture();
+        }
+    }
+
+    setupAutoCapture() {
+        // Uncaught errors
+        window.addEventListener('error', (event) => {
+            this.captureError(event.error, {
+                type: 'uncaught',
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno
+            });
+        });
+
+        // Unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            this.captureError(event.reason, {
+                type: 'unhandledrejection',
+                promise: event.promise
+            });
+        });
+    }
+
+    setupConsoleCapture() {
+        let originalConsoleError = console.error;
+
+        console.error = (...args) => {
+            this.addBreadcrumb('console.error', { args });
+            originalConsoleError.apply(console, args);
+        };
+    }
+
+    addBreadcrumb(message, data = {}) {
+        this.breadcrumbs.push({
+            timestamp: new Date().toISOString(),
+            message,
+            data
+        });
+
+        if (this.breadcrumbs.length > this.maxBreadcrumbs) {
+            this.breadcrumbs.shift();
+        }
+    }
+
+    captureError(error, context = {}) {
+        let errorData = {
+            message: error.message || 'Unknown error',
+            stack: error.stack || '',
+            name: error.name || 'Error',
+            timestamp: new Date().toISOString(),
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            userId: this.userId,
+            context,
+            breadcrumbs: [...this.breadcrumbs],
+            metadata: {
+                viewport: {
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                },
+                screen: {
+                    width: window.screen.width,
+                    height: window.screen.height
+                },
+                memory: performance.memory ? {
+                    usedJSHeapSize: performance.memory.usedJSHeapSize,
+                    totalJSHeapSize: performance.memory.totalJSHeapSize
+                } : null
+            }
+        };
+
+        // Console log for immediate feedback
+        console.error('Error captured:', errorData);
+
+        // Send to server
+        this.sendError(errorData);
+
+        // Clear breadcrumbs after error
+        this.breadcrumbs = [];
+    }
+
+    async sendError(errorData) {
+        if (!this.endpoint) return;
+
+        try {
+            await fetch(this.endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`
+                },
+                body: JSON.stringify(errorData)
+            });
+        } catch (sendError) {
+            console.error('Failed to send error report:', sendError);
+        }
+    }
+
+    // Manual error capture
+    captureException(error, context = {}) {
+        this.captureError(error, { ...context, manual: true });
+    }
+
+    // Set user context
+    setUser(userId, userData = {}) {
+        this.userId = userId;
+        this.userData = userData;
+    }
+
+    // Set tags
+    setTag(key, value) {
+        if (!this.tags) this.tags = {};
+        this.tags[key] = value;
+    }
+
+    // Performance monitoring
+    capturePerformance(name, duration, context = {}) {
+        this.addBreadcrumb('performance', {
+            name,
+            duration,
+            ...context
+        });
+
+        if (duration > 1000) { // Slow operation
+            this.captureError(new Error(`Slow operation: ${name}`), {
+                type: 'performance',
+                duration,
+                ...context
+            });
+        }
+    }
+}
+
+// Global error reporter instance
+let errorReporter = new ErrorReporter({
+    endpoint: '/api/errors',
+    apiKey: 'your-api-key',
+    autoCapture: true,
+    consoleCapture: true
+});
+
+// Integration with async functions
+function withErrorCapture(asyncFunc) {
+    return async function(...args) {
+        try {
+            let start = performance.now();
+            let result = await asyncFunc.apply(this, args);
+            let duration = performance.now() - start;
+
+            errorReporter.capturePerformance(asyncFunc.name, duration);
+            return result;
+        } catch (error) {
+            errorReporter.captureException(error, {
+                function: asyncFunc.name,
+                arguments: args
+            });
+            throw error;
+        }
+    };
+}
+```
+
+## Testing va Debugging
+
+### Unit Test Error Cases
+
+```javascript
+// Test helper functions
+function expectError(func, expectedErrorType) {
+    try {
+        func();
+        throw new Error("Expected function to throw error");
+    } catch (error) {
+        if (error instanceof expectedErrorType) {
+            console.log("✅ Expected error thrown:", error.message);
+            return error;
+        } else {
+            console.error("❌ Wrong error type. Expected:", expectedErrorType.name, "Got:", error.constructor.name);
+            throw error;
+        }
+    }
+}
+
+function expectAsyncError(asyncFunc, expectedErrorType) {
+    return asyncFunc()
+        .then(() => {
+            throw new Error("Expected async function to throw error");
+        })
+        .catch(error => {
+            if (error instanceof expectedErrorType) {
+                console.log("✅ Expected async error thrown:", error.message);
+                return error;
+            } else {
+                console.error("❌ Wrong async error type. Expected:", expectedErrorType.name, "Got:", error.constructor.name);
+                throw error;
+            }
+        });
+}
+
+// Test examples
+function testValidationErrors() {
+    console.log("Testing validation errors...");
+
+    // Test missing name
+    expectError(
+        () => validateUser({}),
+        ValidationError
+    );
+
+    // Test invalid email
+    expectError(
+        () => validateUser({ name: "Ali", email: "invalid" }),
+        ValidationError
+    );
+
+    // Test invalid age
+    expectError(
+        () => validateUser({ name: "Ali", email: "ali@test.com", age: -5 }),
+        ValidationError
+    );
+
+    console.log("All validation tests passed!");
+}
+
+async function testAsyncErrors() {
+    console.log("Testing async errors...");
+
+    // Test network timeout
+    await expectAsyncError(
+        () => fetchDataSafely("http://nonexistent-url.com"),
+        Error
+    );
+
+    console.log("All async tests passed!");
+}
+
+// Mock functions for testing
+function createMockAPI() {
+    return {
+        fetchUser: (id) => {
+            if (id === 404) {
+                return Promise.reject(new NetworkError("User not found", 404));
+            }
+            if (id === 500) {
+                return Promise.reject(new NetworkError("Server error", 500));
+            }
+            return Promise.resolve({ id, name: "Test User" });
+        }
+    };
+}
+
+// Error simulation for testing
+function simulateRandomErrors(probability = 0.3) {
+    if (Math.random() < probability) {
+        let errorTypes = [
+            () => { throw new ValidationError("Random validation error"); },
+            () => { throw new NetworkError("Random network error"); },
+            () => { throw new Error("Random generic error"); }
+        ];
+
+        let randomError = errorTypes[Math.floor(Math.random() * errorTypes.length)];
+        randomError();
+    }
+}
+```
+
+## Best Practices
+
+### Error Handling Guidelines
+
+```javascript
+// ✅ GOOD: Specific error handling
+async function processUserData(userData) {
+    try {
+        validateUser(userData);
+        let result = await saveUser(userData);
+        return { success: true, data: result };
+    } catch (error) {
+        if (error instanceof ValidationError) {
+            return {
+                success: false,
+                type: 'validation',
+                message: error.message,
+                field: error.field
+            };
+        }
+
+        if (error instanceof NetworkError) {
+            return {
+                success: false,
+                type: 'network',
+                message: 'Server bilan bog\'lanishda muammo',
+                canRetry: error.status >= 500
+            };
+        }
+
+        // Unknown error
+        console.error('Unexpected error in processUserData:', error);
+        return {
+            success: false,
+            type: 'unknown',
+            message: 'Kutilmagan xatolik yuz berdi'
+        };
+    }
+}
+
+// ❌ BAD: Generic error handling
+async function processUserDataBad(userData) {
+    try {
+        validateUser(userData);
+        let result = await saveUser(userData);
+        return result;
+    } catch (error) {
+        console.error(error); // Too generic
+        return null; // Loses error information
+    }
+}
+
+// ✅ GOOD: Proper cleanup with resource management
+class DatabaseConnection {
+    constructor() {
+        this.connected = false;
+    }
+
+    async connect() {
+        try {
+            // Connection logic
+            this.connected = true;
+            console.log("Database connected");
+        } catch (error) {
+            console.error("Database connection failed:", error);
+            throw new NetworkError("Database bilan bog'lanib bo'lmadi", null, "database");
+        }
+    }
+
+    async close() {
+        if (this.connected) {
+            this.connected = false;
+            console.log("Database disconnected");
+        }
+    }
+
+    async executeQuery(query) {
+        if (!this.connected) {
+            throw new Error("Database bog'lanmagan");
+        }
+
+        try {
+            // Query execution logic
+            return { success: true, data: [] };
+        } catch (error) {
+            throw new NetworkError("Query bajarishda xatolik", null, query);
+        }
+    }
+}
+
+async function withDatabaseConnection(operation) {
+    let db = new DatabaseConnection();
+
+    try {
+        await db.connect();
+        return await operation(db);
+    } finally {
+        await db.close(); // Cleanup always happens
+    }
+}
+
+// Usage
+async function getUsersFromDB() {
+    return await withDatabaseConnection(async (db) => {
+        return await db.executeQuery("SELECT * FROM users");
+    });
+}
+```
+
+## Performance Monitoring
+
+```javascript
+// Performance monitoring wrapper
+class PerformanceMonitor {
+    constructor() {
+        this.metrics = new Map();
+        this.thresholds = {
+            slow: 1000,    // 1 second
+            critical: 5000 // 5 seconds
+        };
+    }
+
+    measure(name, func) {
+        return async (...args) => {
+            let start = performance.now();
+
+            try {
+                let result = await func.apply(this, args);
+                this.recordSuccess(name, performance.now() - start);
+                return result;
+            } catch (error) {
+                this.recordError(name, performance.now() - start, error);
+                throw error;
+            }
+        };
+    }
+
+    recordSuccess(name, duration) {
+        this.recordMetric(name, { success: true, duration });
+
+        if (duration > this.thresholds.critical) {
+            console.warn(`Critical performance: ${name} took ${duration.toFixed(2)}ms`);
+        } else if (duration > this.thresholds.slow) {
+            console.warn(`Slow operation: ${name} took ${duration.toFixed(2)}ms`);
+        }
+    }
+
+    recordError(name, duration, error) {
+        this.recordMetric(name, { success: false, duration, error: error.message });
+        console.error(`Error in ${name} after ${duration.toFixed(2)}ms:`, error);
+    }
+
+    recordMetric(name, data) {
+        if (!this.metrics.has(name)) {
+            this.metrics.set(name, []);
+        }
+
+        let metrics = this.metrics.get(name);
+        metrics.push({
+            timestamp: Date.now(),
+            ...data
+        });
+
+        // Keep last 1000 entries
+        if (metrics.length > 1000) {
+            metrics.shift();
+        }
+    }
+
+    getStats(name) {
+        let metrics = this.metrics.get(name) || [];
+        let successful = metrics.filter(m => m.success);
+        let failed = metrics.filter(m => !m.success);
+
+        if (successful.length === 0) return null;
+
+        let durations = successful.map(m => m.duration);
+        let avg = durations.reduce((sum, d) => sum + d, 0) / durations.length;
+        let min = Math.min(...durations);
+        let max = Math.max(...durations);
+
+        return {
+            totalCalls: metrics.length,
+            successfulCalls: successful.length,
+            failedCalls: failed.length,
+            successRate: (successful.length / metrics.length) * 100,
+            avgDuration: avg,
+            minDuration: min,
+            maxDuration: max,
+            slowCalls: successful.filter(m => m.duration > this.thresholds.slow).length
+        };
+    }
+
+    getAllStats() {
+        let stats = {};
+        for (let [name] of this.metrics) {
+            stats[name] = this.getStats(name);
+        }
+        return stats;
+    }
+}
+
+// Global performance monitor
+let perfMonitor = new PerformanceMonitor();
+
+// Usage
+let monitoredFetch = perfMonitor.measure('api-fetch', async (url) => {
+    let response = await fetch(url);
+    if (!response.ok) {
+        throw new NetworkError(`HTTP ${response.status}`, response.status, url);
+    }
+    return await response.json();
+});
+
+// Performance reporting
+setInterval(() => {
+    let stats = perfMonitor.getAllStats();
+    console.table(stats);
+}, 30000); // Every 30 seconds
+```
+
+## Xulosa
+
+Bu darsda JavaScript error handling va debugging'ning professional asoslarini o'rgandik:
+
+- ✅ **Error Types** - Built-in va custom error'lar
+- ✅ **Try/Catch/Finally** - Xatolik boshqaruvi
+- ✅ **Custom Errors** - O'zgartirilgan error class'lari
+- ✅ **Debugging Tools** - Console methods, debugger statement
+- ✅ **Logging Strategies** - Local va remote logging
+- ✅ **Error Monitoring** - Crash reporting, performance monitoring
+- ✅ **Testing** - Error case testing, mock functions
+- ✅ **Best Practices** - Professional error handling patterns
+
+Bu bilimlar bilan siz robust va maintainable JavaScript applications yoza olasiz! 🛠️
+
+## Qo'shimcha Resurslar
+
+- [MDN Error Handling](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Error_Handling)
+- [Chrome DevTools Debugging](https://developers.google.com/web/tools/chrome-devtools/javascript)
+
+---
+
+⚡ **Keyingi dars**: Modules va Object-Oriented Programming o'rganamiz!

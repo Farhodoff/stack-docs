@@ -1,0 +1,1264 @@
+---
+title: "JavaScript ES6+ Modern Features"
+description: "Zamonaviy JavaScript xususiyatlari: destructuring, spread/rest, template literals, Map/Set, va ES6+ da qo'shilgan muhim yangiliklar."
+order: 7
+category: javascript
+tags: ["javascript", "es6", "es2015", "modern", "destructuring", "spread", "map", "set"]
+difficulty: advanced
+readTime: 35
+---
+
+# JavaScript ES6+ Modern Features
+
+ES6 (ES2015) dan boshlab JavaScript'ga ko'plab zamonaviy xususiyatlar qo'shildi. Bu dars orqali eng muhim modern features'larni o'rganamiz.
+
+## Template Literals (Shablon Literallari)
+
+### Basic Template Literals
+
+```javascript
+// Eski usul
+let name = "Ahmad";
+let age = 25;
+let message = "Salom, mening ismim " + name + " va yoshim " + age;
+
+// ✅ Modern usul
+let modernMessage = `Salom, mening ismim ${name} va yoshim ${age}`;
+
+// Multi-line strings
+let poem = `Bu shoir,
+Bu she'r,
+Bu sevgi hikoyasi`;
+
+console.log(poem);
+```
+
+### Tagged Template Literals
+
+```javascript
+function highlight(strings, ...values) {
+    return strings.reduce((result, string, i) => {
+        let value = values[i] ? `<mark>${values[i]}</mark>` : '';
+        return result + string + value;
+    }, '');
+}
+
+let searchTerm = "JavaScript";
+let text = "dasturlash";
+
+let highlighted = highlight`${searchTerm} tili ${text} uchun zo'r tanlov`;
+console.log(highlighted); // "<mark>JavaScript</mark> tili <mark>dasturlash</mark> uchun zo'r tanlov"
+
+// Practical example: SQL query builder
+function sql(strings, ...values) {
+    let query = strings.reduce((result, string, i) => {
+        let value = values[i];
+        if (typeof value === 'string') {
+            value = `'${value.replace(/'/g, "''")}'`; // SQL injection prevention
+        }
+        return result + string + (value || '');
+    }, '');
+
+    return query.trim();
+}
+
+let userId = 123;
+let status = "active";
+let query = sql`SELECT * FROM users WHERE id = ${userId} AND status = ${status}`;
+console.log(query); // "SELECT * FROM users WHERE id = 123 AND status = 'active'"
+```
+
+## Destructuring (Qismlarга Ajratish)
+
+### Array Destructuring
+
+```javascript
+let colors = ["qizil", "yashil", "ko'k", "sariq"];
+
+// Eski usul
+let first = colors[0];
+let second = colors[1];
+
+// ✅ Modern destructuring
+let [birinchi, ikkinchi, uchinchi] = colors;
+console.log(birinchi); // "qizil"
+console.log(ikkinchi); // "yashil"
+
+// Skipping elements
+let [, , blue] = colors;
+console.log(blue); // "ko'k"
+
+// Rest operator
+let [head, ...tail] = colors;
+console.log(head); // "qizil"
+console.log(tail); // ["yashil", "ko'k", "sariq"]
+
+// Default values
+let [a, b, c, d, e = "default"] = colors;
+console.log(e); // "sariq" (chunki colors[4] mavjud emas)
+
+// Swapping variables
+let x = 1, y = 2;
+[x, y] = [y, x];
+console.log(x, y); // 2, 1
+
+// Nested arrays
+let nested = [[1, 2], [3, 4]];
+let [[a1, b1], [a2, b2]] = nested;
+console.log(a1, b1, a2, b2); // 1 2 3 4
+```
+
+### Object Destructuring
+
+```javascript
+let person = {
+    name: "Fatima",
+    age: 28,
+    city: "Toshkent",
+    profession: "developer",
+    skills: ["JavaScript", "React", "Node.js"],
+    address: {
+        street: "Amir Temur",
+        district: "Yunusobod"
+    }
+};
+
+// Basic destructuring
+let { name, age, city } = person;
+console.log(name, age, city); // "Fatima" 28 "Toshkent"
+
+// Renaming variables
+let { name: fullName, profession: job } = person;
+console.log(fullName, job); // "Fatima" "developer"
+
+// Default values
+let { name: personName, salary = 0 } = person;
+console.log(salary); // 0 (default value)
+
+// Nested destructuring
+let { address: { street, district } } = person;
+console.log(street, district); // "Amir Temur" "Yunusobod"
+
+// Rest in objects
+let { name, age, ...otherInfo } = person;
+console.log(otherInfo); // {city: "Toshkent", profession: "developer", ...}
+
+// Function parameter destructuring
+function introduce({ name, age, profession }) {
+    return `Salom, men ${name}, ${age} yoshdaman va ${profession} ishlayman`;
+}
+
+console.log(introduce(person));
+
+// Dynamic property names
+let key = "name";
+let { [key]: dynamicValue } = person;
+console.log(dynamicValue); // "Fatima"
+```
+
+## Spread/Rest Operators (...)
+
+### Spread Operator
+
+```javascript
+// Array spread
+let arr1 = [1, 2, 3];
+let arr2 = [4, 5, 6];
+
+// Array concatenation
+let combined = [...arr1, ...arr2]; // [1, 2, 3, 4, 5, 6]
+
+// Array cloning
+let cloned = [...arr1]; // [1, 2, 3]
+
+// Adding elements
+let extended = [0, ...arr1, 999]; // [0, 1, 2, 3, 999]
+
+// Object spread
+let obj1 = { a: 1, b: 2 };
+let obj2 = { c: 3, d: 4 };
+
+// Object merging
+let merged = { ...obj1, ...obj2 }; // {a: 1, b: 2, c: 3, d: 4}
+
+// Object cloning
+let objCloned = { ...obj1 }; // {a: 1, b: 2}
+
+// Overriding properties
+let override = { ...obj1, b: 999 }; // {a: 1, b: 999}
+
+// Function calls
+function sum(x, y, z) {
+    return x + y + z;
+}
+
+let numbers = [1, 2, 3];
+let result = sum(...numbers); // sum(1, 2, 3)
+console.log(result); // 6
+
+// Converting NodeList to Array
+let divs = document.querySelectorAll('div');
+let divArray = [...divs];
+```
+
+### Rest Parameters
+
+```javascript
+// Rest in function parameters
+function total(...numbers) {
+    return numbers.reduce((sum, num) => sum + num, 0);
+}
+
+console.log(total(1, 2, 3, 4, 5)); // 15
+
+// Mixed parameters
+function greet(greeting, ...names) {
+    return `${greeting} ${names.join(', ')}!`;
+}
+
+console.log(greet("Salom", "Ali", "Fatima", "Ahmad")); // "Salom Ali, Fatima, Ahmad!"
+
+// Rest in destructuring
+let [first, second, ...others] = [1, 2, 3, 4, 5];
+console.log(others); // [3, 4, 5]
+```
+
+## Arrow Functions (O'q Funksiyalar)
+
+### Basic Arrow Functions
+
+```javascript
+// Function declaration
+function add(a, b) {
+    return a + b;
+}
+
+// Arrow function
+let add = (a, b) => a + b;
+
+// Single parameter (parentheses optional)
+let square = x => x * x;
+
+// No parameters
+let getRandom = () => Math.random();
+
+// Multiple statements
+let processData = (data) => {
+    let processed = data.map(x => x * 2);
+    return processed.filter(x => x > 10);
+};
+
+// Returning objects (parentheses needed)
+let createUser = (name, age) => ({
+    name: name,
+    age: age,
+    created: new Date()
+});
+
+// IIFE (Immediately Invoked Function Expression)
+((name) => {
+    console.log(`Hello, ${name}!`);
+})('World');
+```
+
+### Arrow Function vs Regular Function
+
+```javascript
+// 'this' binding difference
+let obj = {
+    name: "MyObject",
+
+    // Regular function - 'this' refers to obj
+    regularMethod: function() {
+        console.log("Regular:", this.name); // "MyObject"
+
+        setTimeout(function() {
+            console.log("Timeout regular:", this.name); // undefined (window object)
+        }, 100);
+    },
+
+    // Arrow function - 'this' is lexical
+    arrowMethod: () => {
+        console.log("Arrow:", this.name); // undefined ('this' is not obj)
+    },
+
+    // Best practice: regular method with arrow callback
+    modernMethod: function() {
+        console.log("Modern:", this.name); // "MyObject"
+
+        setTimeout(() => {
+            console.log("Timeout arrow:", this.name); // "MyObject"
+        }, 100);
+    }
+};
+
+// Array methods with arrows
+let numbers = [1, 2, 3, 4, 5];
+
+// Traditional way
+let doubled = numbers.map(function(n) {
+    return n * 2;
+});
+
+// ✅ Modern way
+let modern = numbers
+    .filter(n => n % 2 === 0)
+    .map(n => n * 3)
+    .reduce((sum, n) => sum + n, 0);
+
+console.log(modern); // 18 (2*3 + 4*3)
+```
+
+## Enhanced Object Literals
+
+```javascript
+// Old way
+let name = "Ahmad";
+let age = 25;
+let skills = ["JavaScript", "React"];
+
+let oldPerson = {
+    name: name,
+    age: age,
+    skills: skills,
+
+    greet: function() {
+        return "Salom!";
+    }
+};
+
+// ✅ Enhanced object literals
+let newPerson = {
+    name,           // Shorthand property
+    age,            // Shorthand property
+    skills,         // Shorthand property
+
+    greet() {       // Shorthand method
+        return "Salom!";
+    },
+
+    // Computed property names
+    [`user_${Date.now()}`]: "dynamic value",
+
+    // Getters and setters
+    get fullInfo() {
+        return `${this.name} - ${this.age}`;
+    },
+
+    set updateAge(newAge) {
+        if (newAge > 0) {
+            this.age = newAge;
+        }
+    }
+};
+
+console.log(newPerson.fullInfo); // "Ahmad - 25"
+newPerson.updateAge = 26;
+console.log(newPerson.age); // 26
+```
+
+## Map and Set
+
+### Map
+
+```javascript
+// Map - kalit-qiymat juftliklari
+let userRoles = new Map();
+
+// Set values
+userRoles.set("user1", "admin");
+userRoles.set("user2", "moderator");
+userRoles.set("user3", "user");
+
+// Get values
+console.log(userRoles.get("user1")); // "admin"
+console.log(userRoles.has("user2")); // true
+console.log(userRoles.size); // 3
+
+// Any type as key
+let complexMap = new Map();
+let keyObj = { id: 1 };
+let keyFunc = function() {};
+let keyStr = "string key";
+
+complexMap.set(keyObj, "object value");
+complexMap.set(keyFunc, "function value");
+complexMap.set(keyStr, "string value");
+
+console.log(complexMap.get(keyObj)); // "object value"
+
+// Iteration
+for (let [key, value] of userRoles) {
+    console.log(`${key}: ${value}`);
+}
+
+// Convert to array
+let rolesArray = Array.from(userRoles);
+console.log(rolesArray); // [["user1", "admin"], ...]
+
+// Map methods
+userRoles.delete("user3");
+userRoles.clear(); // Remove all
+
+// Practical example: Caching
+class Cache {
+    constructor() {
+        this.cache = new Map();
+    }
+
+    set(key, value, ttl = 60000) { // 1 minute TTL
+        this.cache.set(key, {
+            value,
+            expires: Date.now() + ttl
+        });
+    }
+
+    get(key) {
+        let item = this.cache.get(key);
+        if (!item) return undefined;
+
+        if (Date.now() > item.expires) {
+            this.cache.delete(key);
+            return undefined;
+        }
+
+        return item.value;
+    }
+}
+```
+
+### Set
+
+```javascript
+// Set - unique values collection
+let uniqueNumbers = new Set([1, 2, 2, 3, 3, 4]);
+console.log(uniqueNumbers); // Set {1, 2, 3, 4}
+
+// Add values
+uniqueNumbers.add(5);
+uniqueNumbers.add(2); // Won't add duplicate
+
+// Check existence
+console.log(uniqueNumbers.has(3)); // true
+
+// Size and deletion
+console.log(uniqueNumbers.size); // 5
+uniqueNumbers.delete(1);
+
+// Iteration
+for (let value of uniqueNumbers) {
+    console.log(value);
+}
+
+// Convert to array
+let arrayFromSet = [...uniqueNumbers];
+
+// Practical examples
+// Remove duplicates from array
+function removeDuplicates(arr) {
+    return [...new Set(arr)];
+}
+
+console.log(removeDuplicates([1, 2, 2, 3, 3, 4])); // [1, 2, 3, 4]
+
+// Set operations
+let setA = new Set([1, 2, 3]);
+let setB = new Set([2, 3, 4]);
+
+// Union
+let union = new Set([...setA, ...setB]); // {1, 2, 3, 4}
+
+// Intersection
+let intersection = new Set([...setA].filter(x => setB.has(x))); // {2, 3}
+
+// Difference
+let difference = new Set([...setA].filter(x => !setB.has(x))); // {1}
+
+// WeakSet for object references
+let weakSet = new WeakSet();
+let obj1 = { name: "Object 1" };
+let obj2 = { name: "Object 2" };
+
+weakSet.add(obj1);
+weakSet.add(obj2);
+
+console.log(weakSet.has(obj1)); // true
+```
+
+## Symbols
+
+```javascript
+// Unique symbols
+let sym1 = Symbol();
+let sym2 = Symbol("description");
+let sym3 = Symbol("description");
+
+console.log(sym2 === sym3); // false (always unique)
+
+// Symbol as object property
+let mySymbol = Symbol("myPrivateProperty");
+let obj = {
+    [mySymbol]: "private value",
+    publicProperty: "public value"
+};
+
+console.log(obj[mySymbol]); // "private value"
+
+// Symbols are not enumerable
+console.log(Object.keys(obj)); // ["publicProperty"]
+console.log(Object.getOwnPropertySymbols(obj)); // [Symbol(myPrivateProperty)]
+
+// Global symbol registry
+let globalSym1 = Symbol.for("app.id");
+let globalSym2 = Symbol.for("app.id");
+console.log(globalSym1 === globalSym2); // true
+
+// Well-known symbols
+class MyIterable {
+    constructor() {
+        this.items = [1, 2, 3];
+    }
+
+    [Symbol.iterator]() {
+        let index = 0;
+        let items = this.items;
+
+        return {
+            next() {
+                if (index < items.length) {
+                    return { value: items[index++], done: false };
+                }
+                return { done: true };
+            }
+        };
+    }
+}
+
+let iterable = new MyIterable();
+for (let value of iterable) {
+    console.log(value); // 1, 2, 3
+}
+```
+
+## Iterators and Generators
+
+### Iterators
+
+```javascript
+// Custom iterator
+function createIterator(array) {
+    let index = 0;
+
+    return {
+        next() {
+            if (index < array.length) {
+                return { value: array[index++], done: false };
+            }
+            return { done: true };
+        }
+    };
+}
+
+let iterator = createIterator([1, 2, 3]);
+console.log(iterator.next()); // {value: 1, done: false}
+console.log(iterator.next()); // {value: 2, done: false}
+console.log(iterator.next()); // {value: 3, done: false}
+console.log(iterator.next()); // {done: true}
+
+// Iterable object
+let range = {
+    from: 1,
+    to: 5,
+
+    [Symbol.iterator]() {
+        return this;
+    },
+
+    next() {
+        if (this.current === undefined) {
+            this.current = this.from;
+        }
+
+        if (this.current <= this.to) {
+            return { value: this.current++, done: false };
+        }
+
+        delete this.current;
+        return { done: true };
+    }
+};
+
+for (let num of range) {
+    console.log(num); // 1, 2, 3, 4, 5
+}
+```
+
+### Generators
+
+```javascript
+// Basic generator
+function* numberGenerator() {
+    yield 1;
+    yield 2;
+    yield 3;
+}
+
+let gen = numberGenerator();
+console.log(gen.next()); // {value: 1, done: false}
+console.log(gen.next()); // {value: 2, done: false}
+
+// Generator with logic
+function* fibonacci() {
+    let a = 0, b = 1;
+
+    while (true) {
+        yield a;
+        [a, b] = [b, a + b];
+    }
+}
+
+let fib = fibonacci();
+for (let i = 0; i < 10; i++) {
+    console.log(fib.next().value); // 0, 1, 1, 2, 3, 5, 8, 13, 21, 34
+}
+
+// Generator with input
+function* dataProcessor() {
+    let data = yield "Ma'lumot kiring:";
+
+    while (data !== "exit") {
+        let processed = data.toUpperCase();
+        data = yield `Processed: ${processed}`;
+    }
+
+    return "Tugadi!";
+}
+
+let processor = dataProcessor();
+console.log(processor.next());           // "Ma'lumot kiring:"
+console.log(processor.next("salom"));   // "Processed: SALOM"
+console.log(processor.next("dunyo"));   // "Processed: DUNYO"
+console.log(processor.next("exit"));    // "Tugadi!"
+
+// Async generator
+async function* asyncNumbers() {
+    for (let i = 1; i <= 3; i++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        yield i;
+    }
+}
+
+async function useAsyncGenerator() {
+    for await (let num of asyncNumbers()) {
+        console.log(num); // 1 (after 1s), 2 (after 2s), 3 (after 3s)
+    }
+}
+```
+
+## Proxies
+
+```javascript
+// Basic proxy
+let target = {
+    name: "Ahmad",
+    age: 25
+};
+
+let proxy = new Proxy(target, {
+    get(target, property) {
+        console.log(`Getting ${property}`);
+        return target[property];
+    },
+
+    set(target, property, value) {
+        console.log(`Setting ${property} to ${value}`);
+
+        if (property === 'age' && value < 0) {
+            throw new Error("Yosh manfiy bo'lishi mumkin emas!");
+        }
+
+        target[property] = value;
+        return true;
+    }
+});
+
+console.log(proxy.name); // "Getting name" -> "Ahmad"
+proxy.age = 26; // "Setting age to 26"
+
+// Advanced proxy example: Virtual object
+let virtualObject = new Proxy({}, {
+    get(target, property) {
+        if (property.startsWith('get')) {
+            let propName = property.slice(3).toLowerCase();
+            return () => target[propName];
+        }
+
+        if (property.startsWith('set')) {
+            let propName = property.slice(3).toLowerCase();
+            return (value) => target[propName] = value;
+        }
+
+        return target[property];
+    }
+});
+
+virtualObject.setName("Fatima");
+console.log(virtualObject.getName()); // "Fatima"
+
+// Array validator
+function createValidatedArray(validationFn) {
+    return new Proxy([], {
+        set(target, property, value) {
+            if (property === 'length') {
+                target[property] = value;
+                return true;
+            }
+
+            if (!validationFn(value)) {
+                throw new Error(`Invalid value: ${value}`);
+            }
+
+            target[property] = value;
+            return true;
+        }
+    });
+}
+
+let numbersOnly = createValidatedArray(value => typeof value === 'number');
+numbersOnly.push(1, 2, 3); // OK
+// numbersOnly.push("string"); // Error!
+```
+
+## Default Parameters and Rest Parameters
+
+```javascript
+// Default parameters
+function createUser(name, age = 18, role = "user", active = true) {
+    return { name, age, role, active };
+}
+
+console.log(createUser("Ali")); // {name: "Ali", age: 18, role: "user", active: true}
+console.log(createUser("Fatima", 25, "admin")); // {name: "Fatima", age: 25, role: "admin", active: true}
+
+// Complex default values
+function processConfig(config = {}) {
+    let defaults = {
+        theme: "light",
+        language: "uz",
+        notifications: true,
+        debugging: false
+    };
+
+    return { ...defaults, ...config };
+}
+
+// Default value based on other parameters
+function calculatePrice(basePrice, tax = basePrice * 0.1, discount = 0) {
+    return basePrice + tax - discount;
+}
+
+console.log(calculatePrice(100)); // 110 (100 + 10 - 0)
+
+// Rest parameters in depth
+function logger(level, message, ...metadata) {
+    let timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
+
+    if (metadata.length > 0) {
+        console.log("Metadata:", metadata);
+    }
+}
+
+logger("info", "User logged in", { userId: 123 }, { ip: "192.168.1.1" });
+```
+
+## Practical Examples
+
+### 1. Modern Data Processing Pipeline
+
+```javascript
+class DataPipeline {
+    constructor(data) {
+        this.data = data;
+        this.processors = new Map();
+    }
+
+    // Fluent API with method chaining
+    filter(predicate) {
+        this.data = this.data.filter(predicate);
+        return this;
+    }
+
+    map(transformer) {
+        this.data = this.data.map(transformer);
+        return this;
+    }
+
+    reduce(reducer, initial) {
+        return this.data.reduce(reducer, initial);
+    }
+
+    // ES6+ features showcase
+    groupBy(keyExtractor) {
+        this.data = [...this.data.reduce((groups, item) => {
+            let key = keyExtractor(item);
+            let group = groups.get(key) || [];
+            groups.set(key, [...group, item]);
+            return groups;
+        }, new Map()).entries()];
+
+        return this;
+    }
+
+    async *processAsync() {
+        for (let item of this.data) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            yield item;
+        }
+    }
+
+    get result() {
+        return this.data;
+    }
+}
+
+// Usage
+let salesData = [
+    { id: 1, product: "Laptop", price: 1000, category: "Electronics", date: "2024-01-15" },
+    { id: 2, product: "Phone", price: 500, category: "Electronics", date: "2024-01-16" },
+    { id: 3, product: "Book", price: 20, category: "Education", date: "2024-01-17" },
+    { id: 4, product: "Tablet", price: 300, category: "Electronics", date: "2024-01-18" }
+];
+
+let pipeline = new DataPipeline(salesData);
+
+// Process data
+let expensiveElectronics = pipeline
+    .filter(({ category, price }) => category === "Electronics" && price > 400)
+    .map(({ product, price, ...rest }) => ({
+        product: product.toUpperCase(),
+        price: price * 1.1, // Add 10% tax
+        ...rest
+    }))
+    .result;
+
+console.log(expensiveElectronics);
+
+// Group by category
+let groupedData = new DataPipeline(salesData)
+    .groupBy(({ category }) => category)
+    .result;
+
+console.log(groupedData);
+```
+
+### 2. Modern Cache Implementation
+
+```javascript
+class SmartCache {
+    constructor({ maxSize = 100, ttl = Infinity, onEvict = null } = {}) {
+        this.cache = new Map();
+        this.maxSize = maxSize;
+        this.ttl = ttl;
+        this.onEvict = onEvict;
+        this.accessTimes = new Map();
+    }
+
+    set(key, value, customTtl = this.ttl) {
+        // Evict if needed
+        if (this.cache.size >= this.maxSize) {
+            this.evictLRU();
+        }
+
+        let expiry = customTtl === Infinity ? Infinity : Date.now() + customTtl;
+
+        this.cache.set(key, { value, expiry });
+        this.accessTimes.set(key, Date.now());
+
+        return this;
+    }
+
+    get(key) {
+        let item = this.cache.get(key);
+
+        if (!item) return undefined;
+
+        // Check expiry
+        if (item.expiry !== Infinity && Date.now() > item.expiry) {
+            this.delete(key);
+            return undefined;
+        }
+
+        // Update access time
+        this.accessTimes.set(key, Date.now());
+
+        return item.value;
+    }
+
+    has(key) {
+        return this.get(key) !== undefined;
+    }
+
+    delete(key) {
+        let item = this.cache.get(key);
+
+        if (item && this.onEvict) {
+            this.onEvict(key, item.value);
+        }
+
+        this.cache.delete(key);
+        this.accessTimes.delete(key);
+
+        return this;
+    }
+
+    evictLRU() {
+        // Find least recently used
+        let lruKey = [...this.accessTimes.entries()]
+            .reduce((lru, [key, time]) =>
+                time < lru.time ? { key, time } : lru,
+                { key: null, time: Infinity }
+            ).key;
+
+        if (lruKey) {
+            this.delete(lruKey);
+        }
+    }
+
+    clear() {
+        if (this.onEvict) {
+            for (let [key, item] of this.cache) {
+                this.onEvict(key, item.value);
+            }
+        }
+
+        this.cache.clear();
+        this.accessTimes.clear();
+    }
+
+    // ES6+ features: Iterators and generators
+    *entries() {
+        for (let [key, item] of this.cache) {
+            if (item.expiry === Infinity || Date.now() <= item.expiry) {
+                yield [key, item.value];
+            }
+        }
+    }
+
+    *keys() {
+        for (let [key] of this.entries()) {
+            yield key;
+        }
+    }
+
+    *values() {
+        for (let [, value] of this.entries()) {
+            yield value;
+        }
+    }
+
+    get size() {
+        // Count non-expired items
+        return [...this.entries()].length;
+    }
+
+    // Proxy-based dynamic getters
+    createProxy() {
+        return new Proxy(this, {
+            get(target, property) {
+                if (property in target) {
+                    return target[property];
+                }
+
+                // Dynamic getter for cache keys
+                return target.get(property);
+            },
+
+            set(target, property, value) {
+                if (property in target) {
+                    target[property] = value;
+                } else {
+                    target.set(property, value);
+                }
+                return true;
+            }
+        });
+    }
+}
+
+// Usage
+let cache = new SmartCache({
+    maxSize: 3,
+    ttl: 5000,
+    onEvict: (key, value) => console.log(`Evicted: ${key}`)
+});
+
+cache.set("user:1", { name: "Ali" });
+cache.set("user:2", { name: "Fatima" });
+
+// Proxy usage
+let dynamicCache = cache.createProxy();
+dynamicCache.user3 = { name: "Ahmad" };
+console.log(dynamicCache.user3); // { name: "Ahmad" }
+
+// Iterator usage
+for (let [key, value] of cache.entries()) {
+    console.log(`${key}:`, value);
+}
+```
+
+### 3. Event System with Modern Features
+
+```javascript
+class ModernEventEmitter {
+    constructor() {
+        this.events = new Map();
+        this.onceEvents = new WeakSet();
+        this.middleware = [];
+    }
+
+    // Add middleware
+    use(middleware) {
+        this.middleware.push(middleware);
+        return this;
+    }
+
+    // Subscribe to events
+    on(eventName, listener, { once = false, priority = 0 } = {}) {
+        if (!this.events.has(eventName)) {
+            this.events.set(eventName, []);
+        }
+
+        let listeners = this.events.get(eventName);
+        let listenerData = { listener, priority, id: Symbol() };
+
+        if (once) {
+            this.onceEvents.add(listenerData);
+        }
+
+        // Insert by priority
+        let insertIndex = listeners.findIndex(l => l.priority < priority);
+        if (insertIndex === -1) {
+            listeners.push(listenerData);
+        } else {
+            listeners.splice(insertIndex, 0, listenerData);
+        }
+
+        // Return unsubscribe function
+        return () => this.off(eventName, listenerData.id);
+    }
+
+    // One-time listener
+    once(eventName, listener, options = {}) {
+        return this.on(eventName, listener, { ...options, once: true });
+    }
+
+    // Remove listeners
+    off(eventName, listenerOrId) {
+        if (!this.events.has(eventName)) return this;
+
+        let listeners = this.events.get(eventName);
+
+        if (typeof listenerOrId === 'symbol') {
+            // Remove by ID
+            this.events.set(eventName,
+                listeners.filter(l => l.id !== listenerOrId)
+            );
+        } else {
+            // Remove by function reference
+            this.events.set(eventName,
+                listeners.filter(l => l.listener !== listenerOrId)
+            );
+        }
+
+        return this;
+    }
+
+    // Emit events with middleware support
+    async emit(eventName, ...args) {
+        let eventData = { eventName, args, canceled: false };
+
+        // Run middleware
+        for (let middleware of this.middleware) {
+            await middleware(eventData);
+            if (eventData.canceled) return false;
+        }
+
+        if (!this.events.has(eventName)) return true;
+
+        let listeners = [...this.events.get(eventName)];
+        let results = [];
+
+        for (let listenerData of listeners) {
+            try {
+                let result = await listenerData.listener(...eventData.args);
+                results.push(result);
+
+                // Remove 'once' listeners
+                if (this.onceEvents.has(listenerData)) {
+                    this.off(eventName, listenerData.id);
+                    this.onceEvents.delete(listenerData);
+                }
+            } catch (error) {
+                console.error(`Event listener error for '${eventName}':`, error);
+            }
+        }
+
+        return results;
+    }
+
+    // Remove all listeners
+    removeAllListeners(eventName) {
+        if (eventName) {
+            this.events.delete(eventName);
+        } else {
+            this.events.clear();
+        }
+        return this;
+    }
+
+    // Get listener count
+    listenerCount(eventName) {
+        return this.events.get(eventName)?.length || 0;
+    }
+
+    // Get all event names
+    eventNames() {
+        return [...this.events.keys()];
+    }
+
+    // Async iterator for events
+    async *waitFor(eventName, timeout = Infinity) {
+        let timeoutId;
+
+        while (true) {
+            let eventPromise = new Promise(resolve => {
+                let unsubscribe = this.once(eventName, (...args) => {
+                    resolve({ args, timeout: false });
+                });
+
+                if (timeout !== Infinity) {
+                    timeoutId = setTimeout(() => {
+                        unsubscribe();
+                        resolve({ timeout: true });
+                    }, timeout);
+                }
+            });
+
+            let result = await eventPromise;
+
+            if (timeoutId) clearTimeout(timeoutId);
+
+            if (result.timeout) break;
+
+            yield result.args;
+        }
+    }
+}
+
+// Usage example
+let emitter = new ModernEventEmitter();
+
+// Add logging middleware
+emitter.use(async ({ eventName, args }) => {
+    console.log(`Event: ${eventName}`, args);
+});
+
+// Regular listener
+emitter.on('user:login', (user) => {
+    console.log(`User logged in: ${user.name}`);
+}, { priority: 10 });
+
+// High priority listener
+emitter.on('user:login', (user) => {
+    console.log(`Security check for: ${user.name}`);
+}, { priority: 20 });
+
+// One-time listener
+let unsubscribe = emitter.once('user:logout', (user) => {
+    console.log(`User logged out: ${user.name}`);
+});
+
+// Emit events
+emitter.emit('user:login', { name: 'Ali', id: 1 });
+
+// Async event waiting
+async function waitForLogin() {
+    for await (let [user] of emitter.waitFor('user:login', 5000)) {
+        console.log('Received login event:', user);
+        break; // Exit after first event
+    }
+}
+
+waitForLogin();
+```
+
+## Browser Support va Polyfills
+
+```javascript
+// Feature detection
+function supportsES6Features() {
+    let features = {
+        arrows: (() => { try { eval("()=>{}"); return true; } catch(e) { return false; } })(),
+        classes: (() => { try { eval("class Test{}"); return true; } catch(e) { return false; } })(),
+        destructuring: (() => { try { eval("let [a] = [1]"); return true; } catch(e) { return false; } })(),
+        modules: typeof Symbol !== 'undefined',
+        promises: typeof Promise !== 'undefined',
+        generators: (function*(){}).constructor === Object.getPrototypeOf(function*(){}).constructor
+    };
+
+    return features;
+}
+
+// Simple polyfills
+if (!Array.prototype.includes) {
+    Array.prototype.includes = function(searchElement, fromIndex = 0) {
+        return this.indexOf(searchElement, fromIndex) !== -1;
+    };
+}
+
+if (!String.prototype.includes) {
+    String.prototype.includes = function(search, start = 0) {
+        return this.indexOf(search, start) !== -1;
+    };
+}
+
+// Feature-based loading
+async function loadModernFeatures() {
+    let support = supportsES6Features();
+
+    if (!support.promises) {
+        await import('./polyfills/promise.js');
+    }
+
+    if (!support.modules) {
+        await import('./polyfills/symbol.js');
+    }
+
+    console.log('All modern features ready!');
+}
+```
+
+## Xulosa
+
+Bu darsda ES6+ ning eng muhim xususiyatlarini o'rgandik:
+
+- ✅ **Template Literals** - String interpolation
+- ✅ **Destructuring** - Array va object qismlarga ajratish
+- ✅ **Spread/Rest Operators** - Ma'lumot tarqatish va to'plash
+- ✅ **Arrow Functions** - Qisqa funksiya sintaksisi
+- ✅ **Map/Set/Symbol** - Yangi ma'lumot turlari
+- ✅ **Iterators/Generators** - Custom iteration
+- ✅ **Proxies** - Meta-programming
+- ✅ **Enhanced Objects** - Object literal improvements
+
+Bu xususiyatlar zamonaviy JavaScript dasturlashning asosini tashkil qiladi va React kabi framework'larda keng qo'llaniladi! 🚀
+
+## Qo'shimcha Resurslar
+
+- [ES6 Features Overview](https://es6-features.org/)
+- [MDN JavaScript Guide](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide)
+
+---
+
+⚡ **Keyingi dars**: Error Handling va Debugging techniques o'rganamiz!

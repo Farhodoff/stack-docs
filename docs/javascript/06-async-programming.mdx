@@ -1,0 +1,1208 @@
+---
+title: "JavaScript Asynchronous Programming"
+description: "JavaScript'da asinxron dasturlash: Promises, async/await, fetch API, va real-time ma'lumotlar bilan ishlash. Modern web development."
+order: 6
+category: javascript
+tags: ["javascript", "async", "promises", "fetch", "api", "ajax"]
+difficulty: advanced
+readTime: 40
+---
+
+# JavaScript Asynchronous Programming
+
+Asinxron dasturlash JavaScript'ning eng muhim qismlaridan biri. Bu web ilovalarni tez va responsiv qilish uchun zarur.
+
+## Synchronous vs Asynchronous
+
+### Synchronous Code (Sinxron)
+
+```javascript
+console.log("1 - Birinchi");
+console.log("2 - Ikkinchi");
+console.log("3 - Uchinchi");
+
+// Natija:
+// 1 - Birinchi
+// 2 - Ikkinchi
+// 3 - Uchinchi
+```
+
+### Asynchronous Code (Asinxron)
+
+```javascript
+console.log("1 - Birinchi");
+
+setTimeout(() => {
+    console.log("2 - Ikkinchi (2 sekund keyin)");
+}, 2000);
+
+console.log("3 - Uchinchi");
+
+// Natija:
+// 1 - Birinchi
+// 3 - Uchinchi
+// 2 - Ikkinchi (2 sekund keyin)
+```
+
+## Callback Functions
+
+### Oddiy Callback
+
+```javascript
+function getData(callback) {
+    setTimeout(() => {
+        let data = { id: 1, name: "Ahmad" };
+        callback(data);
+    }, 1000);
+}
+
+function processData(data) {
+    console.log("Ma'lumot olindi:", data);
+}
+
+getData(processData);
+
+// Yoki inline
+getData((data) => {
+    console.log("Inline callback:", data);
+});
+```
+
+### Callback Hell (Muammo)
+
+```javascript
+// ❌ Callback Hell - murakkab va o'qib bo'lmaydigan kod
+function getUserData(userId, callback) {
+    setTimeout(() => {
+        callback({ userId, name: "Ali" });
+    }, 1000);
+}
+
+function getUserPosts(userId, callback) {
+    setTimeout(() => {
+        callback([
+            { id: 1, title: "Post 1" },
+            { id: 2, title: "Post 2" }
+        ]);
+    }, 1000);
+}
+
+function getPostComments(postId, callback) {
+    setTimeout(() => {
+        callback([
+            { id: 1, text: "Yaxshi post!" },
+            { id: 2, text: "Rahmat!" }
+        ]);
+    }, 1000);
+}
+
+// Callback hell!
+getUserData(1, (user) => {
+    console.log("User:", user);
+
+    getUserPosts(user.userId, (posts) => {
+        console.log("Posts:", posts);
+
+        getPostComments(posts[0].id, (comments) => {
+            console.log("Comments:", comments);
+
+            // Va bundan ham chuqurroq...
+        });
+    });
+});
+```
+
+## Promises
+
+Promise - bu asinxron operatsiyaning natijasini ifodalovchi obyekt.
+
+### Promise Yaratish
+
+```javascript
+// Oddiy Promise
+let myPromise = new Promise((resolve, reject) => {
+    let success = true;
+
+    setTimeout(() => {
+        if (success) {
+            resolve("Operatsiya muvaffaqiyatli!");
+        } else {
+            reject("Xatolik yuz berdi!");
+        }
+    }, 2000);
+});
+
+// Promise ishlatish
+myPromise
+    .then((result) => {
+        console.log("Success:", result);
+    })
+    .catch((error) => {
+        console.log("Error:", error);
+    });
+```
+
+### Promise States (Holatlar)
+
+```javascript
+// 1. Pending - kutilmoqda
+let pendingPromise = new Promise((resolve, reject) => {
+    // Hech narsa qilinmagan
+});
+console.log(pendingPromise); // Promise { <pending> }
+
+// 2. Fulfilled - muvaffaqiyatli
+let fulfilledPromise = Promise.resolve("Muvaffaq!");
+console.log(fulfilledPromise); // Promise { 'Muvaffaq!' }
+
+// 3. Rejected - xatolik
+let rejectedPromise = Promise.reject("Xatolik!");
+console.log(rejectedPromise); // Promise { <rejected> 'Xatolik!' }
+```
+
+### Promise Chaining
+
+```javascript
+// Callback hell'ni Promise bilan yechish
+function getUserData(userId) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve({ userId, name: "Ali" });
+        }, 1000);
+    });
+}
+
+function getUserPosts(userId) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve([
+                { id: 1, title: "Post 1" },
+                { id: 2, title: "Post 2" }
+            ]);
+        }, 1000);
+    });
+}
+
+function getPostComments(postId) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve([
+                { id: 1, text: "Yaxshi post!" },
+                { id: 2, text: "Rahmat!" }
+            ]);
+        }, 1000);
+    });
+}
+
+// ✅ Promise chaining - tozaроq kod
+getUserData(1)
+    .then((user) => {
+        console.log("User:", user);
+        return getUserPosts(user.userId);
+    })
+    .then((posts) => {
+        console.log("Posts:", posts);
+        return getPostComments(posts[0].id);
+    })
+    .then((comments) => {
+        console.log("Comments:", comments);
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+    });
+```
+
+### Promise.all(), Promise.race(), Promise.allSettled()
+
+```javascript
+let promise1 = new Promise(resolve => setTimeout(() => resolve("1-natija"), 1000));
+let promise2 = new Promise(resolve => setTimeout(() => resolve("2-natija"), 2000));
+let promise3 = new Promise(resolve => setTimeout(() => resolve("3-natija"), 1500));
+
+// Promise.all() - hammasi tugashini kutish
+Promise.all([promise1, promise2, promise3])
+    .then((results) => {
+        console.log("Barcha natijalar:", results);
+        // ["1-natija", "2-natija", "3-natija"]
+    })
+    .catch((error) => {
+        console.error("Birorта xatolik:", error);
+    });
+
+// Promise.race() - birinchisini kutish
+Promise.race([promise1, promise2, promise3])
+    .then((result) => {
+        console.log("Birinchi natija:", result); // "1-natija"
+    });
+
+// Promise.allSettled() - barcha natijalarni olish (xatoliklar bilan)
+Promise.allSettled([promise1, promise2, promise3])
+    .then((results) => {
+        results.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                console.log(`Promise ${index + 1} muvaffaq:`, result.value);
+            } else {
+                console.log(`Promise ${index + 1} xatolik:`, result.reason);
+            }
+        });
+    });
+```
+
+## Async/Await
+
+ES2017 (ES8) da qo'shilgan zamonaviy sintaksis.
+
+### Async Function
+
+```javascript
+// Oddiy function
+async function fetchUserData() {
+    return "User data";
+}
+
+// Bu Promise qaytaradi
+console.log(fetchUserData()); // Promise { 'User data' }
+
+// Natijani olish uchun
+fetchUserData().then(data => console.log(data)); // "User data"
+
+// Yoki
+async function main() {
+    let data = await fetchUserData();
+    console.log(data); // "User data"
+}
+
+main();
+```
+
+### Await Keyword
+
+```javascript
+// Promise bilan
+function oldway() {
+    getUserData(1)
+        .then(user => {
+            console.log("User:", user);
+            return getUserPosts(user.userId);
+        })
+        .then(posts => {
+            console.log("Posts:", posts);
+        })
+        .catch(error => {
+            console.error("Error:", error);
+        });
+}
+
+// ✅ Async/await bilan - oson o'qiladi
+async function newWay() {
+    try {
+        let user = await getUserData(1);
+        console.log("User:", user);
+
+        let posts = await getUserPosts(user.userId);
+        console.log("Posts:", posts);
+
+        let comments = await getPostComments(posts[0].id);
+        console.log("Comments:", comments);
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+
+newWay();
+```
+
+## Fetch API
+
+Zamonaviy HTTP request'lar uchun.
+
+### Basic Fetch
+
+```javascript
+// GET request
+async function fetchData() {
+    try {
+        let response = await fetch('https://jsonplaceholder.typicode.com/posts/1');
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        let data = await response.json();
+        console.log(data);
+    } catch (error) {
+        console.error("Fetch error:", error);
+    }
+}
+
+fetchData();
+
+// Promise bilan ham ishlaydi
+fetch('https://jsonplaceholder.typicode.com/posts/1')
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error("Error:", error));
+```
+
+### POST Request
+
+```javascript
+async function createPost() {
+    try {
+        let newPost = {
+            title: "Yangi post",
+            body: "Bu yangi post matni",
+            userId: 1
+        };
+
+        let response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newPost)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        let createdPost = await response.json();
+        console.log("Yaratilgan post:", createdPost);
+    } catch (error) {
+        console.error("Post yaratishda xatolik:", error);
+    }
+}
+
+createPost();
+```
+
+### Advanced Fetch Options
+
+```javascript
+async function advancedFetch() {
+    try {
+        let response = await fetch('/api/data', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                id: 123,
+                name: "Yangilangan nom"
+            }),
+            credentials: 'include', // Cookie'larni jo'natish
+            cache: 'no-cache',      // Cache'siz
+            timeout: 5000           // 5 sekund timeout
+        });
+
+        // Response headers
+        console.log("Content-Type:", response.headers.get("Content-Type"));
+        console.log("Status:", response.status);
+        console.log("Status Text:", response.statusText);
+
+        // Response body
+        if (response.headers.get("Content-Type").includes("application/json")) {
+            let data = await response.json();
+            return data;
+        } else {
+            let text = await response.text();
+            return text;
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log('Request aborted');
+        } else {
+            console.error("Request error:", error);
+        }
+    }
+}
+```
+
+## Error Handling (Xatolik Boshqaruvi)
+
+### Try/Catch with Async/Await
+
+```javascript
+async function fetchWithErrorHandling() {
+    try {
+        let response = await fetch('/api/user/123');
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error("User topilmadi");
+            } else if (response.status === 500) {
+                throw new Error("Server xatoligi");
+            } else {
+                throw new Error(`Request failed: ${response.status}`);
+            }
+        }
+
+        let user = await response.json();
+        return user;
+    } catch (error) {
+        // Network xatolik
+        if (error.name === 'TypeError') {
+            console.error("Network xatoligi:", error.message);
+            throw new Error("Internet aloqasini tekshiring");
+        }
+
+        // Custom xatoliklar
+        console.error("User olishda xatolik:", error.message);
+        throw error; // Re-throw
+    }
+}
+
+// Ishlatish
+async function main() {
+    try {
+        let user = await fetchWithErrorHandling();
+        console.log("User ma'lumotlari:", user);
+    } catch (error) {
+        // User'ga xatolik ko'rsatish
+        document.getElementById('error-message').textContent =
+            `Xatolik: ${error.message}`;
+    }
+}
+```
+
+### Promise Error Handling
+
+```javascript
+// Multiple promise errors
+async function handleMultipleErrors() {
+    let errors = [];
+    let results = [];
+
+    try {
+        let promises = [
+            fetch('/api/user/1'),
+            fetch('/api/user/2'),
+            fetch('/api/user/3'),
+        ];
+
+        let responses = await Promise.allSettled(promises);
+
+        responses.forEach((response, index) => {
+            if (response.status === 'fulfilled') {
+                results.push(response.value);
+            } else {
+                errors.push({
+                    index,
+                    error: response.reason
+                });
+            }
+        });
+
+        console.log("Muvaffaqiyatli:", results.length);
+        console.log("Xatoliklar:", errors.length);
+
+        return { results, errors };
+    } catch (error) {
+        console.error("Umumiy xatolik:", error);
+    }
+}
+```
+
+## Amaliy Misollar
+
+### 1. Real-time Weather App
+
+```javascript
+class WeatherApp {
+    constructor() {
+        this.apiKey = 'YOUR_API_KEY';
+        this.baseUrl = 'https://api.openweathermap.org/data/2.5';
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+        this.getCurrentLocation();
+    }
+
+    setupEventListeners() {
+        let searchBtn = document.getElementById('search-btn');
+        let cityInput = document.getElementById('city-input');
+
+        searchBtn.addEventListener('click', () => {
+            this.searchCity(cityInput.value);
+        });
+
+        cityInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.searchCity(cityInput.value);
+            }
+        });
+    }
+
+    async getCurrentLocation() {
+        try {
+            // Geolocation API
+            let position = await this.getPosition();
+            let { latitude, longitude } = position.coords;
+
+            await this.getWeatherByCoords(latitude, longitude);
+        } catch (error) {
+            console.error("Location olishda xatolik:", error);
+            // Default shaharni ko'rsatish
+            await this.searchCity('Tashkent');
+        }
+    }
+
+    getPosition() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error("Geolocation qo'llab-quvvatlanmaydi"));
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+    }
+
+    async searchCity(cityName) {
+        if (!cityName.trim()) return;
+
+        try {
+            this.showLoader();
+
+            let weatherData = await this.getWeatherByCity(cityName);
+            let forecastData = await this.getForecast(cityName);
+
+            this.displayWeather(weatherData);
+            this.displayForecast(forecastData);
+        } catch (error) {
+            this.showError(error.message);
+        } finally {
+            this.hideLoader();
+        }
+    }
+
+    async getWeatherByCity(city) {
+        try {
+            let response = await fetch(
+                `${this.baseUrl}/weather?q=${city}&appid=${this.apiKey}&units=metric&lang=uz`
+            );
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error("Shahar topilmadi");
+                } else {
+                    throw new Error("Ob-havo ma'lumotlari olinmadi");
+                }
+            }
+
+            return await response.json();
+        } catch (error) {
+            if (error.name === 'TypeError') {
+                throw new Error("Internet aloqasini tekshiring");
+            }
+            throw error;
+        }
+    }
+
+    async getWeatherByCoords(lat, lon) {
+        try {
+            let response = await fetch(
+                `${this.baseUrl}/weather?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=metric&lang=uz`
+            );
+
+            if (!response.ok) {
+                throw new Error("Ob-havo ma'lumotlari olinmadi");
+            }
+
+            let data = await response.json();
+            this.displayWeather(data);
+        } catch (error) {
+            throw new Error("Geografik koordinatalar bo'yicha ma'lumot olinmadi");
+        }
+    }
+
+    async getForecast(city) {
+        try {
+            let response = await fetch(
+                `${this.baseUrl}/forecast?q=${city}&appid=${this.apiKey}&units=metric&lang=uz`
+            );
+
+            if (!response.ok) {
+                throw new Error("Prognoz ma'lumotlari olinmadi");
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Forecast error:", error);
+            return null; // Optional data
+        }
+    }
+
+    displayWeather(data) {
+        let weatherContainer = document.getElementById('weather-container');
+
+        weatherContainer.innerHTML = `
+            <div class="weather-main">
+                <h2>${data.name}, ${data.sys.country}</h2>
+                <div class="temperature">${Math.round(data.main.temp)}°C</div>
+                <div class="description">${data.weather[0].description}</div>
+                <img src="https://openweathermap.org/img/w/${data.weather[0].icon}.png"
+                     alt="${data.weather[0].description}">
+            </div>
+            <div class="weather-details">
+                <div>Hissiyot: ${Math.round(data.main.feels_like)}°C</div>
+                <div>Namlik: ${data.main.humidity}%</div>
+                <div>Shamol: ${data.wind.speed} m/s</div>
+                <div>Bosim: ${data.main.pressure} hPa</div>
+            </div>
+        `;
+    }
+
+    displayForecast(forecastData) {
+        if (!forecastData) return;
+
+        let forecastContainer = document.getElementById('forecast-container');
+        let dailyForecasts = this.groupForecastByDate(forecastData.list);
+
+        let html = '<h3>5 kunlik prognoz</h3><div class="forecast-list">';
+
+        dailyForecasts.forEach(day => {
+            html += `
+                <div class="forecast-item">
+                    <div class="date">${day.date}</div>
+                    <img src="https://openweathermap.org/img/w/${day.icon}.png"
+                         alt="${day.description}">
+                    <div class="temps">
+                        <span class="high">${day.maxTemp}°</span>
+                        <span class="low">${day.minTemp}°</span>
+                    </div>
+                    <div class="description">${day.description}</div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        forecastContainer.innerHTML = html;
+    }
+
+    groupForecastByDate(forecastList) {
+        let grouped = {};
+
+        forecastList.forEach(item => {
+            let date = new Date(item.dt * 1000).toLocaleDateString('uz-UZ', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short'
+            });
+
+            if (!grouped[date]) {
+                grouped[date] = {
+                    date,
+                    temps: [],
+                    icon: item.weather[0].icon,
+                    description: item.weather[0].description
+                };
+            }
+
+            grouped[date].temps.push(item.main.temp);
+        });
+
+        return Object.values(grouped).map(day => ({
+            ...day,
+            maxTemp: Math.round(Math.max(...day.temps)),
+            minTemp: Math.round(Math.min(...day.temps))
+        })).slice(0, 5);
+    }
+
+    showLoader() {
+        document.getElementById('loader').style.display = 'block';
+    }
+
+    hideLoader() {
+        document.getElementById('loader').style.display = 'none';
+    }
+
+    showError(message) {
+        let errorContainer = document.getElementById('error-container');
+        errorContainer.textContent = message;
+        errorContainer.style.display = 'block';
+
+        setTimeout(() => {
+            errorContainer.style.display = 'none';
+        }, 5000);
+    }
+}
+
+// App ni ishga tushirish
+document.addEventListener('DOMContentLoaded', () => {
+    new WeatherApp();
+});
+```
+
+### 2. File Upload with Progress
+
+```javascript
+class FileUploader {
+    constructor() {
+        this.uploadQueue = [];
+        this.maxConcurrentUploads = 3;
+        this.activeUploads = 0;
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        let fileInput = document.getElementById('file-input');
+        let uploadArea = document.getElementById('upload-area');
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            this.handleFiles(e.target.files);
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            this.handleFiles(e.dataTransfer.files);
+        });
+
+        // Click to select
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+    }
+
+    handleFiles(files) {
+        Array.from(files).forEach(file => {
+            if (this.validateFile(file)) {
+                this.addToQueue(file);
+            }
+        });
+
+        this.processQueue();
+    }
+
+    validateFile(file) {
+        let maxSize = 10 * 1024 * 1024; // 10MB
+        let allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+
+        if (file.size > maxSize) {
+            this.showError(`Fayl ${file.name} juda katta (max 10MB)`);
+            return false;
+        }
+
+        if (!allowedTypes.includes(file.type)) {
+            this.showError(`Fayl ${file.name} turi ruxsat etilmagan`);
+            return false;
+        }
+
+        return true;
+    }
+
+    addToQueue(file) {
+        let uploadItem = {
+            id: Date.now() + Math.random(),
+            file,
+            status: 'pending',
+            progress: 0,
+            uploadedBytes: 0
+        };
+
+        this.uploadQueue.push(uploadItem);
+        this.renderUploadItem(uploadItem);
+    }
+
+    async processQueue() {
+        while (this.uploadQueue.length > 0 && this.activeUploads < this.maxConcurrentUploads) {
+            let item = this.uploadQueue.find(item => item.status === 'pending');
+            if (!item) break;
+
+            item.status = 'uploading';
+            this.activeUploads++;
+
+            try {
+                await this.uploadFile(item);
+            } catch (error) {
+                this.handleUploadError(item, error);
+            }
+
+            this.activeUploads--;
+            this.processQueue(); // Process next
+        }
+    }
+
+    async uploadFile(uploadItem) {
+        return new Promise((resolve, reject) => {
+            let formData = new FormData();
+            formData.append('file', uploadItem.file);
+
+            let xhr = new XMLHttpRequest();
+
+            // Progress tracking
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    uploadItem.progress = (e.loaded / e.total) * 100;
+                    uploadItem.uploadedBytes = e.loaded;
+                    this.updateProgress(uploadItem);
+                }
+            });
+
+            // Upload complete
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    let response = JSON.parse(xhr.responseText);
+                    this.handleUploadSuccess(uploadItem, response);
+                    resolve(response);
+                } else {
+                    reject(new Error(`Upload failed: ${xhr.status}`));
+                }
+            });
+
+            // Upload error
+            xhr.addEventListener('error', () => {
+                reject(new Error('Network error'));
+            });
+
+            // Upload abort
+            xhr.addEventListener('abort', () => {
+                reject(new Error('Upload cancelled'));
+            });
+
+            // Start upload
+            xhr.open('POST', '/api/upload');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.send(formData);
+
+            // Store XHR for potential cancellation
+            uploadItem.xhr = xhr;
+        });
+    }
+
+    renderUploadItem(uploadItem) {
+        let container = document.getElementById('uploads-container');
+
+        let itemElement = document.createElement('div');
+        itemElement.className = 'upload-item';
+        itemElement.id = `upload-${uploadItem.id}`;
+
+        itemElement.innerHTML = `
+            <div class="upload-info">
+                <div class="file-name">${uploadItem.file.name}</div>
+                <div class="file-size">${this.formatFileSize(uploadItem.file.size)}</div>
+            </div>
+            <div class="upload-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text">0%</div>
+            </div>
+            <div class="upload-actions">
+                <button class="cancel-btn" onclick="fileUploader.cancelUpload('${uploadItem.id}')">
+                    Bekor qilish
+                </button>
+            </div>
+        `;
+
+        container.appendChild(itemElement);
+    }
+
+    updateProgress(uploadItem) {
+        let element = document.getElementById(`upload-${uploadItem.id}`);
+        if (!element) return;
+
+        let progressFill = element.querySelector('.progress-fill');
+        let progressText = element.querySelector('.progress-text');
+
+        progressFill.style.width = `${uploadItem.progress}%`;
+        progressText.textContent = `${Math.round(uploadItem.progress)}%`;
+
+        // Upload speed calculation
+        if (!uploadItem.startTime) {
+            uploadItem.startTime = Date.now();
+        }
+
+        let elapsed = (Date.now() - uploadItem.startTime) / 1000;
+        let speed = uploadItem.uploadedBytes / elapsed;
+
+        if (speed > 0) {
+            let remaining = (uploadItem.file.size - uploadItem.uploadedBytes) / speed;
+            progressText.textContent += ` (${this.formatTime(remaining)} qoldi)`;
+        }
+    }
+
+    handleUploadSuccess(uploadItem, response) {
+        uploadItem.status = 'completed';
+        this.removeFromQueue(uploadItem.id);
+
+        let element = document.getElementById(`upload-${uploadItem.id}`);
+        if (element) {
+            element.classList.add('completed');
+            element.innerHTML = `
+                <div class="upload-info">
+                    <div class="file-name">${uploadItem.file.name}</div>
+                    <div class="success-message">✅ Muvaffaqiyatli yuklandi</div>
+                </div>
+                <div class="upload-actions">
+                    <a href="${response.fileUrl}" target="_blank" class="view-btn">
+                        Ko'rish
+                    </a>
+                    <button class="remove-btn" onclick="fileUploader.removeUpload('${uploadItem.id}')">
+                        Olib tashlash
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    handleUploadError(uploadItem, error) {
+        uploadItem.status = 'error';
+
+        let element = document.getElementById(`upload-${uploadItem.id}`);
+        if (element) {
+            element.classList.add('error');
+            element.innerHTML = `
+                <div class="upload-info">
+                    <div class="file-name">${uploadItem.file.name}</div>
+                    <div class="error-message">❌ ${error.message}</div>
+                </div>
+                <div class="upload-actions">
+                    <button class="retry-btn" onclick="fileUploader.retryUpload('${uploadItem.id}')">
+                        Qayta urinish
+                    </button>
+                    <button class="remove-btn" onclick="fileUploader.removeUpload('${uploadItem.id}')">
+                        Olib tashlash
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    cancelUpload(uploadId) {
+        let uploadItem = this.uploadQueue.find(item => item.id == uploadId);
+        if (uploadItem && uploadItem.xhr) {
+            uploadItem.xhr.abort();
+            uploadItem.status = 'cancelled';
+        }
+
+        this.removeUpload(uploadId);
+    }
+
+    retryUpload(uploadId) {
+        let uploadItem = this.uploadQueue.find(item => item.id == uploadId);
+        if (uploadItem) {
+            uploadItem.status = 'pending';
+            uploadItem.progress = 0;
+            uploadItem.uploadedBytes = 0;
+            delete uploadItem.startTime;
+
+            this.renderUploadItem(uploadItem);
+            this.processQueue();
+        }
+    }
+
+    removeUpload(uploadId) {
+        this.removeFromQueue(uploadId);
+
+        let element = document.getElementById(`upload-${uploadId}`);
+        if (element) {
+            element.remove();
+        }
+    }
+
+    removeFromQueue(uploadId) {
+        this.uploadQueue = this.uploadQueue.filter(item => item.id != uploadId);
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+
+        let k = 1024;
+        let sizes = ['B', 'KB', 'MB', 'GB'];
+        let i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    formatTime(seconds) {
+        if (seconds < 60) return `${Math.round(seconds)}s`;
+        if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+        return `${Math.round(seconds / 3600)}h`;
+    }
+
+    showError(message) {
+        let errorContainer = document.getElementById('error-container');
+        let errorElement = document.createElement('div');
+        errorElement.className = 'error-message';
+        errorElement.textContent = message;
+
+        errorContainer.appendChild(errorElement);
+
+        setTimeout(() => {
+            errorElement.remove();
+        }, 5000);
+    }
+}
+
+// Global variable for access from HTML onclick
+let fileUploader;
+
+document.addEventListener('DOMContentLoaded', () => {
+    fileUploader = new FileUploader();
+});
+```
+
+## Performance Va Best Practices
+
+### 1. AbortController
+
+```javascript
+// Request'larni cancel qilish
+let controller = new AbortController();
+
+async function fetchWithCancel() {
+    try {
+        let response = await fetch('/api/data', {
+            signal: controller.signal
+        });
+
+        return await response.json();
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log('Request cancelled');
+        } else {
+            console.error('HTTP error:', error);
+        }
+    }
+}
+
+// 5 sekunddan keyin cancel qilish
+setTimeout(() => {
+    controller.abort();
+}, 5000);
+```
+
+### 2. Request Caching
+
+```javascript
+class APICache {
+    constructor() {
+        this.cache = new Map();
+        this.maxAge = 5 * 60 * 1000; // 5 minut
+    }
+
+    async get(url) {
+        let cached = this.cache.get(url);
+
+        if (cached && Date.now() - cached.timestamp < this.maxAge) {
+            console.log('Cache hit:', url);
+            return cached.data;
+        }
+
+        console.log('Cache miss:', url);
+        let data = await this.fetchFromAPI(url);
+
+        this.cache.set(url, {
+            data,
+            timestamp: Date.now()
+        });
+
+        return data;
+    }
+
+    async fetchFromAPI(url) {
+        let response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    }
+
+    clear() {
+        this.cache.clear();
+    }
+}
+
+let apiCache = new APICache();
+
+// Ishlatish
+async function getUserWithCache(userId) {
+    return await apiCache.get(`/api/users/${userId}`);
+}
+```
+
+### 3. Debouncing API Calls
+
+```javascript
+class DebouncedAPI {
+    constructor() {
+        this.debounceTimers = new Map();
+    }
+
+    debounce(key, func, delay) {
+        if (this.debounceTimers.has(key)) {
+            clearTimeout(this.debounceTimers.get(key));
+        }
+
+        return new Promise((resolve, reject) => {
+            let timer = setTimeout(async () => {
+                try {
+                    let result = await func();
+                    resolve(result);
+                } catch (error) {
+                    reject(error);
+                } finally {
+                    this.debounceTimers.delete(key);
+                }
+            }, delay);
+
+            this.debounceTimers.set(key, timer);
+        });
+    }
+}
+
+let debouncedAPI = new DebouncedAPI();
+
+// Ishlatish - search
+async function searchUsers(query) {
+    return await debouncedAPI.debounce(
+        'search-users',
+        () => fetch(`/api/search?q=${query}`).then(r => r.json()),
+        300
+    );
+}
+```
+
+## Xulosa
+
+Bu darsda asinxron JavaScript'ni chuqur o'rgandik:
+
+- ✅ **Callbacks → Promises → Async/Await**
+- ✅ **Fetch API** va HTTP requests
+- ✅ **Error Handling** strategiyalari
+- ✅ **Real-time applications** qurish
+- ✅ **Performance optimization** texnikalari
+- ✅ **Amaliy loyihalar**: Weather app, File uploader
+
+Bu bilimlar bilan siz professional web ilovalar yasay olasiz va React'ga o'tishga tayyor! 🚀
+
+## Qo'shimcha Resurslar
+
+- [MDN Promises Guide](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)
+- [Fetch API Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+
+---
+
+⚡ **Keyingi dars**: Modern ES6+ features o'rganamiz!

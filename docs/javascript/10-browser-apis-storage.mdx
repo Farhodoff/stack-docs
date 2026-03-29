@@ -1,0 +1,2009 @@
+---
+title: "JavaScript Browser APIs va Local Storage"
+description: "Browser APIs bilan ishlash: localStorage, sessionStorage, IndexedDB, Geolocation, File API, Web Workers va zamonaviy browser imkoniyatlari."
+order: 10
+category: javascript
+tags: ["javascript", "browser-apis", "local-storage", "web-workers", "geolocation", "file-api"]
+difficulty: advanced
+readTime: 50
+---
+
+# JavaScript Browser APIs va Local Storage
+
+Modern brauzerlar minglab API taklif qiladi. Bu darsda eng muhim Browser API'lar va data storage usullari bilan tanishamiz.
+
+## Storage APIs
+
+### LocalStorage
+
+```javascript
+// LocalStorage - Persistent storage
+class LocalStorageManager {
+    static set(key, value) {
+        try {
+            const serializedValue = JSON.stringify(value);
+            localStorage.setItem(key, serializedValue);
+            return true;
+        } catch (error) {
+            console.error('LocalStorage set error:', error);
+            return false;
+        }
+    }
+
+    static get(key, defaultValue = null) {
+        try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : defaultValue;
+        } catch (error) {
+            console.error('LocalStorage get error:', error);
+            return defaultValue;
+        }
+    }
+
+    static remove(key) {
+        localStorage.removeItem(key);
+    }
+
+    static clear() {
+        localStorage.clear();
+    }
+
+    static keys() {
+        return Object.keys(localStorage);
+    }
+
+    static size() {
+        return localStorage.length;
+    }
+
+    static getUsage() {
+        let total = 0;
+        for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                total += localStorage[key].length + key.length;
+            }
+        }
+        return total;
+    }
+
+    static isQuotaExceeded() {
+        try {
+            const testKey = '__localStorage_test__';
+            localStorage.setItem(testKey, 'test');
+            localStorage.removeItem(testKey);
+            return false;
+        } catch (e) {
+            return e.code === 22 || e.code === 1014;
+        }
+    }
+}
+
+// Practical usage
+class UserPreferences {
+    constructor() {
+        this.defaults = {
+            theme: 'light',
+            language: 'uz',
+            notifications: true,
+            fontSize: 'medium'
+        };
+    }
+
+    get(key) {
+        const prefs = LocalStorageManager.get('userPreferences', this.defaults);
+        return key ? prefs[key] : prefs;
+    }
+
+    set(key, value) {
+        const prefs = this.get();
+        prefs[key] = value;
+        LocalStorageManager.set('userPreferences', prefs);
+        this.notifyChange(key, value);
+    }
+
+    reset() {
+        LocalStorageManager.set('userPreferences', this.defaults);
+    }
+
+    notifyChange(key, value) {
+        // Custom event for preference changes
+        window.dispatchEvent(new CustomEvent('preferencesChanged', {
+            detail: { key, value, preferences: this.get() }
+        }));
+    }
+}
+
+// Usage
+const preferences = new UserPreferences();
+
+// Listen to preference changes
+window.addEventListener('preferencesChanged', (e) => {
+    const { key, value } = e.detail;
+    console.log(`Preference changed: ${key} = ${value}`);
+
+    // Update UI based on preferences
+    if (key === 'theme') {
+        document.body.className = value === 'dark' ? 'dark-theme' : 'light-theme';
+    }
+});
+
+preferences.set('theme', 'dark');
+preferences.set('language', 'en');
+```
+
+### SessionStorage
+
+```javascript
+// SessionStorage - Tab-specific storage
+class SessionManager {
+    static createSession(userInfo) {
+        const session = {
+            id: 'session_' + Date.now(),
+            user: userInfo,
+            startTime: new Date().toISOString(),
+            lastActivity: new Date().toISOString()
+        };
+
+        sessionStorage.setItem('currentSession', JSON.stringify(session));
+        return session;
+    }
+
+    static updateActivity() {
+        const session = this.getSession();
+        if (session) {
+            session.lastActivity = new Date().toISOString();
+            sessionStorage.setItem('currentSession', JSON.stringify(session));
+        }
+    }
+
+    static getSession() {
+        const sessionData = sessionStorage.getItem('currentSession');
+        return sessionData ? JSON.parse(sessionData) : null;
+    }
+
+    static endSession() {
+        sessionStorage.removeItem('currentSession');
+    }
+
+    static isSessionValid(maxInactiveMinutes = 30) {
+        const session = this.getSession();
+        if (!session) return false;
+
+        const lastActivity = new Date(session.lastActivity);
+        const now = new Date();
+        const diffMinutes = (now - lastActivity) / (1000 * 60);
+
+        return diffMinutes < maxInactiveMinutes;
+    }
+
+    static getSessionDuration() {
+        const session = this.getSession();
+        if (!session) return 0;
+
+        const start = new Date(session.startTime);
+        const now = new Date();
+        return now - start;
+    }
+}
+
+// Auto activity tracking
+let inactivityTimer;
+
+function trackUserActivity() {
+    SessionManager.updateActivity();
+
+    // Reset inactivity timer
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+        if (!SessionManager.isSessionValid()) {
+            alert('Session expired due to inactivity');
+            SessionManager.endSession();
+            // Redirect to login or refresh
+        }
+    }, 30 * 60 * 1000); // 30 minutes
+}
+
+// Track various user activities
+['click', 'keypress', 'scroll', 'mousemove'].forEach(event => {
+    document.addEventListener(event, trackUserActivity, { passive: true });
+});
+```
+
+### IndexedDB
+
+```javascript
+// IndexedDB - Advanced client-side database
+class IndexedDBManager {
+    constructor(dbName, version = 1) {
+        this.dbName = dbName;
+        this.version = version;
+        this.db = null;
+    }
+
+    async init(stores = []) {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, this.version);
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                this.db = request.result;
+                resolve(this.db);
+            };
+
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+
+                stores.forEach(store => {
+                    if (!db.objectStoreNames.contains(store.name)) {
+                        const objectStore = db.createObjectStore(store.name, store.options);
+
+                        // Create indexes
+                        if (store.indexes) {
+                            store.indexes.forEach(index => {
+                                objectStore.createIndex(index.name, index.keyPath, index.options);
+                            });
+                        }
+                    }
+                });
+            };
+        });
+    }
+
+    async add(storeName, data) {
+        if (!this.db) throw new Error('Database not initialized');
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readwrite');
+            const objectStore = transaction.objectStore(storeName);
+            const request = objectStore.add(data);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async get(storeName, key) {
+        if (!this.db) throw new Error('Database not initialized');
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readonly');
+            const objectStore = transaction.objectStore(storeName);
+            const request = objectStore.get(key);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getAll(storeName) {
+        if (!this.db) throw new Error('Database not initialized');
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readonly');
+            const objectStore = transaction.objectStore(storeName);
+            const request = objectStore.getAll();
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async update(storeName, data) {
+        if (!this.db) throw new Error('Database not initialized');
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readwrite');
+            const objectStore = transaction.objectStore(storeName);
+            const request = objectStore.put(data);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async delete(storeName, key) {
+        if (!this.db) throw new Error('Database not initialized');
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readwrite');
+            const objectStore = transaction.objectStore(storeName);
+            const request = objectStore.delete(key);
+
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async search(storeName, indexName, value) {
+        if (!this.db) throw new Error('Database not initialized');
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readonly');
+            const objectStore = transaction.objectStore(storeName);
+            const index = objectStore.index(indexName);
+            const request = index.getAll(value);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+}
+
+// Task management example with IndexedDB
+class TaskManager {
+    constructor() {
+        this.db = new IndexedDBManager('TasksDB', 1);
+    }
+
+    async init() {
+        await this.db.init([
+            {
+                name: 'tasks',
+                options: { keyPath: 'id', autoIncrement: true },
+                indexes: [
+                    { name: 'by-status', keyPath: 'status', options: {} },
+                    { name: 'by-date', keyPath: 'createdAt', options: {} },
+                    { name: 'by-priority', keyPath: 'priority', options: {} }
+                ]
+            },
+            {
+                name: 'categories',
+                options: { keyPath: 'id', autoIncrement: true }
+            }
+        ]);
+    }
+
+    async addTask(title, description, priority = 'medium') {
+        const task = {
+            title,
+            description,
+            priority,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            completedAt: null
+        };
+
+        const id = await this.db.add('tasks', task);
+        return { ...task, id };
+    }
+
+    async getTasks(status = null) {
+        if (status) {
+            return await this.db.search('tasks', 'by-status', status);
+        }
+        return await this.db.getAll('tasks');
+    }
+
+    async updateTask(id, updates) {
+        const task = await this.db.get('tasks', id);
+        if (!task) throw new Error('Task not found');
+
+        const updatedTask = {
+            ...task,
+            ...updates,
+            updatedAt: new Date().toISOString()
+        };
+
+        if (updates.status === 'completed' && task.status !== 'completed') {
+            updatedTask.completedAt = new Date().toISOString();
+        }
+
+        await this.db.update('tasks', updatedTask);
+        return updatedTask;
+    }
+
+    async deleteTask(id) {
+        await this.db.delete('tasks', id);
+    }
+
+    async getTaskStats() {
+        const tasks = await this.getTasks();
+        return {
+            total: tasks.length,
+            pending: tasks.filter(t => t.status === 'pending').length,
+            inProgress: tasks.filter(t => t.status === 'in-progress').length,
+            completed: tasks.filter(t => t.status === 'completed').length,
+            high: tasks.filter(t => t.priority === 'high').length
+        };
+    }
+}
+
+// Usage
+async function taskExample() {
+    const taskManager = new TaskManager();
+    await taskManager.init();
+
+    // Add tasks
+    await taskManager.addTask('Learn JavaScript', 'Complete all JS lessons', 'high');
+    await taskManager.addTask('Build project', 'Build a todo app', 'medium');
+
+    // Get tasks
+    const allTasks = await taskManager.getTasks();
+    const completedTasks = await taskManager.getTasks('completed');
+
+    console.log('All tasks:', allTasks);
+    console.log('Completed tasks:', completedTasks);
+
+    // Update task
+    if (allTasks.length > 0) {
+        await taskManager.updateTask(allTasks[0].id, {
+            status: 'in-progress'
+        });
+    }
+
+    // Get stats
+    const stats = await taskManager.getTaskStats();
+    console.log('Task statistics:', stats);
+}
+
+taskExample();
+```
+
+## Geolocation API
+
+```javascript
+class LocationManager {
+    constructor() {
+        this.currentPosition = null;
+        this.watchId = null;
+        this.options = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        };
+    }
+
+    async getCurrentLocation() {
+        if (!navigator.geolocation) {
+            throw new Error('Geolocation is not supported');
+        }
+
+        return new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    this.currentPosition = position;
+                    resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        timestamp: new Date(position.timestamp)
+                    });
+                },
+                (error) => {
+                    let message;
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            message = "Location access denied by user";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            message = "Location information unavailable";
+                            break;
+                        case error.TIMEOUT:
+                            message = "Location request timeout";
+                            break;
+                        default:
+                            message = "Unknown location error";
+                    }
+                    reject(new Error(message));
+                },
+                this.options
+            );
+        });
+    }
+
+    watchLocation(callback, errorCallback) {
+        if (!navigator.geolocation) {
+            throw new Error('Geolocation is not supported');
+        }
+
+        this.watchId = navigator.geolocation.watchPosition(
+            (position) => {
+                this.currentPosition = position;
+                const location = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    speed: position.coords.speed,
+                    heading: position.coords.heading,
+                    timestamp: new Date(position.timestamp)
+                };
+                callback(location);
+            },
+            errorCallback,
+            this.options
+        );
+
+        return this.watchId;
+    }
+
+    stopWatching() {
+        if (this.watchId !== null) {
+            navigator.geolocation.clearWatch(this.watchId);
+            this.watchId = null;
+        }
+    }
+
+    calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Earth radius in kilometers
+        const dLat = this.toRadians(lat2 - lat1);
+        const dLon = this.toRadians(lon2 - lon1);
+
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in kilometers
+    }
+
+    toRadians(degrees) {
+        return degrees * (Math.PI / 180);
+    }
+
+    async getNearbyPlaces(radius = 1) {
+        const location = await this.getCurrentLocation();
+
+        // Mock API call - replace with actual service
+        const places = [
+            { name: "Restaurant 1", lat: location.latitude + 0.001, lon: location.longitude + 0.001 },
+            { name: "Shop 1", lat: location.latitude - 0.002, lon: location.longitude + 0.003 },
+            { name: "Park", lat: location.latitude + 0.005, lon: location.longitude - 0.001 }
+        ];
+
+        return places.filter(place => {
+            const distance = this.calculateDistance(
+                location.latitude, location.longitude,
+                place.lat, place.lon
+            );
+            return distance <= radius;
+        }).map(place => ({
+            ...place,
+            distance: this.calculateDistance(
+                location.latitude, location.longitude,
+                place.lat, place.lon
+            ).toFixed(2) + ' km'
+        }));
+    }
+}
+
+// Location-based app example
+class DeliveryTracker {
+    constructor() {
+        this.locationManager = new LocationManager();
+        this.deliveryRoute = [];
+        this.isTracking = false;
+    }
+
+    async startDelivery(deliveryId) {
+        this.deliveryId = deliveryId;
+        this.isTracking = true;
+        this.deliveryRoute = [];
+
+        try {
+            const initialLocation = await this.locationManager.getCurrentLocation();
+            this.recordLocation('started', initialLocation);
+
+            // Start watching location
+            this.locationManager.watchLocation(
+                (location) => {
+                    this.recordLocation('enroute', location);
+                    this.updateDeliveryStatus(location);
+                },
+                (error) => {
+                    console.error('Location tracking error:', error);
+                }
+            );
+
+            console.log('Delivery tracking started');
+        } catch (error) {
+            console.error('Failed to start delivery tracking:', error);
+        }
+    }
+
+    recordLocation(status, location) {
+        const record = {
+            ...location,
+            status,
+            deliveryId: this.deliveryId,
+            recordedAt: new Date().toISOString()
+        };
+
+        this.deliveryRoute.push(record);
+
+        // Save to storage
+        const savedRoutes = LocalStorageManager.get('deliveryRoutes', []);
+        savedRoutes.push(record);
+        LocalStorageManager.set('deliveryRoutes', savedRoutes);
+    }
+
+    updateDeliveryStatus(currentLocation) {
+        // Check if near destination (mock coordinates)
+        const destination = { lat: 41.2995, lon: 69.2401 }; // Tashkent coordinates
+
+        const distance = this.locationManager.calculateDistance(
+            currentLocation.latitude,
+            currentLocation.longitude,
+            destination.lat,
+            destination.lon
+        );
+
+        if (distance < 0.1) { // Within 100 meters
+            this.completeDelivery();
+        }
+
+        // Emit location update event
+        window.dispatchEvent(new CustomEvent('deliveryLocationUpdate', {
+            detail: { currentLocation, distance, route: this.deliveryRoute }
+        }));
+    }
+
+    completeDelivery() {
+        this.isTracking = false;
+        this.locationManager.stopWatching();
+
+        const finalLocation = this.deliveryRoute[this.deliveryRoute.length - 1];
+        this.recordLocation('delivered', finalLocation);
+
+        console.log('Delivery completed');
+
+        window.dispatchEvent(new CustomEvent('deliveryCompleted', {
+            detail: {
+                deliveryId: this.deliveryId,
+                route: this.deliveryRoute,
+                totalDistance: this.calculateTotalDistance()
+            }
+        }));
+    }
+
+    calculateTotalDistance() {
+        let total = 0;
+        for (let i = 1; i < this.deliveryRoute.length; i++) {
+            const prev = this.deliveryRoute[i - 1];
+            const curr = this.deliveryRoute[i];
+            total += this.locationManager.calculateDistance(
+                prev.latitude, prev.longitude,
+                curr.latitude, curr.longitude
+            );
+        }
+        return total.toFixed(2);
+    }
+}
+```
+
+## File API
+
+```javascript
+class FileManager {
+    constructor() {
+        this.maxFileSize = 10 * 1024 * 1024; // 10MB
+        this.allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'text/plain', 'application/pdf'];
+    }
+
+    async selectFiles(options = {}) {
+        return new Promise((resolve) => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = options.multiple || false;
+            input.accept = options.accept || this.allowedTypes.join(',');
+
+            input.onchange = (event) => {
+                const files = Array.from(event.target.files);
+                resolve(files);
+            };
+
+            input.click();
+        });
+    }
+
+    validateFile(file) {
+        const errors = [];
+
+        if (file.size > this.maxFileSize) {
+            errors.push(`File too large: ${this.formatFileSize(file.size)} (max: ${this.formatFileSize(this.maxFileSize)})`);
+        }
+
+        if (!this.allowedTypes.includes(file.type)) {
+            errors.push(`Invalid file type: ${file.type}`);
+        }
+
+        return {
+            valid: errors.length === 0,
+            errors
+        };
+    }
+
+    async readAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsText(file);
+        });
+    }
+
+    async readAsDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async readAsArrayBuffer(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    async compressImage(file, quality = 0.8, maxWidth = 1920, maxHeight = 1080) {
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+
+            img.onload = () => {
+                // Calculate new dimensions
+                let { width, height } = this.calculateNewDimensions(
+                    img.width, img.height, maxWidth, maxHeight
+                );
+
+                canvas.width = width;
+                canvas.height = height;
+
+                // Draw and compress
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(
+                    (blob) => {
+                        resolve(new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        }));
+                    },
+                    'image/jpeg',
+                    quality
+                );
+            };
+
+            img.src = URL.createObjectURL(file);
+        });
+    }
+
+    calculateNewDimensions(width, height, maxWidth, maxHeight) {
+        if (width <= maxWidth && height <= maxHeight) {
+            return { width, height };
+        }
+
+        const aspectRatio = width / height;
+
+        if (width > height) {
+            width = maxWidth;
+            height = width / aspectRatio;
+        } else {
+            height = maxHeight;
+            width = height * aspectRatio;
+        }
+
+        return {
+            width: Math.round(width),
+            height: Math.round(height)
+        };
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    async generateThumbnail(file, size = 150) {
+        if (!file.type.startsWith('image/')) {
+            throw new Error('File is not an image');
+        }
+
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+
+            img.onload = () => {
+                const scale = Math.min(size / img.width, size / img.height);
+                const width = img.width * scale;
+                const height = img.height * scale;
+
+                canvas.width = size;
+                canvas.height = size;
+
+                // Fill background
+                ctx.fillStyle = '#f0f0f0';
+                ctx.fillRect(0, 0, size, size);
+
+                // Center image
+                const x = (size - width) / 2;
+                const y = (size - height) / 2;
+
+                ctx.drawImage(img, x, y, width, height);
+
+                canvas.toBlob(resolve, 'image/jpeg', 0.8);
+            };
+
+            img.src = URL.createObjectURL(file);
+        });
+    }
+
+    async exportData(data, filename, type = 'application/json') {
+        const blob = new Blob([data], { type });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        URL.revokeObjectURL(url);
+    }
+}
+
+// Image gallery with file management
+class ImageGallery {
+    constructor(containerId) {
+        this.container = document.getElementById(containerId);
+        this.fileManager = new FileManager();
+        this.images = LocalStorageManager.get('galleryImages', []);
+        this.init();
+    }
+
+    init() {
+        this.render();
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        // Upload button
+        const uploadBtn = document.createElement('button');
+        uploadBtn.textContent = 'Upload Images';
+        uploadBtn.onclick = () => this.uploadImages();
+        this.container.prepend(uploadBtn);
+
+        // Drag and drop
+        this.container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            this.container.classList.add('drag-over');
+        });
+
+        this.container.addEventListener('dragleave', (e) => {
+            if (!this.container.contains(e.relatedTarget)) {
+                this.container.classList.remove('drag-over');
+            }
+        });
+
+        this.container.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            this.container.classList.remove('drag-over');
+
+            const files = Array.from(e.dataTransfer.files);
+            await this.processFiles(files);
+        });
+    }
+
+    async uploadImages() {
+        const files = await this.fileManager.selectFiles({
+            multiple: true,
+            accept: 'image/*'
+        });
+
+        await this.processFiles(files);
+    }
+
+    async processFiles(files) {
+        for (const file of files) {
+            const validation = this.fileManager.validateFile(file);
+
+            if (!validation.valid) {
+                console.error(`Invalid file ${file.name}:`, validation.errors);
+                continue;
+            }
+
+            try {
+                // Compress image
+                const compressedFile = await this.fileManager.compressImage(file);
+
+                // Generate thumbnail
+                const thumbnail = await this.fileManager.generateThumbnail(compressedFile);
+
+                // Convert to data URLs for storage
+                const imageData = await this.fileManager.readAsDataURL(compressedFile);
+                const thumbnailData = await this.fileManager.readAsDataURL(thumbnail);
+
+                const imageRecord = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    size: compressedFile.size,
+                    originalSize: file.size,
+                    type: file.type,
+                    dataUrl: imageData,
+                    thumbnail: thumbnailData,
+                    uploadedAt: new Date().toISOString()
+                };
+
+                this.images.push(imageRecord);
+                this.saveImages();
+                this.addImageToDOM(imageRecord);
+
+            } catch (error) {
+                console.error(`Error processing ${file.name}:`, error);
+            }
+        }
+    }
+
+    addImageToDOM(imageRecord) {
+        const imageDiv = document.createElement('div');
+        imageDiv.className = 'gallery-item';
+        imageDiv.innerHTML = `
+            <img src="${imageRecord.thumbnail}" alt="${imageRecord.name}"
+                 onclick="this.parentElement.querySelector('.full-image').style.display='block'">
+            <div class="full-image" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000;">
+                <img src="${imageRecord.dataUrl}" style="max-width:90%; max-height:90%; margin:5%;"
+                     onclick="this.parentElement.style.display='none'">
+            </div>
+            <div class="image-info">
+                <div>${imageRecord.name}</div>
+                <div>${this.fileManager.formatFileSize(imageRecord.size)}</div>
+                <button onclick="gallery.deleteImage('${imageRecord.id}')">Delete</button>
+            </div>
+        `;
+
+        this.container.appendChild(imageDiv);
+    }
+
+    deleteImage(imageId) {
+        this.images = this.images.filter(img => img.id !== imageId);
+        this.saveImages();
+        this.render();
+    }
+
+    saveImages() {
+        LocalStorageManager.set('galleryImages', this.images);
+    }
+
+    render() {
+        // Clear existing images (keep upload button)
+        const items = this.container.querySelectorAll('.gallery-item');
+        items.forEach(item => item.remove());
+
+        // Render all images
+        this.images.forEach(image => this.addImageToDOM(image));
+    }
+
+    exportGallery() {
+        const exportData = this.images.map(img => ({
+            ...img,
+            dataUrl: undefined, // Don't export large data URLs
+            thumbnail: undefined
+        }));
+
+        this.fileManager.exportData(
+            JSON.stringify(exportData, null, 2),
+            'gallery-export.json'
+        );
+    }
+}
+
+// Global reference for HTML onclick
+let gallery;
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('image-gallery')) {
+        gallery = new ImageGallery('image-gallery');
+    }
+});
+```
+
+## Web Workers
+
+```javascript
+// Heavy computation in Web Worker
+class WorkerManager {
+    constructor() {
+        this.workers = new Map();
+    }
+
+    createWorker(name, script) {
+        const blob = new Blob([script], { type: 'application/javascript' });
+        const url = URL.createObjectURL(blob);
+        const worker = new Worker(url);
+
+        this.workers.set(name, {
+            worker,
+            url,
+            busy: false
+        });
+
+        return worker;
+    }
+
+    async runTask(workerName, data, timeout = 30000) {
+        const workerInfo = this.workers.get(workerName);
+        if (!workerInfo) {
+            throw new Error(`Worker ${workerName} not found`);
+        }
+
+        if (workerInfo.busy) {
+            throw new Error(`Worker ${workerName} is busy`);
+        }
+
+        workerInfo.busy = true;
+
+        return new Promise((resolve, reject) => {
+            const { worker } = workerInfo;
+
+            let completed = false;
+
+            // Timeout handler
+            const timeoutId = setTimeout(() => {
+                if (!completed) {
+                    completed = true;
+                    workerInfo.busy = false;
+                    reject(new Error('Worker task timeout'));
+                }
+            }, timeout);
+
+            // Message handler
+            const messageHandler = (event) => {
+                if (completed) return;
+
+                clearTimeout(timeoutId);
+                completed = true;
+                workerInfo.busy = false;
+
+                worker.removeEventListener('message', messageHandler);
+                worker.removeEventListener('error', errorHandler);
+
+                if (event.data.error) {
+                    reject(new Error(event.data.error));
+                } else {
+                    resolve(event.data.result);
+                }
+            };
+
+            // Error handler
+            const errorHandler = (error) => {
+                if (completed) return;
+
+                clearTimeout(timeoutId);
+                completed = true;
+                workerInfo.busy = false;
+
+                worker.removeEventListener('message', messageHandler);
+                worker.removeEventListener('error', errorHandler);
+
+                reject(error);
+            };
+
+            worker.addEventListener('message', messageHandler);
+            worker.addEventListener('error', errorHandler);
+
+            // Send task to worker
+            worker.postMessage(data);
+        });
+    }
+
+    terminateWorker(name) {
+        const workerInfo = this.workers.get(name);
+        if (workerInfo) {
+            workerInfo.worker.terminate();
+            URL.revokeObjectURL(workerInfo.url);
+            this.workers.delete(name);
+        }
+    }
+
+    terminateAll() {
+        this.workers.forEach((_, name) => {
+            this.terminateWorker(name);
+        });
+    }
+}
+
+// Prime number calculator worker script
+const primeWorkerScript = `
+function isPrime(n) {
+    if (n < 2) return false;
+    if (n === 2) return true;
+    if (n % 2 === 0) return false;
+
+    for (let i = 3; i <= Math.sqrt(n); i += 2) {
+        if (n % i === 0) return false;
+    }
+    return true;
+}
+
+function findPrimes(start, end) {
+    const primes = [];
+    for (let i = start; i <= end; i++) {
+        if (isPrime(i)) {
+            primes.push(i);
+        }
+
+        // Report progress every 1000 numbers
+        if (i % 1000 === 0) {
+            self.postMessage({
+                type: 'progress',
+                current: i,
+                total: end - start,
+                found: primes.length
+            });
+        }
+    }
+    return primes;
+}
+
+self.addEventListener('message', function(event) {
+    try {
+        const { start, end } = event.data;
+        const result = findPrimes(start, end);
+
+        self.postMessage({
+            result: result,
+            count: result.length
+        });
+    } catch (error) {
+        self.postMessage({
+            error: error.message
+        });
+    }
+});
+`;
+
+// Image processing worker
+const imageWorkerScript = `
+self.addEventListener('message', function(event) {
+    try {
+        const { imageData, operation, params } = event.data;
+
+        let result;
+        switch (operation) {
+            case 'grayscale':
+                result = grayscale(imageData);
+                break;
+            case 'blur':
+                result = blur(imageData, params.radius);
+                break;
+            case 'brightness':
+                result = adjustBrightness(imageData, params.value);
+                break;
+            default:
+                throw new Error('Unknown operation: ' + operation);
+        }
+
+        self.postMessage({ result });
+    } catch (error) {
+        self.postMessage({ error: error.message });
+    }
+});
+
+function grayscale(imageData) {
+    const data = new Uint8ClampedArray(imageData.data);
+
+    for (let i = 0; i < data.length; i += 4) {
+        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        data[i] = data[i + 1] = data[i + 2] = gray;
+    }
+
+    return new ImageData(data, imageData.width, imageData.height);
+}
+
+function adjustBrightness(imageData, value) {
+    const data = new Uint8ClampedArray(imageData.data);
+
+    for (let i = 0; i < data.length; i += 4) {
+        data[i] = Math.max(0, Math.min(255, data[i] + value));     // Red
+        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + value)); // Green
+        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + value)); // Blue
+    }
+
+    return new ImageData(data, imageData.width, imageData.height);
+}
+
+function blur(imageData, radius) {
+    // Simple box blur implementation
+    const data = new Uint8ClampedArray(imageData.data);
+    const width = imageData.width;
+    const height = imageData.height;
+    const output = new Uint8ClampedArray(data);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            let r = 0, g = 0, b = 0, count = 0;
+
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    const ny = y + dy;
+                    const nx = x + dx;
+
+                    if (ny >= 0 && ny < height && nx >= 0 && nx < width) {
+                        const index = (ny * width + nx) * 4;
+                        r += data[index];
+                        g += data[index + 1];
+                        b += data[index + 2];
+                        count++;
+                    }
+                }
+            }
+
+            const index = (y * width + x) * 4;
+            output[index] = r / count;
+            output[index + 1] = g / count;
+            output[index + 2] = b / count;
+        }
+    }
+
+    return new ImageData(output, width, height);
+}
+`;
+
+// Usage example
+async function demonstrateWorkers() {
+    const workerManager = new WorkerManager();
+
+    // Create workers
+    workerManager.createWorker('primes', primeWorkerScript);
+    workerManager.createWorker('imageProcessor', imageWorkerScript);
+
+    try {
+        // Prime calculation
+        console.log('Starting prime calculation...');
+        const primes = await workerManager.runTask('primes', {
+            start: 1,
+            end: 10000
+        });
+        console.log(`Found ${primes.count} primes:`, primes.result.slice(0, 10), '...');
+
+        // Image processing example (requires canvas)
+        if (typeof document !== 'undefined') {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Create sample image data
+            canvas.width = canvas.height = 100;
+            ctx.fillStyle = 'red';
+            ctx.fillRect(0, 0, 50, 50);
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(50, 50, 50, 50);
+
+            const imageData = ctx.getImageData(0, 0, 100, 100);
+
+            console.log('Processing image...');
+            const processed = await workerManager.runTask('imageProcessor', {
+                imageData: imageData,
+                operation: 'grayscale'
+            });
+
+            console.log('Image processed successfully');
+        }
+
+    } catch (error) {
+        console.error('Worker task failed:', error);
+    } finally {
+        // Clean up
+        workerManager.terminateAll();
+    }
+}
+
+// Run demo
+// demonstrateWorkers();
+```
+
+## Notification API
+
+```javascript
+class NotificationManager {
+    constructor() {
+        this.permission = Notification.permission;
+        this.notifications = new Map();
+    }
+
+    async requestPermission() {
+        if (!('Notification' in window)) {
+            throw new Error('Notifications not supported');
+        }
+
+        if (this.permission === 'granted') {
+            return true;
+        }
+
+        const permission = await Notification.requestPermission();
+        this.permission = permission;
+        return permission === 'granted';
+    }
+
+    async show(title, options = {}) {
+        const hasPermission = await this.requestPermission();
+        if (!hasPermission) {
+            throw new Error('Notification permission denied');
+        }
+
+        const defaultOptions = {
+            icon: '/icon-192.png',
+            badge: '/badge-72.png',
+            vibrate: [200, 100, 200],
+            persistant: false,
+            tag: 'default',
+            timestamp: Date.now(),
+            requireInteraction: false
+        };
+
+        const notificationOptions = { ...defaultOptions, ...options };
+        const notification = new Notification(title, notificationOptions);
+
+        // Store notification reference
+        const id = options.id || Date.now().toString();
+        this.notifications.set(id, notification);
+
+        // Handle events
+        notification.onclick = (event) => {
+            if (options.onClick) {
+                options.onClick(event);
+            }
+            this.close(id);
+        };
+
+        notification.onclose = (event) => {
+            this.notifications.delete(id);
+            if (options.onClose) {
+                options.onClose(event);
+            }
+        };
+
+        notification.onerror = (event) => {
+            console.error('Notification error:', event);
+            if (options.onError) {
+                options.onError(event);
+            }
+        };
+
+        // Auto close
+        if (!notificationOptions.persistant && !notificationOptions.requireInteraction) {
+            setTimeout(() => {
+                this.close(id);
+            }, options.duration || 5000);
+        }
+
+        return id;
+    }
+
+    close(id) {
+        const notification = this.notifications.get(id);
+        if (notification) {
+            notification.close();
+            this.notifications.delete(id);
+        }
+    }
+
+    closeAll() {
+        this.notifications.forEach((notification, id) => {
+            this.close(id);
+        });
+    }
+
+    async showInfo(message, options = {}) {
+        return this.show('Infomatsiya', {
+            body: message,
+            icon: '/info-icon.png',
+            tag: 'info',
+            ...options
+        });
+    }
+
+    async showWarning(message, options = {}) {
+        return this.show('Ogohlantirish', {
+            body: message,
+            icon: '/warning-icon.png',
+            tag: 'warning',
+            vibrate: [100, 50, 100, 50, 100],
+            ...options
+        });
+    }
+
+    async showError(message, options = {}) {
+        return this.show('Xatolik', {
+            body: message,
+            icon: '/error-icon.png',
+            tag: 'error',
+            vibrate: [200],
+            requireInteraction: true,
+            ...options
+        });
+    }
+
+    async showSuccess(message, options = {}) {
+        return this.show('Muvaffaqiyat', {
+            body: message,
+            icon: '/success-icon.png',
+            tag: 'success',
+            ...options
+        });
+    }
+}
+
+// Task reminder system
+class TaskReminder {
+    constructor() {
+        this.notificationManager = new NotificationManager();
+        this.reminders = LocalStorageManager.get('taskReminders', []);
+        this.setupPeriodicCheck();
+    }
+
+    async addReminder(title, date, description = '') {
+        const reminder = {
+            id: Date.now(),
+            title,
+            description,
+            date: new Date(date),
+            completed: false,
+            notified: false
+        };
+
+        this.reminders.push(reminder);
+        this.saveReminders();
+
+        // Show confirmation
+        await this.notificationManager.showSuccess(
+            `Reminder set for ${reminder.date.toLocaleString()}`
+        );
+
+        return reminder;
+    }
+
+    async checkReminders() {
+        const now = new Date();
+
+        for (const reminder of this.reminders) {
+            if (!reminder.completed && !reminder.notified && new Date(reminder.date) <= now) {
+                await this.showReminder(reminder);
+                reminder.notified = true;
+            }
+        }
+
+        this.saveReminders();
+    }
+
+    async showReminder(reminder) {
+        await this.notificationManager.show(reminder.title, {
+            body: reminder.description || 'Time for your task!',
+            tag: `reminder-${reminder.id}`,
+            icon: '/reminder-icon.png',
+            vibrate: [200, 100, 200, 100, 200],
+            requireInteraction: true,
+            onClick: () => {
+                this.markCompleted(reminder.id);
+                window.focus(); // Bring tab to front
+            }
+        });
+    }
+
+    markCompleted(reminderId) {
+        const reminder = this.reminders.find(r => r.id === reminderId);
+        if (reminder) {
+            reminder.completed = true;
+            this.saveReminders();
+        }
+    }
+
+    removeReminder(reminderId) {
+        this.reminders = this.reminders.filter(r => r.id !== reminderId);
+        this.saveReminders();
+    }
+
+    setupPeriodicCheck() {
+        // Check every minute
+        setInterval(() => {
+            this.checkReminders();
+        }, 60000);
+
+        // Check immediately
+        this.checkReminders();
+    }
+
+    saveReminders() {
+        LocalStorageManager.set('taskReminders', this.reminders);
+    }
+
+    getUpcoming(hours = 24) {
+        const now = new Date();
+        const cutoff = new Date(now.getTime() + (hours * 60 * 60 * 1000));
+
+        return this.reminders
+            .filter(r => !r.completed && new Date(r.date) <= cutoff && new Date(r.date) > now)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+}
+
+// Initialize reminder system
+const taskReminder = new TaskReminder();
+
+// Example usage
+async function setupNotificationDemo() {
+    const notificationManager = new NotificationManager();
+
+    // Request permission
+    const hasPermission = await notificationManager.requestPermission();
+    if (!hasPermission) {
+        console.log('Notifications not allowed');
+        return;
+    }
+
+    // Show different types of notifications
+    setTimeout(() => {
+        notificationManager.showInfo('This is an info message');
+    }, 1000);
+
+    setTimeout(() => {
+        notificationManager.showWarning('This is a warning');
+    }, 2000);
+
+    setTimeout(() => {
+        notificationManager.showSuccess('Operation completed successfully');
+    }, 3000);
+
+    // Add reminder
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(14, 30, 0, 0);
+
+    await taskReminder.addReminder(
+        'Important Meeting',
+        tomorrow,
+        'Don\'t forget about the team meeting!'
+    );
+}
+
+// setupNotificationDemo();
+```
+
+## Performance va Battery APIs
+
+```javascript
+class PerformanceMonitor {
+    constructor() {
+        this.metrics = {
+            pageLoad: null,
+            navigation: null,
+            resources: [],
+            marks: new Map(),
+            measures: new Map()
+        };
+        this.init();
+    }
+
+    init() {
+        if ('performance' in window) {
+            this.collectNavigationTiming();
+            this.collectResourceTiming();
+            this.setupObserver();
+        }
+    }
+
+    collectNavigationTiming() {
+        if (performance.navigation && performance.timing) {
+            const timing = performance.timing;
+
+            this.metrics.navigation = {
+                type: performance.navigation.type,
+                redirectCount: performance.navigation.redirectCount,
+                timings: {
+                    redirect: timing.redirectEnd - timing.redirectStart,
+                    dns: timing.domainLookupEnd - timing.domainLookupStart,
+                    connect: timing.connectEnd - timing.connectStart,
+                    request: timing.responseStart - timing.requestStart,
+                    response: timing.responseEnd - timing.responseStart,
+                    domLoad: timing.domContentLoadedEventEnd - timing.navigationStart,
+                    pageLoad: timing.loadEventEnd - timing.navigationStart
+                }
+            };
+        }
+
+        // Modern Navigation API
+        if ('getEntriesByType' in performance) {
+            const navEntries = performance.getEntriesByType('navigation');
+            if (navEntries.length > 0) {
+                const entry = navEntries[0];
+                this.metrics.pageLoad = {
+                    dns: entry.domainLookupEnd - entry.domainLookupStart,
+                    connect: entry.connectEnd - entry.connectStart,
+                    request: entry.requestStart - entry.connectEnd,
+                    response: entry.responseEnd - entry.requestStart,
+                    domLoad: entry.domContentLoadedEventEnd - entry.responseEnd,
+                    pageLoad: entry.loadEventEnd - entry.navigationStart,
+                    transferSize: entry.transferSize,
+                    encodedBodySize: entry.encodedBodySize,
+                    decodedBodySize: entry.decodedBodySize
+                };
+            }
+        }
+    }
+
+    collectResourceTiming() {
+        const resources = performance.getEntriesByType('resource');
+        this.metrics.resources = resources.map(resource => ({
+            name: resource.name,
+            type: this.getResourceType(resource.name),
+            duration: resource.duration,
+            transferSize: resource.transferSize,
+            encodedBodySize: resource.encodedBodySize,
+            decodedBodySize: resource.decodedBodySize,
+            blocked: resource.domainLookupStart - resource.fetchStart,
+            dns: resource.domainLookupEnd - resource.domainLookupStart,
+            connect: resource.connectEnd - resource.connectStart,
+            send: resource.requestStart - resource.connectEnd,
+            wait: resource.responseStart - resource.requestStart,
+            receive: resource.responseEnd - resource.responseStart
+        }));
+    }
+
+    getResourceType(url) {
+        if (url.match(/\.(js|mjs)$/)) return 'script';
+        if (url.match(/\.(css)$/)) return 'stylesheet';
+        if (url.match(/\.(png|jpg|jpeg|gif|svg|webp)$/)) return 'image';
+        if (url.match(/\.(woff|woff2|ttf|eot)$/)) return 'font';
+        if (url.match(/\.(mp4|webm|ogg)$/)) return 'video';
+        return 'other';
+    }
+
+    setupObserver() {
+        // Performance Observer for new entries
+        if ('PerformanceObserver' in window) {
+            const observer = new PerformanceObserver((list) => {
+                for (const entry of list.getEntries()) {
+                    if (entry.entryType === 'resource') {
+                        this.metrics.resources.push({
+                            name: entry.name,
+                            type: this.getResourceType(entry.name),
+                            duration: entry.duration,
+                            transferSize: entry.transferSize || 0
+                        });
+                    } else if (entry.entryType === 'mark') {
+                        this.metrics.marks.set(entry.name, entry.startTime);
+                    } else if (entry.entryType === 'measure') {
+                        this.metrics.measures.set(entry.name, {
+                            duration: entry.duration,
+                            startTime: entry.startTime
+                        });
+                    }
+                }
+            });
+
+            observer.observe({ entryTypes: ['resource', 'mark', 'measure'] });
+        }
+    }
+
+    mark(name) {
+        if ('mark' in performance) {
+            performance.mark(name);
+        }
+    }
+
+    measure(name, startMark, endMark) {
+        if ('measure' in performance) {
+            performance.measure(name, startMark, endMark);
+        }
+    }
+
+    getPageLoadMetrics() {
+        return {
+            navigation: this.metrics.navigation,
+            pageLoad: this.metrics.pageLoad,
+            resourceSummary: this.getResourceSummary(),
+            coreWebVitals: this.getCoreWebVitals()
+        };
+    }
+
+    getResourceSummary() {
+        const byType = {};
+        let totalSize = 0;
+        let totalDuration = 0;
+
+        this.metrics.resources.forEach(resource => {
+            if (!byType[resource.type]) {
+                byType[resource.type] = { count: 0, size: 0, duration: 0 };
+            }
+
+            byType[resource.type].count++;
+            byType[resource.type].size += resource.transferSize || 0;
+            byType[resource.type].duration += resource.duration;
+
+            totalSize += resource.transferSize || 0;
+            totalDuration += resource.duration;
+        });
+
+        return {
+            byType,
+            total: {
+                count: this.metrics.resources.length,
+                size: totalSize,
+                averageDuration: totalDuration / this.metrics.resources.length
+            }
+        };
+    }
+
+    getCoreWebVitals() {
+        // This is a simplified version - real implementation should use web-vitals library
+        const vitals = {};
+
+        // First Contentful Paint
+        const fcpEntries = performance.getEntriesByName('first-contentful-paint');
+        if (fcpEntries.length > 0) {
+            vitals.fcp = fcpEntries[0].startTime;
+        }
+
+        // Largest Contentful Paint (requires observer)
+        if (this.largestContentfulPaint) {
+            vitals.lcp = this.largestContentfulPaint;
+        }
+
+        // Cumulative Layout Shift (requires observer)
+        if (this.cumulativeLayoutShift) {
+            vitals.cls = this.cumulativeLayoutShift;
+        }
+
+        return vitals;
+    }
+
+    generateReport() {
+        const metrics = this.getPageLoadMetrics();
+
+        return {
+            timestamp: new Date().toISOString(),
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            connection: this.getConnectionInfo(),
+            ...metrics,
+            customMarks: Object.fromEntries(this.metrics.marks),
+            customMeasures: Object.fromEntries(this.metrics.measures)
+        };
+    }
+
+    getConnectionInfo() {
+        if ('connection' in navigator) {
+            const conn = navigator.connection;
+            return {
+                effectiveType: conn.effectiveType,
+                downlink: conn.downlink,
+                rtt: conn.rtt,
+                saveData: conn.saveData
+            };
+        }
+        return null;
+    }
+
+    exportReport() {
+        const report = this.generateReport();
+        const blob = new Blob([JSON.stringify(report, null, 2)], {
+            type: 'application/json'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `performance-report-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+}
+
+// Battery API
+class BatteryMonitor {
+    constructor() {
+        this.battery = null;
+        this.callbacks = {
+            levelchange: [],
+            chargingchange: [],
+            chargingtimechange: [],
+            dischargingtimechange: []
+        };
+        this.init();
+    }
+
+    async init() {
+        if ('getBattery' in navigator) {
+            try {
+                this.battery = await navigator.getBattery();
+                this.setupEventListeners();
+            } catch (error) {
+                console.warn('Battery API not available:', error);
+            }
+        }
+    }
+
+    setupEventListeners() {
+        if (!this.battery) return;
+
+        this.battery.addEventListener('levelchange', () => {
+            this.callbacks.levelchange.forEach(callback => callback(this.getStatus()));
+        });
+
+        this.battery.addEventListener('chargingchange', () => {
+            this.callbacks.chargingchange.forEach(callback => callback(this.getStatus()));
+        });
+
+        this.battery.addEventListener('chargingtimechange', () => {
+            this.callbacks.chargingtimechange.forEach(callback => callback(this.getStatus()));
+        });
+
+        this.battery.addEventListener('dischargingtimechange', () => {
+            this.callbacks.dischargingtimechange.forEach(callback => callback(this.getStatus()));
+        });
+    }
+
+    getStatus() {
+        if (!this.battery) return null;
+
+        return {
+            level: Math.round(this.battery.level * 100),
+            charging: this.battery.charging,
+            chargingTime: this.battery.chargingTime,
+            dischargingTime: this.battery.dischargingTime,
+            isLow: this.battery.level < 0.2,
+            isCritical: this.battery.level < 0.1
+        };
+    }
+
+    on(event, callback) {
+        if (this.callbacks[event]) {
+            this.callbacks[event].push(callback);
+        }
+    }
+
+    off(event, callback) {
+        if (this.callbacks[event]) {
+            const index = this.callbacks[event].indexOf(callback);
+            if (index !== -1) {
+                this.callbacks[event].splice(index, 1);
+            }
+        }
+    }
+
+    optimizeForBattery() {
+        const status = this.getStatus();
+        if (!status) return;
+
+        const suggestions = [];
+
+        if (status.isLow && !status.charging) {
+            suggestions.push({
+                type: 'performance',
+                message: 'Battery low - reducing performance',
+                actions: [
+                    'Reduce animation frequency',
+                    'Disable auto-refresh',
+                    'Lower image quality',
+                    'Minimize background tasks'
+                ]
+            });
+
+            // Apply optimizations
+            this.reducePerformance();
+        }
+
+        if (status.isCritical) {
+            suggestions.push({
+                type: 'critical',
+                message: 'Critical battery level - entering power save mode',
+                actions: [
+                    'Disable animations',
+                    'Save current work',
+                    'Reduce screen brightness',
+                    'Close non-essential features'
+                ]
+            });
+
+            this.enterPowerSaveMode();
+        }
+
+        return suggestions;
+    }
+
+    reducePerformance() {
+        // Reduce animation frame rate
+        const originalRAF = window.requestAnimationFrame;
+        let frameCount = 0;
+
+        window.requestAnimationFrame = function(callback) {
+            frameCount++;
+            if (frameCount % 2 === 0) { // Run at half speed
+                originalRAF(callback);
+            }
+        };
+
+        // Inform other parts of the app
+        window.dispatchEvent(new CustomEvent('batteryOptimization', {
+            detail: { level: 'reduce' }
+        }));
+    }
+
+    enterPowerSaveMode() {
+        // Disable heavy features
+        document.body.classList.add('power-save-mode');
+
+        // Pause auto-save intervals
+        // Disable push notifications
+
+        window.dispatchEvent(new CustomEvent('batteryOptimization', {
+            detail: { level: 'critical' }
+        }));
+    }
+}
+
+// Initialize monitoring
+const performanceMonitor = new PerformanceMonitor();
+const batteryMonitor = new BatteryMonitor();
+
+// Usage examples
+performanceMonitor.mark('app-start');
+
+setTimeout(() => {
+    performanceMonitor.mark('app-ready');
+    performanceMonitor.measure('app-startup', 'app-start', 'app-ready');
+}, 1000);
+
+// Listen to battery changes
+batteryMonitor.on('levelchange', (status) => {
+    console.log(`Battery level: ${status.level}%`);
+
+    if (status.isLow) {
+        const suggestions = batteryMonitor.optimizeForBattery();
+        console.log('Battery optimization suggestions:', suggestions);
+    }
+});
+
+// Export performance report
+// performanceMonitor.exportReport();
+```
+
+## Xulosa
+
+Bu darsda Browser API'lar va client-side storage'ning keng spektrini o'rgandik:
+
+- ✅ **Storage APIs** - localStorage, sessionStorage, IndexedDB
+- ✅ **Geolocation API** - Location tracking va mapping
+- ✅ **File API** - File upload, processing, compression
+- ✅ **Web Workers** - Heavy computation offloading
+- ✅ **Notification API** - Desktop notifications
+- ✅ **Performance APIs** - Monitoring va optimization
+- ✅ **Battery API** - Power-aware applications
+- ✅ **Real-world Examples** - Practical implementations
+
+## 🎉 **JavaScript Kursi Yakunlandi!**
+
+**10 ta to'liq dars** orqali JavaScript'ning barcha jihatlarini chuqur o'rgandik:
+
+1. **JavaScript Asoslari** - Variables, data types, operators
+2. **Funksiyalar va Scope** - Functions, closures, callbacks
+3. **Massivlar va Obyektlar** - Data structures va methods
+4. **DOM Manipulation** - HTML/CSS bilan ishlash
+5. **Events va Interactions** - User interactions, games
+6. **Async Programming** - Promises, async/await, fetch
+7. **ES6+ Modern Features** - Destructuring, spread, modules
+8. **Error Handling** - Debugging, logging, error management
+9. **Modules va Classes** - OOP, design patterns
+10. **Browser APIs** - Storage, geolocation, file handling
+
+**Endi siz professional JavaScript developer bo'la olasiz!** 🚀
+
+## Qo'shimcha Resurslar
+
+- [MDN Web APIs](https://developer.mozilla.org/en-US/docs/Web/API)
+- [Can I Use](https://caniuse.com/) - Browser compatibility
+- [Web.dev](https://web.dev/) - Modern web development guides
+
+---
+
+⚡ **Keyingi qadam**: React kursi bilan davom eting va full-stack developer bo'ling!
